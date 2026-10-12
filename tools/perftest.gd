@@ -1,5 +1,6 @@
 extends SceneTree
-## Frame rate check:  godot --path . --resolution 1280x720 --script tools/perftest.gd
+## Frame rate check:  godot --path . --resolution 1280x720 --script tools/perftest.gd [-- night]
+## (with "night": the clock is frozen at 23:00 and an invasion is running)
 func _initialize() -> void:
 	_run()
 func sample(label: String, secs: float) -> void:
@@ -16,6 +17,12 @@ func _run() -> void:
 	root.add_child(main)
 	await create_timer(3.0).timeout
 	var p := get_first_node_in_group("player") as Player
+	if "night" in OS.get_cmdline_user_args():
+		var dn := get_first_node_in_group("daynight")
+		dn.running = false
+		dn.set_time(21.0)
+		await create_timer(2.0).timeout
+		print("PERF night mode: lamps ", get_nodes_in_group("night_lights").size())
 	await sample("spawn / plaza", 4.0)
 	for v in [["forest edge", -150.0, -100.0, 0.5], ["west camp", -140.0, 20.0, 1.5], ["crypt gate", 0.0, -128.0, PI], ["meadow", 60.0, 90.0, 2.0]]:
 		p.teleport(Vector3(v[1], 0.05, v[2]), v[3])

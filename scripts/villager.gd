@@ -36,10 +36,14 @@ var _stuck_time := 0.0
 var _last_pos := Vector3.ZERO
 var _bubble_tween: Tween
 var _base_anim := "Idle"
+var _sheltered := false
+var _shelter_tween: Tween
 
 
 func _ready() -> void:
 	add_to_group("interactables")
+	if mode == Mode.WANDER or mode == Mode.CHAT:
+		add_to_group("villagers")       # these go indoors at night (set_sheltered)
 	collision_layer = 16
 	collision_mask = 1 if mode == Mode.WANDER else 0
 	var shape := CollisionShape3D.new()
@@ -124,6 +128,29 @@ func _attach_mug(model: Node3D) -> void:
 	var mug := (load(MUG) as PackedScene).instantiate() as Node3D
 	mug.scale = Vector3.ONE * 0.55
 	holder.add_child(mug)
+
+
+## At dusk the outdoor villagers go home (hidden, not talkable); at dawn they come back.
+func set_sheltered(on: bool) -> void:
+	if on == _sheltered:
+		return
+	_sheltered = on
+	if _shelter_tween:
+		_shelter_tween.kill()
+	_shelter_tween = create_tween()
+	if on:
+		remove_from_group("interactables")
+		collision_layer = 0
+		_talking = false
+		_shelter_tween.tween_property(_model_root, "scale", Vector3.ONE * 0.01, 0.6)
+		_shelter_tween.tween_callback(func(): visible = false)
+		set_physics_process(false)
+	else:
+		visible = true
+		add_to_group("interactables")
+		collision_layer = 16
+		set_physics_process(mode == Mode.WANDER)
+		_shelter_tween.tween_property(_model_root, "scale", Vector3.ONE, 0.6)
 
 
 # ---------------------------------------------------------------- talking ----

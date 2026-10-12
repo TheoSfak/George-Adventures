@@ -114,6 +114,20 @@ func report_item(item_id: String) -> void:
 	changed.emit()
 
 
+## The village survived a night invasion.
+func report_defense() -> void:
+	for id in QuestData.QUESTS:
+		if state[id] != S.ACTIVE:
+			continue
+		var objectives: Array = QuestData.QUESTS[id]["objectives"]
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if o["type"] == "defend" and progress[id][i] < o["count"]:
+				progress[id][i] += 1
+		_check_ready(id)
+	changed.emit()
+
+
 ## True while some active quest still needs this item (quest items only show up then).
 func item_wanted(item_id: String) -> bool:
 	for id in QuestData.QUESTS:

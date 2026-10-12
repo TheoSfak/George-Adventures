@@ -45,6 +45,10 @@ static func draw(ci: CanvasItem, rect: Rect2, icon: String, color: Color) -> voi
 			_bone(ci, c, s, color)
 		"coin":
 			_coin(ci, c, s, color)
+		"sun":
+			_sun(ci, c, s, color)
+		"moon":
+			_moon(ci, c, s, color)
 
 
 static func _poly(ci: CanvasItem, c: Vector2, s: float, pts: Array, color: Color) -> void:
@@ -193,3 +197,16 @@ static func _coin(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
 	ci.draw_circle(c, 0.66 * s, color.darkened(0.3))
 	ci.draw_circle(c, 0.54 * s, color)
 	ci.draw_arc(c, 0.34 * s, 0.0, TAU, 20, color.darkened(0.3), 0.08 * s, true)
+
+
+static func _sun(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	ci.draw_circle(c, 0.38 * s, color)
+	for i in 8:
+		var a := TAU * float(i) / 8.0
+		ci.draw_line(c + Vector2(cos(a), sin(a)) * 0.55 * s, c + Vector2(cos(a), sin(a)) * 0.9 * s, color, maxf(1.5, 0.12 * s))
+
+
+static func _moon(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	# a crescent: a disc with a darker disc bitten out of it
+	ci.draw_circle(c, 0.72 * s, color)
+	ci.draw_circle(c + Vector2(0.36, -0.2) * s, 0.62 * s, Color(0.06, 0.05, 0.1, 1.0))

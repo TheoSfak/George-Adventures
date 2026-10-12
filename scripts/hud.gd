@@ -41,6 +41,14 @@ var _buff_labels := {}
 var _hero: HeroWindow
 var _shop: ShopWindow
 var _hint: Label
+var _clock_label: Label
+var _clock_icon: Control
+var _clock_is_night := false
+var _daynight: DayNight
+var _def_box: Control
+var _def_label: Label
+var _def_fill: ColorRect
+var _banner_tween: Tween
 
 
 func _ready() -> void:
@@ -61,6 +69,7 @@ func _ready() -> void:
 	_build_tracker()
 	_build_prompt_and_dialogue()
 	_build_action_bar()
+	_build_clock()
 	_connect_signals()
 	_refresh_tracker()
 
@@ -81,6 +90,10 @@ func _connect_signals() -> void:
 	_player.message.connect(show_message)
 	_player.leveled_up.connect(_on_level_up)
 	_player.prompt_changed.connect(_on_prompt_changed)
+	var invasion := get_parent().get_node_or_null("Invasion") as Invasion
+	if invasion:
+		invasion.updated.connect(_on_invasion_updated)
+		invasion.banner.connect(show_banner)
 	_player.died.connect(func(): _death_text.visible = true)
 	_player.respawned.connect(func(): _death_text.visible = false)
 
@@ -147,6 +160,10 @@ func _build_bars() -> void:
 	add_child(_feed)
 
 	_banner = _label("", 56, Control.PRESET_CENTER)
+	_banner.anchor_left = 0.0       # full width, so long banners stay centred
+	_banner.anchor_right = 1.0
+	_banner.offset_left = 0.0
+	_banner.offset_right = 0.0
 	_banner.position.y -= 160.0
 	_banner.modulate.a = 0.0
 
@@ -406,6 +423,7 @@ func _build_action_bar() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_clock()
 	if _player == null:
 		return
 	var names := {"power": Strings.BUFF_POWER, "speed": Strings.BUFF_SPEED, "guard": Strings.BUFF_GUARD,
@@ -416,6 +434,86 @@ func _process(_delta: float) -> void:
 		l.visible = t > 0.0
 		if t > 0.0:
 			l.text = "%s %d δ" % [names[id], ceili(t)]
+
+
+# ------------------------------------------------- clock and invasion panel ----
+
+func _build_clock() -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.anchor_left = 0.5
+	row.anchor_right = 0.5
+	row.offset_left = -150.0
+	row.offset_right = 150.0
+	row.offset_top = 12.0
+	row.offset_bottom = 46.0
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(row)
+	_clock_icon = Control.new()
+	_clock_icon.custom_minimum_size = Vector2(30, 30)
+	_clock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_clock_icon.draw.connect(func():
+		Icons.draw(_clock_icon, Rect2(Vector2.ZERO, _clock_icon.size), "moon" if _clock_is_night else "sun",
+				Color(0.85, 0.9, 1.0) if _clock_is_night else Color(1.0, 0.82, 0.3)))
+	row.add_child(_clock_icon)
+	_clock_label = _plain_label("", 22)
+	row.add_child(_clock_label)
+
+	_def_box = Control.new()
+	_def_box.anchor_left = 0.5
+	_def_box.anchor_right = 0.5
+	_def_box.offset_left = -170.0
+	_def_box.offset_right = 170.0
+	_def_box.offset_top = 52.0
+	_def_box.offset_bottom = 110.0
+	_def_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_def_box.visible = false
+	add_child(_def_box)
+	_def_label = _plain_label("", 20, Color(1.0, 0.8, 0.7))
+	_def_label.position = Vector2(0, 0)
+	_def_label.size = Vector2(340, 26)
+	_def_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_def_box.add_child(_def_label)
+	var back := _rect(Color(0.07, 0.05, 0.04, 0.85), Vector2(0, 30), Vector2(340, 18), _def_box)
+	_def_fill = _rect(Color(0.35, 0.75, 0.4), Vector2(3, 3), Vector2(334, 12), back)
+	var cap := _plain_label(Strings.INVASION_SAFETY, 14, Color(0.9, 0.9, 0.85))
+	cap.position = Vector2(0, 48)
+	cap.size = Vector2(340, 18)
+	cap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_def_box.add_child(cap)
+
+
+func _update_clock() -> void:
+	if _daynight == null:
+		_daynight = get_tree().get_first_node_in_group("daynight") as DayNight
+		if _daynight == null:
+			return
+	_clock_label.text = _daynight.clock_text()
+	var night := _daynight.darkness() > 0.5
+	if night != _clock_is_night:
+		_clock_is_night = night
+		_clock_icon.queue_redraw()
+
+
+func _on_invasion_updated(active: bool, wave: int, waves: int, alive: int, safety: float) -> void:
+	_def_box.visible = active
+	if not active:
+		return
+	_def_label.text = Strings.INVASION_WAVE % [maxi(wave, 1), waves, alive]
+	_def_fill.size.x = 334.0 * clampf(safety / 100.0, 0.0, 1.0)
+	_def_fill.color = Color(0.35, 0.75, 0.4).lerp(Color(0.85, 0.2, 0.15), 1.0 - clampf(safety / 100.0, 0.0, 1.0))
+
+
+## A big title in the middle of the screen that fades after `seconds`.
+func show_banner(text: String, seconds: float = 2.5) -> void:
+	_banner.text = text
+	_banner.add_theme_font_size_override("font_size", clampi(int(1150.0 / (float(text.length()) * 0.62)), 32, 56))
+	_banner.modulate.a = 1.0
+	if _banner_tween:
+		_banner_tween.kill()
+	_banner_tween = create_tween()
+	_banner_tween.tween_interval(seconds)
+	_banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.8)
 
 
 func _build_windows() -> void:

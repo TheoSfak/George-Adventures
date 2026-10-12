@@ -54,6 +54,17 @@ const KINDS := {
 		"aggro_range": 15.0, "patrol_radius": 4.0,
 		"xp_reward": 55, "gold_min": 8, "gold_max": 18, "potion_chance": 0.5,
 	},
+	# Night invasion mini-boss (nights 3 and later)
+	"warlord": {
+		"kind_id": "warlord", "respawn": false, "tint_color": Color(0.9, 0.3, 0.1, 0.3),
+		"display_name": "Οστέινος Πολέμαρχος", "model_scale": 1.9,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 300.0, "attack_damage": 20.0, "chase_speed": 4.0, "attack_range": 3.4,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.8, "aggro_range": 22.0, "patrol_radius": 4.0,
+		"xp_reward": 160, "gold_min": 40, "gold_max": 70, "potion_chance": 1.0,
+	},
 	# Quest bosses (they do not respawn)
 	"captain": {
 		"kind_id": "captain", "respawn": false,

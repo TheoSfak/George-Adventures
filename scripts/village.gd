@@ -131,6 +131,7 @@ func _ready() -> void:
 	_build_scatter()
 	_finish_terrain()
 	_build_clouds()
+	_build_night_lights()
 
 
 func _process(delta: float) -> void:
@@ -327,6 +328,7 @@ func _build_camp() -> void:
 	light.light_color = Color(1.0, 0.65, 0.3)
 	light.light_energy = 2.0
 	light.omni_range = 22.0
+	light.add_to_group("night_lights")
 	holder.add_child(light)
 	var extras := [
 		["decoration/props/weaponrack.gltf", -9.0, -6.0, 40, 1.6], ["decoration/props/crate_A_big.gltf", 8.0, -9.0, 20, 1.2],
@@ -411,6 +413,7 @@ func _build_crypt() -> void:
 			light.light_color = Color(1.0, 0.7, 0.35)
 			light.light_energy = 1.2
 			light.omni_range = 11.0
+			light.add_to_group("night_lights")
 			holder.add_child(light)
 			_add_cylinder_collider(lamp, 0.5, 2.0, Vector3.ZERO)
 	_occupy(CRYPT.x, CRYPT.y - 6.0, 52)
@@ -595,6 +598,34 @@ func _build_clouds() -> void:
 		var c := _place(model, Vector3(_rng.randf_range(-320, 320), _rng.randf_range(110, 140),
 				_rng.randf_range(-320, 320)), _rng.randf_range(0, 360), _rng.randf_range(7.0, 13.0), holder)
 		_clouds.append(c)
+
+
+## Lamps for the night: a warm light at every door and lantern posts around the square.
+## Their lights are in group "night_lights" (DayNight switches them on after dusk).
+func _build_night_lights() -> void:
+	var holder := Node3D.new()
+	holder.name = "NightLights"
+	add_child(holder)
+	for df in _door_fronts:
+		var light := OmniLight3D.new()
+		light.position = Vector3(df.x, 3.4, df.y)
+		light.light_color = Color(1.0, 0.72, 0.4)
+		light.light_energy = 1.6
+		light.omni_range = 13.0
+		light.add_to_group("night_lights")
+		holder.add_child(light)
+	for i in 8:
+		var a := TAU * (float(i) + 0.5) / 8.0
+		var p := Vector2(cos(a), sin(a)) * 30.0
+		var lamp := _place_abs(GRAVE + "lantern_standing.gltf", Vector3(p.x, 0, p.y), 0.0, 2.4, holder)
+		_add_cylinder_collider(lamp, 0.5, 2.0, Vector3.ZERO)
+		var light := OmniLight3D.new()
+		light.position = Vector3(p.x, 2.6, p.y)
+		light.light_color = Color(1.0, 0.7, 0.35)
+		light.light_energy = 1.5
+		light.omni_range = 14.0
+		light.add_to_group("night_lights")
+		holder.add_child(light)
 
 
 # --------------------------------------------------------------- helpers ----

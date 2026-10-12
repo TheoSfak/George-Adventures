@@ -182,6 +182,10 @@ func _ready() -> void:
 	add_to_group("interiors")
 
 
+func is_inside() -> bool:
+	return _inside
+
+
 ## Called from a door outside. outside_pos / outside_heading is where George stands
 ## again when he comes back out.
 func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading: float, player: Player) -> void:

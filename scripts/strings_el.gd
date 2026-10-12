@@ -119,3 +119,15 @@ const BUILDING_NAMES := {
 	"market": "Παζάρι",
 	"home": "Σπίτι",
 }
+
+const DAY_WORD := "Ημέρα"
+
+const DUSK_FALLS := "Σουρουπώνει… οι χωρικοί μπαίνουν στα σπίτια τους."
+const INVASION_BANNER := "ΕΙΣΒΟΛΗ!  Οι νεκροί πλησιάζουν το χωριό!"
+const INVASION_WAVE_BANNER := "Κύμα %d!"
+const INVASION_WAVE := "Κύμα %d/%d — Σκελετοί: %d"
+const INVASION_SAFETY := "Ασφάλεια χωριού"
+const INVASION_WON := "Το χωριό σώθηκε!"
+const INVASION_LOST := "Το πηγάδι έπεσε! Οι νεκροί λεηλάτησαν το χωριό…"
+const INVASION_LOST_GOLD := "Έχασες %d χρυσά"
+const INVASION_DAWN := "Χάραξε… οι νεκροί γύρισαν στα χώματα."
