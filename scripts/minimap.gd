@@ -141,6 +141,7 @@ func _draw() -> void:
 			draw_texture_rect_region(world_texture, Rect2(Vector2.ZERO, size),
 					Rect2(src_centre - Vector2.ONE * src_half, Vector2.ONE * src_half * 2.0))
 	_draw_enemies()
+	_draw_guards()
 	_draw_shops_and_places()
 	_draw_invasion_well()
 	_draw_quest_markers()
@@ -165,6 +166,14 @@ func _draw_enemies() -> void:
 		else:
 			draw_circle(pos, 3.4, INK)
 			draw_circle(pos, 2.5, Color(1.0, 0.45, 0.2) if invader else RED)
+
+
+func _draw_guards() -> void:
+	for g in get_tree().get_nodes_in_group("guards"):
+		var pos := _to_map(g.global_position)
+		if _on_map(pos, 3.0):
+			draw_circle(pos, 3.6, INK)
+			draw_circle(pos, 2.7, Color(0.45, 0.75, 1.0))
 
 
 func _draw_shops_and_places() -> void:
@@ -222,6 +231,11 @@ func _draw_quest_markers() -> void:
 						if it.visible and it.get("item_id") == o["item"]:
 							_diamond(it.global_position)
 				"kill":
+					if o["target"] == "totem":
+						for t in get_tree().get_nodes_in_group("breakables"):
+							if t.visible:
+								_diamond(t.global_position)
+						continue
 					var found := false
 					for e in get_tree().get_nodes_in_group("enemies"):
 						if e.get("kind_id") == o["target"] and o["target"] != "skeleton":

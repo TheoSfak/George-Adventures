@@ -444,6 +444,24 @@ func _swing_hits(serial: int, damage: float, knock: float = 5.0) -> void:
 		if dist > 0.8 and forward.dot(to_enemy / dist) < sword_arc:
 			continue
 		_hit(enemy, damage, knock)
+	_hit_breakables(damage, sword_reach, true)
+
+
+## Totems and other breakable objects take the same blows as skeletons. `reach` is measured
+## from the surface of the object; with `cone` only things in front of George are hit.
+func _hit_breakables(damage: float, reach: float, cone: bool = false) -> void:
+	var forward := _facing()
+	for b in get_tree().get_nodes_in_group("breakables"):
+		if not b.visible:
+			continue
+		var to: Vector3 = b.global_position - global_position
+		to.y = 0.0
+		var dist := to.length() - float(b.get("hit_radius"))
+		if dist > reach:
+			continue
+		if cone and dist > 0.8 and forward.dot(to.normalized()) < sword_arc:
+			continue
+		b.take_damage(damage * _damage_mult(), global_position)
 
 
 ## Every blow George lands goes through here: damage buffs, critical hits, lifesteal, stun.
@@ -622,6 +640,10 @@ func apply_reward(reward: Dictionary) -> void:
 		collect("gold", reward["gold"])
 	if reward.has("potions"):
 		collect("potion", reward["potions"])
+	if reward.has("power"):
+		collect("power_potion", int(reward["power"]))
+	if reward.has("speed"):
+		collect("speed_potion", int(reward["speed"]))
 	if reward.has("damage"):
 		base_damage += reward["damage"]
 		_recalc()
@@ -992,6 +1014,7 @@ func use_skill(id: String) -> bool:
 				if global_position.distance_to(enemy.global_position) <= 7.0:
 					_hit(enemy, flame_damage, 8.0)
 					dealt += flame_damage * _damage_mult()
+			_hit_breakables(flame_damage, 7.0)
 			var gain := minf(dealt * 0.25, max_health * 0.3) * (1.0 + stats.total("heal_mult"))
 			_restore(gain)
 			message.emit(Strings.MSG_FLAME % int(gain))
@@ -1024,6 +1047,7 @@ func _leap_slam() -> void:
 		var enemy := e as Enemy
 		if global_position.distance_to(enemy.global_position) <= 4.5:
 			_hit(enemy, sword_damage * 2.0, 10.0, 1.2)
+	_hit_breakables(sword_damage * 2.0, 4.5)
 
 
 func _spawn_sanctuary_visual() -> void:
@@ -1063,6 +1087,7 @@ func _whirl_hits(serial: int, damage: float) -> void:
 		to_enemy.y = 0.0
 		if to_enemy.length() <= radius:
 			_hit(enemy, damage, 9.0)
+	_hit_breakables(damage, radius)
 
 
 ## While dashing: hit and stun every enemy George runs into (once each).

@@ -19,6 +19,7 @@ static var menu_in_tests := false              # tools/menutest.gd turns the men
 static var defeated_bosses: Array = []        # kind ids of bosses that do not respawn
 static var opened_chests: Array = []          # "x,z" of chests opened
 static var collected_items: Array = []        # "item@x,z" of quest items picked up
+static var destroyed_totems: Array = []       # "x,z" of bone totems broken
 
 
 static func exists() -> bool:
@@ -35,6 +36,7 @@ static func reset_progress() -> void:
 	defeated_bosses = []
 	opened_chests = []
 	collected_items = []
+	destroyed_totems = []
 
 
 static func key_for(position: Vector3) -> String:
@@ -51,6 +53,12 @@ static func note_item(item_id: String, position: Vector3) -> void:
 	var k := "%s@%s" % [item_id, key_for(position)]
 	if not collected_items.has(k):
 		collected_items.append(k)
+
+
+static func note_totem(position: Vector3) -> void:
+	var k := key_for(position)
+	if not destroyed_totems.has(k):
+		destroyed_totems.append(k)
 
 
 static func note_boss(kind: String) -> void:
@@ -95,7 +103,7 @@ static func save() -> bool:
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
 			"day": daynight.day_number if daynight else 1,
 			"night": daynight.night_number if daynight else 0,
-			"defeated_bosses": defeated_bosses, "opened_chests": opened_chests, "collected_items": collected_items,
+			"defeated_bosses": defeated_bosses, "opened_chests": opened_chests, "collected_items": collected_items, "destroyed_totems": destroyed_totems,
 		},
 	}
 	if exists():
@@ -136,6 +144,7 @@ static func load_progress(d: Dictionary) -> void:
 	defeated_bosses = (w.get("defeated_bosses", []) as Array).duplicate()
 	opened_chests = (w.get("opened_chests", []) as Array).duplicate()
 	collected_items = (w.get("collected_items", []) as Array).duplicate()
+	destroyed_totems = (w.get("destroyed_totems", []) as Array).duplicate()
 
 
 ## Puts a loaded save into the running game. The world must already be built.
@@ -199,6 +208,9 @@ static func apply(d: Dictionary) -> void:
 	for chest in tree.get_nodes_in_group("chests"):
 		if opened_chests.has(key_for(chest.global_position)):
 			chest.mark_opened()
+	for totem in tree.get_nodes_in_group("breakables"):
+		if destroyed_totems.has(key_for(totem.global_position)):
+			totem.queue_free()
 	for item in tree.get_nodes_in_group("quest_items"):
 		if collected_items.has("%s@%s" % [item.get("item_id"), key_for(item.global_position)]):
 			item.queue_free()

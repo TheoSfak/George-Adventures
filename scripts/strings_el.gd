@@ -172,3 +172,8 @@ const SET_KEYS := "Πλήκτρα  (κλικ σε ένα πλήκτρο και �
 const SET_PRESS := "Πάτα πλήκτρο…"
 const SET_RESET_KEYS := "Επαναφορά πλήκτρων"
 const SET_DEFAULT_DEVICE := "Προεπιλογή συστήματος"
+
+const TOTEM_NAME := "Οστέινο Τοτέμ"
+
+const GUARD_NAME := "Φρουρός"
+const GUARDS_ARRIVE := "Οι φρουροί του Βασίλη φτάνουν στο πηγάδι (%d)"

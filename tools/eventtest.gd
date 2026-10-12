@@ -53,7 +53,7 @@ func _run() -> void:
 		guard += 1
 		print("  after kill round ", guard, ": wave ", inv.wave, " active ", inv.active)
 	print("success: ", inv.last_success, " gold +", p.gold - gold_before, " quest night state ", quests.state["night"], " (3 = ready)")
-	print("reward chest present: ", main.get_node("Village/Chests").get_children().any(func(c): return c is Chest and c.position.is_equal_approx(Vector3(6, 0.05, 8))))
+	print("reward chest present: ", main.get_node("Village/Chests").get_children().any(func(c): return c.get("golden") != null and c.position.is_equal_approx(Vector3(6, 0.05, 8))))
 	print("banners: ", banners)
 	await shot("inv_success")
 

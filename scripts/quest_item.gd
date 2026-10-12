@@ -7,6 +7,8 @@ extends Node3D
 const MODELS := {
 	"keg": {"path": "res://assets/items/keg.gltf.glb", "scale": 0.7, "lift": 0.0},
 	"key": {"path": "res://assets/items/key.gltf.glb", "scale": 3.0, "lift": 1.2},
+	"sack": {"path": "res://assets/world/decoration/props/sack.gltf", "scale": 12.0, "lift": 0.0},
+	"log": {"path": "res://assets/world/decoration/props/resource_lumber.gltf", "scale": 5.0, "lift": 0.3},
 }
 
 var item_id := "keg"

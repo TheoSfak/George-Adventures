@@ -62,6 +62,7 @@ func start(night_number: int) -> void:
 	await get_tree().create_timer(FIRST_WAVE_DELAY).timeout
 	_wave_pending = false
 	if active:
+		_spawn_guards()
 		_spawn_wave()
 
 
@@ -134,7 +135,34 @@ func _spawn_wave() -> void:
 
 # ----------------------------------------------------------------- results ----
 
+## Captain Βασίλης sends his guards to the well: 2, plus one for each of his quests George finished.
+func _spawn_guards() -> void:
+	var count := 2
+	for id in ["archers", "mages", "brutes", "totems"]:
+		if Quests.state[id] == Quests.S.DONE:
+			count += 1
+	var holder := get_parent().get_node_or_null("Enemies")
+	if holder == null:
+		return
+	for i in count:
+		var a := TAU * float(i) / float(count) + 0.4
+		var guard := Guard.new()
+		guard.home = Vector3(cos(a) * 9.0, 0.0, sin(a) * 9.0)
+		guard.position = guard.home + Vector3(0, 0.05, 0)
+		guard.damage = 9.0 + float(count) * 1.2
+		holder.add_child(guard)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_message(Strings.GUARDS_ARRIVE % count)
+
+
+func _dismiss_guards() -> void:
+	for g in get_tree().get_nodes_in_group("guards"):
+		g.dismiss()
+
+
 func _succeed() -> void:
+	_dismiss_guards()
 	active = false
 	last_success = true
 	var player := get_tree().get_first_node_in_group("player") as Player
@@ -153,6 +181,7 @@ func _succeed() -> void:
 
 
 func _fail() -> void:
+	_dismiss_guards()
 	active = false
 	last_success = false
 	for e in _alive:
@@ -178,6 +207,7 @@ func _fail() -> void:
 func _on_dawn() -> void:
 	if not active:
 		return
+	_dismiss_guards()
 	active = false
 	for e in get_tree().get_nodes_in_group("invaders"):
 		e.dissolve()

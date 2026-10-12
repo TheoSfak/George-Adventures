@@ -34,8 +34,8 @@ const BUILDINGS := [
 	["buildings/green/building_home_B_green.gltf", 41.0, -47.6, "home", 1.0, ""],
 	["buildings/blue/building_blacksmith_blue.gltf", -93.5, 29.5, "blacksmith", 1.0, "nikitas"],
 	["buildings/red/building_lumbermill_red.gltf", 95.1, 39.4, "", 1.0, "giannis"],
-	["buildings/yellow/building_windmill_yellow.gltf", -100.0, -54.1, "", 1.0, ""],
-	["buildings/blue/building_tower_A_blue.gltf", 95.1, -78.7, "", 1.0, ""],
+	["buildings/yellow/building_windmill_yellow.gltf", -100.0, -54.1, "", 1.0, "stelios"],
+	["buildings/blue/building_tower_A_blue.gltf", 95.1, -78.7, "", 1.0, "vasilis"],
 	["buildings/blue/building_well_blue.gltf", 0.0, 0.0, "", 0.6, ""],
 ]
 
@@ -65,7 +65,13 @@ const BUILDING_PROPS := {
 const QUEST_ITEMS := [
 	["keg", -30.0, -142.0], ["keg", 143.0, -29.0], ["keg", 26.0, 152.0], ["keg", -122.0, 111.0],
 	["key", -176.0, 24.0],
+	# flour sacks scattered around the windmill, logs around the lumber mill
+	["sack", -113.0, -41.0], ["sack", -87.0, -67.0], ["sack", -121.0, -63.0], ["sack", -96.0, -33.0], ["sack", -109.0, -81.0],
+	["log", 109.0, 24.0], ["log", 82.0, 57.0], ["log", 121.0, 49.0], ["log", 98.0, 67.0], ["log", 77.0, 27.0], ["log", 113.0, 38.0],
 ]
+
+# Bone totems (quest "Τα Οστέινα Τοτέμ"): x, z. They only stand while the quest is active.
+const TOTEMS := [Vector2(-175.0, 27.0), Vector2(147.0, 135.0), Vector2(17.0, -142.0)]
 
 # [x, z, rotation, golden, gold_min, gold_max, potions]   (more chests are inside the houses)
 const CHESTS := [
@@ -127,6 +133,7 @@ func _ready() -> void:
 	_build_quarry()
 	_build_crypt()
 	_build_chests_items_signs()
+	_build_totems()
 	_build_terrain_details()
 	_build_scatter()
 	_finish_terrain()
@@ -446,6 +453,17 @@ func _build_chests_items_signs() -> void:
 	for s in SIGNPOSTS:
 		_signpost(s[0], Vector3(s[1], 0.0, s[2]), s[3], signs)
 		_occupy(s[1], s[2], 4.0)
+func _build_totems() -> void:
+	var holder := Node3D.new()
+	holder.name = "Totems"
+	add_child(holder)
+	for t in TOTEMS:
+		var totem := Totem.new()
+		totem.position = Vector3(t.x, 0.0, t.y)
+		holder.add_child(totem)
+		_occupy(t.x, t.y, 5.0)
+
+
 func _signpost(text: String, pos: Vector3, rot_deg: float, parent: Node) -> void:
 	var root := Node3D.new()
 	root.position = pos

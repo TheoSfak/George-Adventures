@@ -11,6 +11,7 @@ const WEAPON_NODES: Array[String] = [
 	"1H_Axe", "1H_Axe_Offhand", "2H_Axe", "Barbarian_Round_Shield", "Mug", "Barbarian_Hat",
 	"Spellbook", "Spellbook_open", "1H_Wand", "2H_Staff",
 	"Knife", "Knife_Offhand", "1H_Crossbow", "2H_Crossbow", "Throwable",
+	"1H_Sword", "1H_Sword_Offhand", "2H_Sword", "Badge_Shield", "Rectangle_Shield", "Spike_Shield",
 ]
 
 var _model_root: Node3D

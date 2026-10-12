@@ -104,7 +104,7 @@ func report_kill(kind: String) -> void:
 		var objectives: Array = QuestData.QUESTS[id]["objectives"]
 		for i in objectives.size():
 			var o: Dictionary = objectives[i]
-			if o["type"] == "kill" and progress[id][i] < o["count"] and (o["target"] == "skeleton" or o["target"] == kind):
+			if o["type"] == "kill" and progress[id][i] < o["count"] and ((o["target"] == "skeleton" and kind != "totem") or o["target"] == kind):
 				progress[id][i] += 1
 		_check_ready(id)
 	changed.emit()
@@ -135,6 +135,19 @@ func report_defense() -> void:
 				progress[id][i] += 1
 		_check_ready(id)
 	changed.emit()
+
+
+## True while some active quest still wants something of this kind killed or destroyed.
+func target_wanted(kind: String) -> bool:
+	for id in QuestData.QUESTS:
+		if state[id] != S.ACTIVE:
+			continue
+		var objectives: Array = QuestData.QUESTS[id]["objectives"]
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if o["type"] == "kill" and o["target"] == kind and progress[id][i] < o["count"]:
+				return true
+	return false
 
 
 ## True while some active quest still needs this item (quest items only show up then).
