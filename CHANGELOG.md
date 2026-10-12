@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.1-beta (2026-10-12) — saving, menus and remote-play fixes
+**New in this version**
+- **Save game:** plain-text JSON (`savegame.json`), autosave on quest completion, level up and at dawn, plus manual save. Saves level, gold, gear, talents, action bar, position, quests, time, defeated bosses, opened chests and collected quest items.
+- **Menus:** title menu (Continue / New game / Settings / Quit) and an Esc pause menu. The prologue now plays only on a new game.
+- **Settings:** volume sliders, audio output device and **key re-binding** (saved in `settings.json`).
+- **Remote-desktop (AnyDesk) fixes:** keys are bound by physical and logical code, Space/Enter advance dialogue, Enter also interacts, jump respects the dialogue lock, F9 cycles the audio device, F12 shows an input diagnostics overlay.
+
+**Not done yet:** more NPCs/quests, totems, village guards (see `HANDOVER.md`).
+
 ## 0.10-beta (2026-10-12) — map, 1080p and sound
 **New in this version**
 - **Minimap and map (M):** corner minimap plus a full-screen map from a live top-down capture of the world. Quest markers: "!" new quest, "?" hand-in, gold diamonds for quest items and bosses; red dots for enemies; a pulsing ring at the well during an invasion; named places on the big map.
