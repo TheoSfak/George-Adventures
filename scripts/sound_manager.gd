@@ -103,9 +103,7 @@ func _setup_buses() -> void:
 			var idx := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(idx, bus)
 			AudioServer.set_bus_send(idx, "Master")
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), -9.0)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), -2.0)
-	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Ambient"), -8.0)
+	GameSettings.apply_audio()          # volumes and output device from user://settings.json
 
 
 func _add_positional_loop(id: String, pos: Vector3, unit: float, max_dist: float, db: float) -> void:
@@ -333,6 +331,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), not music_on)
 		if hud:
 			hud.show_message(Strings.MUSIC_ON if music_on else Strings.MUSIC_OFF)
+	elif key.physical_keycode == KEY_F9:
+		var devices := AudioServer.get_output_device_list()
+		var next := (devices.find(AudioServer.output_device) + 1) % devices.size()
+		AudioServer.output_device = devices[next]
+		Sfx.ui("bell_toll")
+		if hud:
+			hud.show_message(Strings.AUDIO_DEVICE % AudioServer.output_device)
 	elif key.physical_keycode == KEY_F8:
 		sfx_on = not sfx_on
 		AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), not sfx_on)

@@ -32,8 +32,11 @@ The mouse cursor is free. Hold a mouse button to move the camera.
 | Shops (market, blacksmith) | R on the shopkeeper; Esc closes | |
 | Zoom | Mouse wheel | |
 | Map | M (Esc closes) | |
+| Pause menu (save, settings, key re-binding) | Esc | |
 | Music on/off, sounds on/off | F7, F8 | |
 | Fullscreen | F11 | |
+| Audio output device (if silent) | F9 | |
+| Input/audio diagnostics | F12 | |
 
 ## Project layout
 - `scripts/player.gd`      George: movement, camera, combat, skills, potions, interaction

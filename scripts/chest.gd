@@ -17,6 +17,7 @@ var _lid: Node3D
 
 func _ready() -> void:
 	add_to_group("interactables")
+	add_to_group("chests")
 	var visual := Node3D.new()
 	visual.scale = Vector3.ONE * 0.8
 	add_child(visual)
@@ -34,6 +35,13 @@ func _ready() -> void:
 	add_child(body)
 
 
+## A chest that was opened in an earlier session (loading a save): open and empty, no animation.
+func mark_opened() -> void:
+	opened = true
+	if _lid:
+		_lid.rotation.x = deg_to_rad(-115.0)
+
+
 func interact_prompt() -> String:
 	return "" if opened else Strings.PROMPT_OPEN
 
@@ -46,6 +54,7 @@ func interact(_player: Player) -> void:
 	if opened:
 		return
 	opened = true
+	SaveGame.note_chest(global_position)
 	Sfx.play("chest_open", global_position)
 	if _lid:
 		# The lid hinges at the back of the chest: tilt it up and open.

@@ -250,7 +250,7 @@ func _physics_process(delta: float) -> void:
 	var on_floor := is_on_floor()
 	if not on_floor:
 		velocity.y -= gravity * delta
-	elif Input.is_action_just_pressed("jump") and not _attacking and not is_dead and _stun <= 0.0:
+	elif Input.is_action_just_pressed("jump") and not _attacking and not is_dead and _stun <= 0.0 and not busy:
 		velocity.y = jump_velocity
 		Sfx.play("jump", global_position, -4.0)
 		_landing = false

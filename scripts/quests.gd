@@ -16,6 +16,14 @@ var progress := {}                   # quest id -> Array[int], one counter per o
 
 
 func _ready() -> void:
+	reset()
+
+
+## Back to the start of the story (new game).
+func reset() -> void:
+	intro_seen = false
+	state = {}
+	progress = {}
 	for id in QuestData.QUESTS:
 		state[id] = S.LOCKED
 		progress[id] = []

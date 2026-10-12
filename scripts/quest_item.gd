@@ -72,6 +72,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if global_position.distance_to(_player.global_position) < 2.6:
 		Quests.report_item(item_id)
+		SaveGame.note_item(item_id, global_position)
 		Sfx.ui("quest_item")
 		_player.message.emit(QuestData.ITEMS[item_id])
 		queue_free()

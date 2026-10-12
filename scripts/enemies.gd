@@ -138,6 +138,8 @@ func _ready() -> void:
 
 func _spawn(index: int) -> void:
 	var s: Array = SPAWNS[index]
+	if not KINDS[s[0]].get("respawn", true) and SaveGame.boss_defeated(s[0]):
+		return                            # this boss was killed in an earlier session
 	var enemy := ENEMY_SCENE.instantiate() as Enemy
 	var stats: Dictionary = KINDS[s[0]]
 	for key in stats:
@@ -172,6 +174,8 @@ func _on_enemy_died(enemy: Enemy, index: int) -> void:
 	_drop_loot(enemy)
 	if index >= 0 and KINDS[SPAWNS[index][0]].get("respawn", true):
 		_respawn_later(index)
+	elif index >= 0:
+		SaveGame.note_boss(enemy.kind_id)
 
 
 func _drop_loot(enemy: Enemy) -> void:

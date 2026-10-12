@@ -1,0 +1,366 @@
+class_name GameMenu
+extends CanvasLayer
+## The title menu (shown when the game starts) and the pause menu (Esc). Both pause the game.
+##   Title:  Συνέχεια / Νέο παιχνίδι / Ρυθμίσεις / Έξοδος
+##   Pause:  Επιστροφή / Αποθήκευση / Ρυθμίσεις / Κεντρικό μενού / Έξοδος
+## Settings: volumes, audio device and key re-binding (game_settings.gd).
+## Also autosaves on quest completion, level up and at dawn (save_game.gd).
+
+enum Page { MAIN, SETTINGS }
+
+var _title := true                   # the title menu (true) or the pause menu (false)
+var _open := false
+var _page := Page.MAIN
+var _confirm_new := false
+var _capturing := ""                 # action waiting for a key press in the settings window
+var _key_buttons := {}
+var _dim: ColorRect
+var _title_label: Label
+var _panel: PanelContainer
+var _box: VBoxContainer
+var _player: Player
+var _hud: Node
+
+
+func _ready() -> void:
+	# Only in the real game: test drivers add the scene by hand and expect to start playing.
+	if get_tree().current_scene != get_parent() and not SaveGame.menu_in_tests:
+		queue_free()
+		return
+	add_to_group("game_menu")
+	layer = 60
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	_build_root()
+	_hud = get_tree().get_first_node_in_group("hud")
+	_player = get_tree().get_first_node_in_group("player") as Player
+	await get_tree().process_frame
+	match SaveGame.start_action:
+		"continue":
+			SaveGame.start_action = ""
+			_continue_game()
+		"new":
+			SaveGame.start_action = ""
+			_new_game()
+		_:
+			_show_title()
+	var quests := Quests
+	quests.quest_done.connect(func(_id): autosave())
+	if _player:
+		_player.leveled_up.connect(func(_l): autosave())
+	var daynight := get_tree().get_first_node_in_group("daynight") as DayNight
+	if daynight:
+		daynight.dawn_started.connect(autosave)
+
+
+# ------------------------------------------------------------------- layout ----
+
+func _build_root() -> void:
+	_dim = ColorRect.new()
+	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dim.color = Color(0.02, 0.015, 0.01, 0.62)
+	_dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_dim.visible = false
+	add_child(_dim)
+	_title_label = UiKit.label(Strings.TITLE, 46, UiKit.GOLD_TEXT)
+	_title_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_title_label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_title_label.offset_top = 70.0
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title_label.add_theme_constant_override("outline_size", 10)
+	_dim.add_child(_title_label)
+	_panel = PanelContainer.new()
+	_panel.add_theme_stylebox_override("panel", UiKit.panel_style(0.94))
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_dim.add_child(_panel)
+	_box = VBoxContainer.new()
+	_box.add_theme_constant_override("separation", 10)
+	_panel.add_child(_box)
+
+
+func _clear() -> void:
+	for c in _box.get_children():
+		_box.remove_child(c)
+		c.queue_free()
+	_key_buttons.clear()
+
+
+func _menu_button(text: String, callback: Callable, disabled := false) -> Button:
+	var b := UiKit.button(text, callback, 340.0, 22)
+	b.custom_minimum_size.y = 46
+	b.disabled = disabled
+	_box.add_child(b)
+	return b
+
+
+func _heading(text: String) -> void:
+	var l := UiKit.label(text, 24, UiKit.GOLD_TEXT)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(l)
+
+
+# -------------------------------------------------------------------- pages ----
+
+func _show_title() -> void:
+	_title = true
+	_open_menu()
+	_show_page(Page.MAIN)
+
+
+func toggle_pause() -> void:
+	if _open:
+		if _page == Page.SETTINGS:
+			_show_page(Page.MAIN)
+		elif not _title:
+			_close_menu()
+		return
+	_title = false
+	_open_menu()
+	_show_page(Page.MAIN)
+
+
+func _open_menu() -> void:
+	_open = true
+	_dim.visible = true
+	_title_label.visible = _title
+	get_tree().paused = true
+	if _hud:
+		_hud.visible = not _title
+
+
+func _close_menu() -> void:
+	_open = false
+	_dim.visible = false
+	_capturing = ""
+	get_tree().paused = false
+	if _hud:
+		_hud.visible = true
+	Sfx.ui("window_close")
+
+
+func _show_page(page: Page) -> void:
+	_page = page
+	_confirm_new = false
+	_title_label.visible = _title and page == Page.MAIN
+	_clear()
+	if page == Page.SETTINGS:
+		_build_settings()
+	elif _title:
+		_build_title_page()
+	else:
+		_build_pause_page()
+
+
+func _build_title_page() -> void:
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.offset_top = 80.0
+	var has_save := SaveGame.exists() and not SaveGame.read().is_empty()
+	_menu_button(Strings.MENU_CONTINUE, _continue_game, not has_save)
+	if has_save:
+		var info := UiKit.label(SaveGame.summary(), 16, UiKit.MUTED)
+		info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_box.add_child(info)
+	if _confirm_new:
+		_box.add_child(UiKit.paragraph(Strings.MENU_NEW_SURE, 17, 340.0, UiKit.BAD))
+		_menu_button(Strings.MENU_YES, _new_game)
+		_menu_button(Strings.MENU_NO, func(): _show_page(Page.MAIN))
+	else:
+		_menu_button(Strings.MENU_NEW, func():
+			if has_save:
+				_confirm_new = true
+				_clear()
+				_build_title_page()
+			else:
+				_new_game())
+	_menu_button(Strings.MENU_SETTINGS, func(): _show_page(Page.SETTINGS))
+	_menu_button(Strings.MENU_QUIT, func(): get_tree().quit())
+
+
+func _build_pause_page() -> void:
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.offset_top = 0.0
+	_heading(Strings.MENU_PAUSED)
+	_menu_button(Strings.MENU_RESUME, _close_menu)
+	_menu_button(Strings.MENU_SAVE, func():
+		autosave(true)
+		_close_menu())
+	_menu_button(Strings.MENU_SETTINGS, func(): _show_page(Page.SETTINGS))
+	_menu_button(Strings.MENU_TITLE_SCREEN, _to_title)
+	_menu_button(Strings.MENU_QUIT, func():
+		autosave(true)
+		get_tree().quit())
+
+
+func _build_settings() -> void:
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.offset_top = 30.0 if _title else 0.0
+	_heading(Strings.MENU_SETTINGS)
+	_box.add_child(UiKit.label(Strings.SET_VOLUMES, 19, UiKit.GOLD_TEXT))
+	for entry in [["master", Strings.SET_MASTER], ["music", Strings.SET_MUSIC], ["sfx", Strings.SET_SFX], ["ambient", Strings.SET_AMBIENT]]:
+		_box.add_child(_volume_row(entry[0], entry[1]))
+	_box.add_child(UiKit.label(Strings.SET_DEVICE, 19, UiKit.GOLD_TEXT))
+	_box.add_child(_device_picker())
+	_box.add_child(UiKit.label(Strings.SET_KEYS, 19, UiKit.GOLD_TEXT))
+	_box.add_child(_key_list())
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(UiKit.button(Strings.SET_RESET_KEYS, func():
+		GameSettings.reset_keys()
+		_show_page(Page.SETTINGS), 220.0, 18))
+	row.add_child(UiKit.button(Strings.MENU_BACK, func(): _show_page(Page.MAIN), 160.0, 18))
+	_box.add_child(row)
+
+
+func _volume_row(id: String, text: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var name := UiKit.label(text, 18)
+	name.custom_minimum_size.x = 120
+	row.add_child(name)
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.05
+	slider.value = GameSettings.volumes[id]
+	slider.custom_minimum_size = Vector2(300, 24)
+	slider.focus_mode = Control.FOCUS_NONE
+	row.add_child(slider)
+	var value := UiKit.label("%d%%" % roundi(slider.value * 100.0), 18, UiKit.MUTED)
+	value.custom_minimum_size.x = 56
+	row.add_child(value)
+	slider.value_changed.connect(func(v: float):
+		GameSettings.set_volume(id, v)
+		value.text = "%d%%" % roundi(v * 100.0))
+	slider.drag_ended.connect(func(_changed: bool): Sfx.ui("ui_click"))
+	return row
+
+
+func _device_picker() -> Control:
+	var option := OptionButton.new()
+	option.focus_mode = Control.FOCUS_NONE
+	option.custom_minimum_size = Vector2(480, 34)
+	option.add_theme_font_size_override("font_size", 17)
+	option.add_theme_color_override("font_color", UiKit.CREAM)
+	for style in ["normal", "hover", "pressed"]:
+		option.add_theme_stylebox_override(style, UiKit._button_box(Color(0.30, 0.20, 0.09), UiKit.BORDER))
+	var devices := AudioServer.get_output_device_list()
+	for i in devices.size():
+		option.add_item(devices[i])
+		if devices[i] == AudioServer.output_device:
+			option.select(i)
+	option.item_selected.connect(func(i: int):
+		GameSettings.set_device(devices[i])
+		Sfx.ui("bell_toll", -6.0))
+	return option
+
+
+func _key_list() -> Control:
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(640, 210)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 6)
+	scroll.add_child(grid)
+	for entry in GameSettings.REBINDABLE:
+		var action: String = entry[0]
+		var label := UiKit.label(entry[1], 16)
+		label.custom_minimum_size.x = 150
+		grid.add_child(label)
+		var b := UiKit.button(GameSettings.key_name(action), func(): _start_capture(action), 100.0, 16)
+		grid.add_child(b)
+		_key_buttons[action] = b
+	return scroll
+
+
+func _start_capture(action: String) -> void:
+	_capturing = action
+	for a in _key_buttons:
+		(_key_buttons[a] as Button).text = Strings.SET_PRESS if a == action else GameSettings.key_name(a)
+
+
+# -------------------------------------------------------------------- input ----
+
+func _input(event: InputEvent) -> void:
+	if _capturing == "" or not (event is InputEventKey):
+		return
+	var key := event as InputEventKey
+	if not key.pressed or key.echo:
+		return
+	get_viewport().set_input_as_handled()
+	if key.physical_keycode == KEY_ESCAPE:
+		_capturing = ""
+	else:
+		GameSettings.rebind(_capturing, key)
+		_capturing = ""
+		Sfx.ui("ui_click")
+	for a in _key_buttons:
+		(_key_buttons[a] as Button).text = GameSettings.key_name(a)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("ui_cancel"):
+		return
+	if _open:
+		if _capturing == "":
+			toggle_pause()
+		get_viewport().set_input_as_handled()
+		return
+	# the game: Esc opens the pause menu unless a window is open (those close themselves first)
+	if _hud != null and (_hud.is_dialogue_open() or _hud.is_shop_open()):
+		return
+	if _player != null and _player.busy:
+		return
+	toggle_pause()
+	get_viewport().set_input_as_handled()
+
+
+# ------------------------------------------------------------------ actions ----
+
+func _continue_game() -> void:
+	var data := SaveGame.read()
+	if data.is_empty():
+		return
+	_title = false
+	_close_menu_silent()
+	SaveGame.apply(data)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if SaveGame.boss_defeated(String(e.get("kind_id"))) and not e.is_in_group("invaders"):
+			e.queue_free()                 # a boss killed in an earlier session
+	Sfx.ui("heal")
+
+
+func _new_game() -> void:
+	SaveGame.delete()
+	Quests.reset()
+	_title = false
+	_close_menu_silent()
+	if _hud:
+		_hud.start_prologue()
+
+
+func _to_title() -> void:
+	autosave(true)
+	SaveGame.reset_progress()               # the file holds the progress; the next scene starts clean
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+
+func _close_menu_silent() -> void:
+	_open = false
+	_dim.visible = false
+	get_tree().paused = false
+	if _hud:
+		_hud.visible = true
+
+
+## Saves now. Silent calls (autosave) only show a small message in the feed.
+func autosave(announce := false) -> void:
+	if _title or (_player != null and _player.is_dead):
+		return
+	var ok := SaveGame.save()
+	if _hud != null and (announce or ok):
+		_hud.show_message(Strings.SAVED if ok else Strings.SAVE_FAILED)

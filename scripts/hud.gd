@@ -79,7 +79,13 @@ func _ready() -> void:
 
 	if not Quests.intro_seen:
 		await get_tree().create_timer(1.0).timeout
-		show_dialogue(Strings.NARRATOR, QuestData.PROLOGUE, func(): Quests.intro_seen = true)
+		# with the title menu (game_menu.gd) the prologue starts from "New game" instead
+		if not Quests.intro_seen and get_tree().get_first_node_in_group("game_menu") == null:
+			start_prologue()
+
+
+func start_prologue() -> void:
+	show_dialogue(Strings.NARRATOR, QuestData.PROLOGUE, func(): Quests.intro_seen = true)
 
 
 func _connect_signals() -> void:
@@ -373,6 +379,11 @@ func _input(event: InputEvent) -> void:
 		Sfx.ui("window_open" if _big_map.visible else "window_close")
 		get_viewport().set_input_as_handled()
 		return
+	if _hero.visible and event.is_action_pressed("ui_cancel"):
+		_hero.visible = false
+		Sfx.ui("window_close")
+		get_viewport().set_input_as_handled()
+		return
 	if _big_map.visible and event.is_action_pressed("ui_cancel"):
 		_big_map.visible = false
 		Sfx.ui("window_close")
@@ -392,7 +403,7 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		click = mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
-	if click or event.is_action_pressed("interact"):
+	if click or event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 		_advance_dialogue()
 		get_viewport().set_input_as_handled()
 

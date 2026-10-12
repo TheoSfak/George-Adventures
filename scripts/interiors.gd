@@ -175,6 +175,7 @@ var _rooms := {}          # door id -> {"origin": Vector3, "size": Vector2}
 var _count := 0
 var _saved_env := {}
 var _inside := false
+var current_door := ""         # id of the door George went through, "" outside
 var current_kind := ""        # kind of the room George is in ("tavern", "church"...), "" outside
 var _saved_zoom := 7.0
 
@@ -185,6 +186,11 @@ func _ready() -> void:
 
 func is_inside() -> bool:
 	return _inside
+
+
+## Where the door of the current room leads outside (used by the save game).
+func exit_position() -> Vector3:
+	return _rooms[current_door]["outside_pos"] if _rooms.has(current_door) else Vector3(0, 0.05, 16)
 
 
 ## Called from a door outside. outside_pos / outside_heading is where George stands
@@ -206,6 +212,7 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	player.get_node("CameraRig/SpringArm3D").spring_length = 4.6   # rooms are small: zoom in
 	_inside = true
 	current_kind = kind
+	current_door = door_id
 	await hud.fade_in(0.3)
 	player.busy = false
 
@@ -223,6 +230,7 @@ func _exit_room(door_id: String, player: Player) -> void:
 	player.teleport(room["outside_pos"] + Vector3(0, 0.05, 0), room["outside_heading"])
 	_inside = false
 	current_kind = ""
+	current_door = ""
 	await hud.fade_in(0.3)
 	player.busy = false
 
