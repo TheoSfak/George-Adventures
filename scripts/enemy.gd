@@ -224,6 +224,7 @@ func _idle_state() -> State:
 func _patrol(delta: float) -> Vector3:
 	if _can_see_player():
 		_set_state(State.CHASE)
+		_aggro_sound()
 		return Vector3.ZERO
 	if _patrol_wait > 0.0:
 		_patrol_wait -= delta
@@ -246,6 +247,7 @@ func _patrol(delta: float) -> Vector3:
 func _march(delta: float) -> Vector3:
 	if _can_see_player():
 		_set_state(State.CHASE)
+		_aggro_sound()
 		return Vector3.ZERO
 	var to_target := _flat(march_target - global_position)
 	if to_target.length() < 6.0:
@@ -255,6 +257,19 @@ func _march(delta: float) -> Vector3:
 	_face(dir, delta)
 	_play("Running_A", 0.15)
 	return dir * chase_speed * 0.85
+
+
+## The cry when a skeleton first notices George.
+func _aggro_sound() -> void:
+	match kind_id:
+		"brute":
+			Sfx.play("brute_roar", global_position)
+		"captain", "king":
+			Sfx.play("boss_roar", global_position)
+		"warlord":
+			Sfx.play("warlord_roar", global_position)
+		_:
+			Sfx.play("skel_aggro", global_position, -4.0)
 
 
 func _chase() -> Vector3:
@@ -301,6 +316,8 @@ func _chase_ranged(to_player: Vector3, dist: float, _delta: float) -> Vector3:
 
 func _start_attack() -> void:
 	_set_state(State.ATTACK)
+	if not ranged:
+		Sfx.play("skel_attack", global_position)
 	_attack_timer = 0.0
 	_attack_landed = false
 	if ranged:
@@ -337,6 +354,7 @@ func _fire() -> void:
 	var aim := _player.global_position + Vector3.UP * 1.0 - muzzle
 	if projectile_kind == "arrow":
 		aim = aim.rotated(Vector3.UP, randf_range(-0.05, 0.05))   # archers are not perfect
+	Sfx.play("arrow_shoot" if projectile_kind == "arrow" else "orb_cast", global_position)
 	get_parent().add_child(Projectile.make(projectile_kind, muzzle, aim, projectile_speed, attack_damage))
 
 
@@ -353,6 +371,7 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 	if health <= 0.0:
 		_die(away)
 		return
+	Sfx.play("skel_hurt", global_position)
 	_set_state(State.HURT)
 	_hurt_timer = 0.45
 	_cooldown = maxf(_cooldown, 0.5)
@@ -378,6 +397,7 @@ func _die(_away: Vector3) -> void:
 	collision_mask = 0
 	velocity = Vector3.ZERO
 	_bar.visible = false
+	Sfx.play("skel_death", global_position)
 	_play("Death_B", 0.05, true)
 	died.emit(self)
 	var tween := create_tween()

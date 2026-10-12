@@ -42,7 +42,7 @@ const SKILL_UNLOCKED := "Νέα ικανότητα: %s"
 const SKILLBOOK := "Ικανότητες"
 const SKILLBOOK_ITEMS := "Αντικείμενα"
 const SKILLBOOK_HINT := "Σύρε μια ικανότητα ή ένα φίλτρο στη μπάρα κάτω.  Δεξί κλικ σε θέση: άδειασμα."
-const SKILLBOOK_KEY := "[P] Ικανότητες   [T] Ταλέντα   [I] Εξοπλισμός"
+const SKILLBOOK_KEY := "[P] Ικανότητες   [T] Ταλέντα   [I] Εξοπλισμός   [M] Χάρτης"
 const HINT_TALENT_POINTS := "   ★ Πόντοι ταλέντων: %d"
 const BUFF_POWER := "Δύναμη"
 const BUFF_SPEED := "Ταχύτητα"
@@ -131,3 +131,16 @@ const INVASION_WON := "Το χωριό σώθηκε!"
 const INVASION_LOST := "Το πηγάδι έπεσε! Οι νεκροί λεηλάτησαν το χωριό…"
 const INVASION_LOST_GOLD := "Έχασες %d χρυσά"
 const INVASION_DAWN := "Χάραξε… οι νεκροί γύρισαν στα χώματα."
+
+const MAP_TITLE := "Χάρτης του Αγίου Βλάση"
+const MAP_LEGEND := "!  νέα αποστολή     ?  παράδοση     ◆  στόχος     ●  εχθρός     [M] ή [Esc] κλείσιμο"
+const MAP_PLACES := {
+	"church": "Εκκλησία", "tavern": "Ταβέρνα", "market": "Παζάρι", "smith": "Σιδηρουργείο",
+	"mill": "Πριονιστήριο", "windmill": "Μύλος", "tower": "Πύργος Φρουράς", "well": "Πηγάδι",
+	"camp": "Δυτικό Στρατόπεδο", "quarry": "Λατομείο", "crypt": "Παλιά Κρύπτη",
+}
+
+const MUSIC_ON := "Μουσική: ενεργή  [F7]"
+const MUSIC_OFF := "Μουσική: σίγαση  [F7]"
+const SFX_ON := "Ήχοι: ενεργοί  [F8]"
+const SFX_OFF := "Ήχοι: σίγαση  [F8]"

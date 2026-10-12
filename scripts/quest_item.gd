@@ -19,6 +19,7 @@ var _time := 0.0
 
 
 func _ready() -> void:
+	add_to_group("quest_items")
 	var def: Dictionary = MODELS[item_id]
 	_visual = Node3D.new()
 	_visual.position.y = def["lift"]
@@ -71,5 +72,6 @@ func _physics_process(delta: float) -> void:
 		return
 	if global_position.distance_to(_player.global_position) < 2.6:
 		Quests.report_item(item_id)
+		Sfx.ui("quest_item")
 		_player.message.emit(QuestData.ITEMS[item_id])
 		queue_free()

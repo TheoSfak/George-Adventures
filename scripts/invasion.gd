@@ -54,6 +54,9 @@ func start(night_number: int) -> void:
 	_alive.clear()
 	_wave_size = 0
 	_say(Strings.INVASION_BANNER, 5.0)
+	Sfx.ui("invasion_horn")
+	for k in 3:
+		get_tree().create_timer(0.8 + k * 3.2).timeout.connect(func(): Sfx.ui("bell_toll", -3.0))
 	_emit()
 	_wave_pending = true
 	await get_tree().create_timer(FIRST_WAVE_DELAY).timeout
@@ -124,6 +127,8 @@ func _spawn_wave() -> void:
 		_alive.append(spawner.spawn_invader("warlord", gate * GATE_DISTANCE, WELL))
 		_wave_size += 1
 	_say(Strings.INVASION_WAVE_BANNER % wave, 3.0)
+	if wave > 1:
+		Sfx.ui("wave_horn")
 	_emit()
 
 
@@ -142,6 +147,7 @@ func _succeed() -> void:
 	_spawn_reward_chest()
 	Quests.report_defense()
 	_say(Strings.INVASION_WON, 5.0)
+	Sfx.ui("village_saved")
 	_emit()
 	finished.emit(true)
 
@@ -160,6 +166,7 @@ func _fail() -> void:
 		player.gold -= lost
 		player.inventory_changed.emit(player.gold, player.potions)
 	_say(Strings.INVASION_LOST, 6.0)
+	Sfx.ui("village_fell")
 	if lost > 0:
 		var hud := get_tree().get_first_node_in_group("hud")
 		if hud:

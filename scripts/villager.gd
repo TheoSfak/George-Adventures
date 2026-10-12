@@ -157,6 +157,7 @@ func set_sheltered(on: bool) -> void:
 
 ## Shows a speech bubble over their head for a while.
 func say(text: String, seconds: float = 3.5) -> void:
+	Sfx.play("voice_blip", global_position, -6.0)
 	_bubble.text = text
 	_bubble.visible = true
 	_bubble.modulate.a = 1.0

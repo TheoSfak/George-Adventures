@@ -67,6 +67,7 @@ func open(shop_id: String, player: Player) -> void:
 	_open_time = Time.get_ticks_msec() / 1000.0
 	player.busy = true
 	visible = true
+	Sfx.ui("window_open")
 	_refresh()
 
 
@@ -74,6 +75,7 @@ func close() -> void:
 	if not visible:
 		return
 	visible = false
+	Sfx.ui("window_close")
 	closed.emit()
 	# Keep George still for a moment so the same key press does not trigger something else.
 	await get_tree().create_timer(0.2).timeout
@@ -256,6 +258,7 @@ func _buy(entry: Dictionary) -> void:
 		if worn == "" or int(ShopData.GEAR[worn]["tier"]) < int(g["tier"]):
 			_player.equip(id)
 		_player.gear_changed.emit()
+	Sfx.ui("buy")
 	_refresh()
 
 
@@ -269,6 +272,7 @@ func _sell_junk(jid: String, amount: int) -> void:
 	_player.gold += total
 	_player.inventory_changed.emit(_player.gold, _player.potions)
 	_player.message.emit(Strings.SHOP_SOLD % [ShopData.JUNK[jid]["name"], total])
+	Sfx.ui("sell")
 	_refresh()
 
 
@@ -281,5 +285,6 @@ func _sell_gear(id: String) -> void:
 	_player.gold += total
 	_player.inventory_changed.emit(_player.gold, _player.potions)
 	_player.message.emit(Strings.SHOP_SOLD % [g["name"], total])
+	Sfx.ui("sell")
 	_player.gear_changed.emit()
 	_refresh()

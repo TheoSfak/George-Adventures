@@ -44,8 +44,11 @@ func is_open() -> bool:
 func toggle(tab: String) -> void:
 	if visible and _tab == tab:
 		visible = false
+		Sfx.ui("window_close")
 		return
 	_tab = tab
+	if not visible:
+		Sfx.ui("window_open")
 	visible = true
 	_refresh()
 

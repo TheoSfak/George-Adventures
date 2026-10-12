@@ -80,6 +80,7 @@ func finish_dialogue(plan: Dictionary) -> void:
 		"offer":
 			state[id] = S.ACTIVE
 			message.emit(Strings.QUEST_NEW % QuestData.QUESTS[id]["title"])
+			Sfx.ui("quest_new")
 			_check_ready(id)
 			changed.emit()
 		"complete":
@@ -150,12 +151,14 @@ func _check_ready(id: String) -> void:
 			return
 	state[id] = S.READY
 	message.emit(Strings.QUEST_READY % QuestData.QUESTS[id]["title"])
+	Sfx.ui("quest_ready")
 
 
 func _complete(id: String) -> void:
 	var q: Dictionary = QuestData.QUESTS[id]
 	state[id] = S.DONE
 	message.emit(Strings.QUEST_DONE % q["title"])
+	Sfx.ui("quest_done")
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
 		player.apply_reward(q["reward"])

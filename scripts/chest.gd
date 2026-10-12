@@ -46,10 +46,12 @@ func interact(_player: Player) -> void:
 	if opened:
 		return
 	opened = true
+	Sfx.play("chest_open", global_position)
 	if _lid:
 		# The lid hinges at the back of the chest: tilt it up and open.
 		create_tween().tween_property(_lid, "rotation:x", deg_to_rad(-115.0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	await get_tree().create_timer(0.35).timeout
+	Sfx.play("chest_coins", global_position)
 	var parent := get_parent()
 	var amount := randi_range(gold_min, gold_max)
 	var pieces := clampi(amount / 5 + 1, 1, 4)

@@ -142,6 +142,7 @@ var _last_prompt := ""
 var _stun := 0.0
 var _attack_serial := 0
 var _invulnerable := 0.0
+var _step_dist := 0.0
 
 
 func _ready() -> void:
@@ -251,6 +252,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= gravity * delta
 	elif Input.is_action_just_pressed("jump") and not _attacking and not is_dead and _stun <= 0.0:
 		velocity.y = jump_velocity
+		Sfx.play("jump", global_position, -4.0)
 		_landing = false
 		_play("Jump_Start", 0.05)
 
@@ -332,6 +334,7 @@ func _physics_process(delta: float) -> void:
 		velocity.x = _dash_dir.x * 9.0
 		velocity.z = _dash_dir.z * 9.0
 
+	var fall_speed := velocity.y
 	move_and_slide()
 
 	# --- Κεραυνός του Πολέμου: the slam happens when the leap lands
@@ -346,7 +349,10 @@ func _physics_process(delta: float) -> void:
 	if is_on_floor() and not _was_on_floor and not _attacking:
 		_landing = true
 		_play("Jump_Land", 0.05)
+		if fall_speed < -6.0:
+			Sfx.play("land", global_position, -2.0)
 	_was_on_floor = is_on_floor()
+	_footsteps()
 
 	# --- Turn the model toward its heading ---
 	_model_root.rotation.y = lerp_angle(_model_root.rotation.y, _heading, 1.0 - exp(-turn_speed * delta))
@@ -357,6 +363,24 @@ func _physics_process(delta: float) -> void:
 	if global_position.y < -30.0:
 		global_position = _spawn_point
 		velocity = Vector3.ZERO
+
+
+## A footstep every stride: cobbles in the square, wood indoors, grass elsewhere.
+func _footsteps() -> void:
+	var speed := Vector2(velocity.x, velocity.z).length()
+	if not is_on_floor() or is_dead or speed < 1.2:
+		return
+	_step_dist += speed * get_physics_process_delta_time()
+	if _step_dist < (2.4 if speed > 6.5 else 1.7):
+		return
+	_step_dist = 0.0
+	var interiors := get_tree().get_first_node_in_group("interiors")
+	var id := "footstep_grass"
+	if interiors != null and interiors.is_inside():
+		id = "footstep_wood"
+	elif Vector2(global_position.x, global_position.z).length() < 26.0:
+		id = "footstep_stone"
+	Sfx.play(id)
 
 
 func _update_camera(delta: float) -> void:
@@ -370,6 +394,7 @@ func _start_attack(skill: String = "") -> void:
 	_attacking = true
 	_assist_aim()
 	_combo_timer = 1.4
+	Sfx.play("sword_swing", global_position, -2.0)
 	if skill == "power_strike":
 		_play("1H_Melee_Attack_Chop", 0.05, true)
 		attacked.emit(2)
@@ -424,12 +449,14 @@ func _swing_hits(serial: int, damage: float, knock: float = 5.0) -> void:
 ## Every blow George lands goes through here: damage buffs, critical hits, lifesteal, stun.
 func _hit(enemy: Enemy, damage: float, knock: float, stun_time: float = 0.0) -> void:
 	var dealt := damage * _damage_mult()
-	if randf() < stats.total("crit"):
+	var crit := randf() < stats.total("crit")
+	if crit:
 		dealt *= 2.0
 		if _crit_notice <= 0.0:
 			message.emit(Strings.MSG_CRIT)
 			_crit_notice = 1.5
 	enemy.take_damage(dealt, global_position, knock)
+	Sfx.play("sword_crit" if crit else "sword_hit", enemy.global_position)
 	if stun_time > 0.0:
 		enemy.stun(stun_time)
 	var steal := stats.total("lifesteal") + (0.12 if _frenzy_time > 0.0 else 0.0)
@@ -472,6 +499,7 @@ func take_damage(amount: float, from: Vector3) -> void:
 		velocity.x = away.x * 2.5
 		velocity.z = away.z * 2.5
 		_play("Block_Hit", 0.05, true)
+		Sfx.play("block_hit", global_position)
 		_invulnerable = 0.3
 	else:
 		_attacking = false
@@ -482,6 +510,7 @@ func take_damage(amount: float, from: Vector3) -> void:
 		velocity.x = away.x * 6.0
 		velocity.z = away.z * 6.0
 		_play("Hit_A", 0.05, true)
+		Sfx.play("player_hurt", global_position)
 	health = maxf(health - amount, 0.0)
 	health_changed.emit(health, max_health)
 	if health <= 0.0:
@@ -491,6 +520,7 @@ func take_damage(amount: float, from: Vector3) -> void:
 			_invulnerable = 2.0
 			health_changed.emit(health, max_health)
 			message.emit(Strings.MSG_REBIRTH)
+			Sfx.ui("skill_resurrect")
 			_ring_effect(Color(1.0, 0.92, 0.45), 5.0, 1.0, 0.2)
 			return
 		_die()
@@ -516,6 +546,7 @@ func gain_xp(amount: int) -> void:
 		health = max_health
 		health_changed.emit(health, max_health)
 		leveled_up.emit(level)
+		Sfx.ui("level_up")
 		for id in SkillData.SKILLS:
 			if SkillData.SKILLS[id]["level"] == level and not SkillData.is_talent_skill(id):
 				message.emit(Strings.SKILL_UNLOCKED % SkillData.SKILLS[id]["name"])
@@ -528,6 +559,7 @@ func gain_xp(amount: int) -> void:
 
 ## Called by pickups and chests.
 func collect(kind: String, amount: int) -> void:
+	Sfx.ui("gold_pickup" if kind == "gold" else "item_pickup", -3.0)
 	match kind:
 		"gold":
 			gold += amount
@@ -580,6 +612,7 @@ func use_consumable(id: String) -> void:
 			message.emit(Strings.MSG_SPEED_ON)
 	consumables[id] -= 1
 	_potion_cooldown = 0.6
+	Sfx.ui("potion_drink" if id.begins_with("health") else "potion_buff")
 	inventory_changed.emit(gold, potions)
 
 
@@ -615,6 +648,7 @@ func _recalc() -> void:
 func spend_gold(amount: int) -> bool:
 	if gold < amount:
 		message.emit(Strings.MSG_NO_GOLD)
+		Sfx.ui("error")
 		return false
 	gold -= amount
 	inventory_changed.emit(gold, potions)
@@ -633,6 +667,7 @@ func equip(id: String) -> bool:
 	_recalc()
 	_update_equipment_visuals()
 	message.emit(Strings.MSG_EQUIPPED % g["name"])
+	Sfx.ui("equip")
 	gear_changed.emit()
 	return true
 
@@ -695,6 +730,7 @@ func learn_talent(id: String) -> bool:
 	if is_dead or TalentData.block_reason(talents, id, talent_points_free()) != "":
 		return false
 	talents[id] = int(talents.get(id, 0)) + 1
+	Sfx.ui("talent_learn")
 	var node: Dictionary = TalentData.NODES[id]
 	if node.has("skill"):
 		var skill: String = node["skill"]
@@ -862,6 +898,13 @@ func clear_slot(index: int) -> void:
 
 
 ## Uses a skill if it is unlocked and ready. Returns true if it fired.
+const SKILL_SOUNDS := {
+	"power_strike": "skill_heavy", "whirlwind": "skill_whirl", "guard": "skill_shield", "prayer": "skill_blessing",
+	"charge": "skill_dash", "taunt": "skill_shout", "wall": "skill_wall", "frenzy": "skill_frenzy",
+	"leap": "skill_dash", "flame": "skill_flame", "sanctuary": "skill_holy_circle",
+}
+
+
 func use_skill(id: String) -> bool:
 	if is_dead or busy or _stun > 0.0 or not SkillData.SKILLS.has(id):
 		return false
@@ -878,6 +921,7 @@ func use_skill(id: String) -> bool:
 	if melee and (_attacking or not is_on_floor() or _blocking):
 		return false
 	_cooldowns[id] = cooldown_total(id)
+	Sfx.play(SKILL_SOUNDS.get(id, "skill_heavy"), global_position)
 	match id:
 		"power_strike":
 			_start_attack("power_strike")
@@ -973,6 +1017,7 @@ func _leap_slam() -> void:
 	var serial := _attack_serial_next()
 	_attacking = true
 	_play("1H_Melee_Attack_Chop", 0.05, true)
+	Sfx.play("skill_lightning", global_position)
 	get_tree().create_timer(0.5).timeout.connect(_end_skill_attack.bind(serial))
 	_ring_effect(Color(1.0, 0.8, 0.3), 5.0, 0.4, 0.1)
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -1126,6 +1171,7 @@ func _die() -> void:
 	_attacking = false
 	_blocking = false
 	_play("Death_A", 0.05, true)
+	Sfx.play("player_death", global_position)
 	died.emit()
 	get_tree().create_timer(respawn_time).timeout.connect(_respawn)
 
@@ -1138,6 +1184,7 @@ func _respawn() -> void:
 	_stun = 0.0
 	_invulnerable = 2.0
 	_play("Idle", 0.2, true)
+	Sfx.ui("heal")
 	health_changed.emit(health, max_health)
 	respawned.emit()
 

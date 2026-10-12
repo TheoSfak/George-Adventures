@@ -49,6 +49,9 @@ var _def_box: Control
 var _def_label: Label
 var _def_fill: ColorRect
 var _banner_tween: Tween
+var _mini_frame: Control
+var _big_map: Control
+var _interiors: Interiors
 
 
 func _ready() -> void:
@@ -70,6 +73,7 @@ func _ready() -> void:
 	_build_prompt_and_dialogue()
 	_build_action_bar()
 	_build_clock()
+	_build_maps()
 	_connect_signals()
 	_refresh_tracker()
 
@@ -241,7 +245,7 @@ func _build_tracker() -> void:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	panel.offset_top = 28.0
+	panel.offset_top = 244.0          # below the minimap
 	panel.offset_right = -28.0
 	panel.name = "TrackerPanel"
 	add_child(panel)
@@ -333,7 +337,14 @@ func _show_line() -> void:
 	if _dlg_tween:
 		_dlg_tween.kill()
 	_dlg_tween = create_tween()
-	_dlg_tween.tween_property(_dlg_text, "visible_ratio", 1.0, maxf(0.4, _dlg_text.text.length() * 0.018))
+	var chars := _dlg_text.text.length()
+	var last_blip := [0]
+	_dlg_tween.tween_method(func(r: float):
+		_dlg_text.visible_ratio = r
+		var k := int(r * float(chars) / 3.0)
+		if k != last_blip[0]:
+			last_blip[0] = k
+			Sfx.ui("dialogue_blip"), 0.0, 1.0, maxf(0.4, chars * 0.018))
 
 
 func _advance_dialogue() -> void:
@@ -357,6 +368,16 @@ func _advance_dialogue() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("map") and not is_dialogue_open() and not _shop.is_open():
+		_big_map.visible = not _big_map.visible
+		Sfx.ui("window_open" if _big_map.visible else "window_close")
+		get_viewport().set_input_as_handled()
+		return
+	if _big_map.visible and event.is_action_pressed("ui_cancel"):
+		_big_map.visible = false
+		Sfx.ui("window_close")
+		get_viewport().set_input_as_handled()
+		return
 	if not is_dialogue_open() and not _shop.is_open():
 		for pair in [["skillbook", "skills"], ["talents", "talents"], ["equipment", "gear"]]:
 			if event.is_action_pressed(pair[0]):
@@ -424,6 +445,10 @@ func _build_action_bar() -> void:
 
 func _process(_delta: float) -> void:
 	_update_clock()
+	if _interiors == null:
+		_interiors = get_tree().get_first_node_in_group("interiors") as Interiors
+	elif _mini_frame != null:
+		_mini_frame.visible = not _interiors.is_inside()
 	if _player == null:
 		return
 	var names := {"power": Strings.BUFF_POWER, "speed": Strings.BUFF_SPEED, "guard": Strings.BUFF_GUARD,
@@ -514,6 +539,72 @@ func show_banner(text: String, seconds: float = 2.5) -> void:
 	_banner_tween = create_tween()
 	_banner_tween.tween_interval(seconds)
 	_banner_tween.tween_property(_banner, "modulate:a", 0.0, 0.8)
+
+
+func _build_maps() -> void:
+	# corner minimap
+	_mini_frame = Panel.new()
+	_mini_frame.anchor_left = 1.0
+	_mini_frame.anchor_right = 1.0
+	_mini_frame.offset_left = -228.0
+	_mini_frame.offset_right = -28.0
+	_mini_frame.offset_top = 28.0
+	_mini_frame.offset_bottom = 228.0
+	_mini_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mini_frame.add_theme_stylebox_override("panel", _map_frame_style())
+	add_child(_mini_frame)
+	var mini := Minimap.new()
+	mini.position = Vector2(4, 4)
+	mini.size = Vector2(192, 192)
+	_mini_frame.add_child(mini)
+
+	# full map (M)
+	_big_map = Control.new()
+	_big_map.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_big_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_big_map.visible = false
+	add_child(_big_map)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_big_map.add_child(dim)
+	var frame := Panel.new()
+	frame.anchor_left = 0.5
+	frame.anchor_right = 0.5
+	frame.anchor_top = 0.5
+	frame.anchor_bottom = 0.5
+	frame.offset_left = -292.0
+	frame.offset_right = 292.0
+	frame.offset_top = -330.0
+	frame.offset_bottom = 330.0
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override("panel", _map_frame_style())
+	_big_map.add_child(frame)
+	var title := _plain_label(Strings.MAP_TITLE, 24, GOLD_TEXT)
+	title.position = Vector2(0, 8)
+	title.size = Vector2(584, 32)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	frame.add_child(title)
+	var big := Minimap.new()
+	big.big = true
+	big.position = Vector2(12, 46)
+	big.size = Vector2(560, 560)
+	frame.add_child(big)
+	var legend := _plain_label(Strings.MAP_LEGEND, 13, Color(0.9, 0.88, 0.8))
+	legend.position = Vector2(0, 618)
+	legend.size = Vector2(584, 24)
+	legend.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	frame.add_child(legend)
+
+
+func _map_frame_style() -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.07, 0.05, 0.04, 0.92)
+	sb.border_color = Color(0.85, 0.65, 0.3)
+	sb.set_border_width_all(3)
+	sb.set_corner_radius_all(6)
+	return sb
 
 
 func _build_windows() -> void:

@@ -61,6 +61,7 @@ func _physics_process(delta: float) -> void:
 	# stop at walls, rocks and buildings
 	var query := PhysicsRayQueryParameters3D.create(from, to, 1)
 	if not get_world_3d().direct_space_state.intersect_ray(query).is_empty():
+		Sfx.play("arrow_hit" if kind == "arrow" else "orb_hit", global_position, -3.0)
 		queue_free()
 		return
 	global_position = to
@@ -69,4 +70,5 @@ func _physics_process(delta: float) -> void:
 		if to.distance_to(chest) < 0.95:
 			# `from` lies behind the shot so knockback and blocking use the flight direction
 			_player.take_damage(damage, _player.global_position - velocity.normalized() * 3.0)
+			Sfx.play("arrow_hit" if kind == "arrow" else "orb_hit", global_position)
 			queue_free()

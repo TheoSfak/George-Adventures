@@ -111,6 +111,7 @@ func _gui_input(event: InputEvent) -> void:
 	if not mb.pressed:
 		return
 	if mb.button_index == MOUSE_BUTTON_LEFT:
+		Sfx.ui("ui_click")
 		player.use_slot(slot_index)
 	elif mb.button_index == MOUSE_BUTTON_RIGHT:
 		player.clear_slot(slot_index)

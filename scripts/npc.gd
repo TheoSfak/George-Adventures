@@ -22,6 +22,7 @@ var _time := 0.0
 
 func _ready() -> void:
 	add_to_group("interactables")
+	add_to_group("npcs")
 	collision_layer = 16
 	collision_mask = 0
 	var data: Dictionary = QuestData.NPCS[npc_id]

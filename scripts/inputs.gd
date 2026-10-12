@@ -40,6 +40,7 @@ func _ready() -> void:
 	_key("skillbook", KEY_P)
 	_key("talents", KEY_T)
 	_key("equipment", KEY_I)
+	_key("map", KEY_M)
 	_key("interact", KEY_R)
 	_button("interact", JOY_BUTTON_B)
 	_key("block", KEY_K)
@@ -51,6 +52,15 @@ func _ready() -> void:
 	_axis("look_right", JOY_AXIS_RIGHT_X, 1.0)
 	_axis("look_up", JOY_AXIS_RIGHT_Y, -1.0)
 	_axis("look_down", JOY_AXIS_RIGHT_Y, 1.0)
+
+
+## F11 switches between the 1920x1080 window and borderless fullscreen.
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if key and key.pressed and not key.echo and key.physical_keycode == KEY_F11:
+		var fullscreen := DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if fullscreen else DisplayServer.WINDOW_MODE_FULLSCREEN)
+		get_viewport().set_input_as_handled()
 
 
 func _add(action: StringName, ev: InputEvent) -> void:

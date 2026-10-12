@@ -175,6 +175,7 @@ var _rooms := {}          # door id -> {"origin": Vector3, "size": Vector2}
 var _count := 0
 var _saved_env := {}
 var _inside := false
+var current_kind := ""        # kind of the room George is in ("tavern", "church"...), "" outside
 var _saved_zoom := 7.0
 
 
@@ -193,6 +194,7 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 		return
 	player.busy = true
 	var hud := get_tree().get_first_node_in_group("hud")
+	Sfx.ui("door_open")
 	await hud.fade_out(0.3)
 	if not _rooms.has(door_id):
 		_build_room(door_id, kind, outside_pos, outside_heading)
@@ -203,6 +205,7 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	_saved_zoom = player.get_node("CameraRig/SpringArm3D").spring_length
 	player.get_node("CameraRig/SpringArm3D").spring_length = 4.6   # rooms are small: zoom in
 	_inside = true
+	current_kind = kind
 	await hud.fade_in(0.3)
 	player.busy = false
 
@@ -212,12 +215,14 @@ func _exit_room(door_id: String, player: Player) -> void:
 		return
 	player.busy = true
 	var hud := get_tree().get_first_node_in_group("hud")
+	Sfx.ui("door_close")
 	await hud.fade_out(0.3)
 	var room: Dictionary = _rooms[door_id]
 	_set_indoor_light(false)
 	player.get_node("CameraRig/SpringArm3D").spring_length = _saved_zoom
 	player.teleport(room["outside_pos"] + Vector3(0, 0.05, 0), room["outside_heading"])
 	_inside = false
+	current_kind = ""
 	await hud.fade_in(0.3)
 	player.busy = false
 
