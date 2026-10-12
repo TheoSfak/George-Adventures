@@ -1,0 +1,62 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/village.gd" id="1_village"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="3_hud"]
+[ext_resource type="Script" path="res://scripts/enemies.gd" id="4_enemies"]
+[ext_resource type="Script" path="res://scripts/interiors.gd" id="5_interiors"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+sky_top_color = Color(0.22, 0.48, 0.86, 1)
+sky_horizon_color = Color(0.72, 0.84, 0.95, 1)
+ground_bottom_color = Color(0.3, 0.42, 0.3, 1)
+ground_horizon_color = Color(0.72, 0.84, 0.95, 1)
+sun_angle_max = 25.0
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+ambient_light_energy = 0.75
+tonemap_mode = 2
+ssao_enabled = true
+adjustment_enabled = true
+adjustment_contrast = 1.05
+adjustment_saturation = 1.06
+glow_enabled = true
+glow_intensity = 0.4
+fog_enabled = true
+fog_light_color = Color(0.78, 0.87, 0.96, 1)
+fog_density = 0.0006
+fog_sky_affect = 0.3
+
+[node name="Main" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8191521, -0.4090, 0.4045, 0, 0.70711, 0.70711, -0.5735764, -0.5792, 0.5728, 0, 20, 0)
+light_color = Color(1, 0.97, 0.92, 1)
+light_energy = 1.1
+shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 150.0
+
+[node name="Village" type="Node3D" parent="."]
+script = ExtResource("1_village")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 16)
+
+[node name="Interiors" type="Node3D" parent="."]
+script = ExtResource("5_interiors")
+
+[node name="Enemies" type="Node3D" parent="."]
+script = ExtResource("4_enemies")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("3_hud")

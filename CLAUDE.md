@@ -1,0 +1,57 @@
+# George Adventures at Agios Vlasis — project handoff
+
+This file is read automatically by Claude Code. It carries over the conversation from the Claude chat session where this project was started (2026-10-12) and records everything built since.
+
+## Who / what
+- Owner: Theodore (Greek/English, Windows 11). Prefers getting things DONE over step-by-step walkthroughs; wants precise, situation-specific answers. Often writes Greeklish.
+- Goal: a full 3D RPG named **"George Adventures at Agios Vlasis"** (in-game Greek title: *Οι Περιπέτειες του Γιώργου στον Άγιο Βλάση*), starting with ONE map. Built mainly by AI, so everything must be AI-editable (plain-text scenes/scripts).
+- Constraint: **only free tools**. Quality bar: must look good; stop and say so if it can't.
+- **ALL IN-GAME TEXT MUST BE GREEK** (UI, quests, lore, dialogue, item names, prompts). Code, comments and file names stay English. Strings live in `scripts/strings_el.gd`, `scripts/quest_data.gd`, `scripts/villager_data.gd`, `scripts/skill_data.gd`. When editing Greek files use the Write/Edit tools (UTF-8); a Python/bash heredoc can mangle text on Windows.
+
+## Decisions already made (and why)
+- **Engine: Godot 4.7 (free, MIT)** — NOT Unreal. Godot stores scenes/scripts as text, so AI can edit everything.
+- **Art: KayKit (CC0)**: Adventurers (Knight = George, NPCs), Skeletons (enemies), Medieval Hexagon (buildings, nature, props), Dungeon Remastered (chests, coins, potions, kegs, torches, banners), Furniture Bits (interiors), Halloween Bits (crypt/graveyard). Stylized look; realistic AAA is not possible with free assets + AI.
+- Other free tools planned: Blender, Poly Haven/ambientCG, Mixamo, freesound.org, Git/GitHub.
+- Godot is installed per-user at `%LOCALAPPDATA%\Programs\Godot\Godot.exe` (also on PATH as `godot` via winget). Desktop shortcut "George Adventures (Godot)" opens the project in the editor.
+
+## How to run / test
+- Play: open the project in Godot and press F5 (main scene `scenes/main.tscn`).
+- After adding a new `class_name` script or assets run `godot --headless --import` once (refreshes the class cache).
+- Test drivers in `tools/` use simulated input and take screenshots (windowed, GTX 1050 Ti ok): `godot --path . --resolution 1280x720 --script tools/<name>.gd -- <outdir>`. Always `await process_frame` first and set `root.get_node("/root/Quests").intro_seen = true` (autoloads are not available at compile time in `--script` mode, and the prologue dialogue would block input).
+  `controltest` (WoW controls), `playtest` (combat), `loottest` (XP/loot), `skilltest` (skills/bar/potions), `questtest` (whole story), `interiortest` (doors/rooms), `villagertest`, `mobtest` (new mobs), `shoptest` (shop window, equipment, stats), `talenttest` (talent tree + the 6 new skills), `keepertest` (shopkeepers, R flow, respec shrine), `maptest` (map screenshots), `perftest` (fps; 60 fps everywhere). Do not type-reference `Npc` in a test (its script mentions `Quests`): use `n.get("npc_id")`.
+
+## What exists (all tested)
+**Player** (`player.gd`): WoW-style controls — free cursor, hold RMB = look+steer (A/D strafe), hold LMB = orbit camera, both = run forward, W/S, A/D turn, Q/E strafe, wheel zoom, Shift run, Space jump, quick LMB click / F / J = 3-hit combo, K / Ctrl block, R interact, H health potion, 1-8 action bar, P skill book, T talent tree, I equipment, gamepad. Mouse look only starts from clicks that reach the game (not UI). Health, XP/levels (max 20, +10 hp +2 dmg per level), gold, consumables, death/respawn at the village start.
+
+**Skills & action bar** (`skill_data.gd`, `icons.gd`, `action_slot.gd`, HUD): 8-slot bar (keys 1-8, click, drag & drop, right-click clears), skill book (P). Skills unlock by level: Δυνατό Χτύπημα (1), Ασπίδα του Αγίου (2), Σίφουνας (3), Ευχή του Αγίου (4), Εφόρμηση (5), each with cooldown. Potions: Υγείας / Δύναμης / Ταχύτητας (buff timers shown). Icons are drawn in code.
+
+**World** (`village.gd`, `terrain.gd`, `shaders/*.gdshader`): ~17x bigger map (hex radius 12, ~200 m), buildings at 2.4x scale, procedural meadow ground shader (no hex tiles), cobbled spokes + dirt roads with soft edges, ~40k swaying grass tufts and flowers (MultiMesh chunks), vegetable gardens with fences and scarecrows beside the houses, flower bed around the well, a pond, story areas: west skeleton camp, SE quarry, north crypt/graveyard; mountains + forest ring as the edge; signposts; chests; quest items with golden light beams.
+
+**Shops & equipment** (`shop_data.gd`, `shop_window.gd`, `stats.gd`): **Κυρά-Ελένη** (market) and **Νικήτας** (blacksmith) stand inside their buildings (`"shopkeeper"` in `interiors.gd` DEFS, NPC data in `quest_data.gd` with a `"shop"` key). R opens the greeting, then the shop window (tabs Αγορά/Πώληση, Esc/R closes). Market: potions incl. the new Μεγάλο Φίλτρο Υγείας (level 8), buys skeleton junk (Κόκαλο/Σκουριασμένη Λεπίδα/Φυλαχτό, dropped by enemies). Blacksmith: weapon/armor/shield x 4 tiers (Σίδερο → Ατσάλι → Του Αγίου → Βασιλικό, levels 1/5/10/15), buys back gear at 40%. Equipment shows on the model (shield/sword swap, glow, armor tint). `Stats` aggregates modifiers (sources `equip`, `talents`); `Player._recalc()` turns them into `max_health`/`sword_damage` (base values are `base_max_health`/`base_damage`) and the rest (defense, crit, lifesteal, cooldown reduction, regen, heal multiplier...) is read where used. All combat hits go through `Player._hit()`.
+
+**Talent tree** (`talent_data.gd`, `hero_window.gd`, `talent_node.gd`): 3 branches (Φρουρός, Πολεμιστής, Άγιος) x 9 talents, 1 point per level from level 2 (19 at level 20), tiers open at 0/5/10 points in the branch. 6 new active skills come from the tree (Κραυγή Πρόκλησης, Τείχος, Αιματηρή Μανία, Κεραυνός του Πολέμου, Θεία Φλόγα, Ιερός Κύκλος) plus the passive Ανάσταση; talents also upgrade the old skills. The P/T/I window (`HeroWindow`, tabs Ικανότητες/Ταλέντα/Εξοπλισμός) replaces the old skill book. Respec: shrine in the church interior, 50 gold x level.
+
+**Interiors** (`interiors.gd`): church, tavern, blacksmith, market and houses are enterable (R at the door). Rooms are built on first use far outside the map; fade, indoor lighting, exit door; each has furniture and a chest. DEFS in that file edit the furniture.
+
+**Enemies** (`enemy.gd`, `enemies.gd`): skeleton warriors/minions (patrol, chase, attack, hurt, death), bosses *Λοχαγός των Νεκρών* and *Βασιλιάς των Οστών* (scaled, named, no respawn), 32 spawns, normal ones respawn after 45 s. Loot: gold, potions (rarer buff potions), XP.
+
+**Story & quests** (`quest_data.gd`, `quests.gd` autoload, `npc.gd`, `quest_item.gd`): prologue, 4 NPCs (Παπά-Σταύρος, Κυρά-Μαρία, Νικήτας ο Σιδεράς, Γέρο-Γιάννης), 5 quests (kill 4 skeletons → collect 4 wine kegs / find the key in the west camp / kill the captain → kill the Bone King), "!"/"?" markers, quest tracker, rewards (XP, gold, potions, +4 damage), ending "Συνεχίζεται…".
+
+**More mobs** (added last, see `HANDOVER.md`): skeleton archers (`rogue`), mages (`mage`) and brutes (`brute`) with ranged projectiles (`projectile.gd`), a night "invader" march state, anti-snag detours and colour tints. **`HANDOVER.md` lists what is still to build: day/night cycle, the night invasion event, more NPCs/quests, totems.**
+
+**Villagers** (`villager.gd`, `villager_data.gd`): 6 strollers + 5 chatting pairs in the square (speech bubbles), 8 regulars in the tavern with beer mugs (sitting, standing, toasting). R to hear gossip.
+
+**HUD** (`hud.gd`): everything Greek — bars, gold/potions, message feed, quest tracker, interact prompt, typewriter dialogue box, action bar, buffs, skill book, fades.
+
+## Technical notes
+- Collision layers: 1 world, 2 player (mask 1+16), 4 enemies (mask 1+2), 16 NPCs/villagers. Anything in group `interactables` implements `interact_prompt()`, `interact_range()`, `interact(player)`.
+- Imported glb animations don't loop automatically: scripts set loop mode by name.
+- KayKit characters face +Z; model yaw = atan2(x, z). Hex pack models are tiny at scale 1 (props use PS=7, buildings BS=12, trees TS=9.5).
+- A long skill animation (e.g. spin) must be ended by a timer, not by the animation (`_end_skill_attack`).
+- Known gaps / ideas: enemies have no pathfinding (can snag on buildings), camera can clip into an enemy behind George, no save/load, no minimap, no audio, Skeleton Rogue/Mage not used yet, `_to_delete/` still present (safe to delete).
+
+## Next steps (suggested)
+1. Theodore: play it (F5) and tell what to tune (damage, speeds, aggro range, density of grass).
+2. Save/load, main menu, settings; minimap or compass; audio (freesound.org CC0).
+3. More quests/areas, ranged enemies (Skeleton Rogue/Mage), shop (market vendor), equipment.
+4. Navigation (NavigationRegion3D) if skeletons snag on buildings.
