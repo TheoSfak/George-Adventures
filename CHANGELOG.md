@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9-beta (2026-10-12) — day, night and the invasion
+**New in this version**
+- **Day/night cycle:** 10-minute days, custom sky (sun, moon, stars), coloured sunsets and dawns, clock with sun/moon icon in the HUD.
+- **Night lighting:** door lights, lantern posts around the square, camp and crypt fires, a lantern on George, fireflies. Outdoor villagers go indoors at dusk and return at dawn.
+- **Night invasion:** every night the dead march on the village well in 3 waves from 4 gates. A "village safety" bar drains while they stand at the well. Win for XP, gold, potions and a golden chest; lose and George loses 15% of his gold. Leftovers crumble at dawn. Mini-boss (Οστέινος Πολέμαρχος) from night 3.
+- **New side quest:** "Η Νύχτα της Εισβολής" from Παπά-Σταύρος.
+- New test drivers: `daytest`, `eventtest`, `nightinterior`, `shelter`, `skytest`, `perftest -- night`.
+
+**Not done yet:** save/load, minimap, audio, more NPCs/quests, totems (see `HANDOVER.md`).
+
 ## 0.8-beta (2026-10-12) — first public snapshot
 Playable single-map RPG in Godot 4.7, all in-game text in Greek.
 
