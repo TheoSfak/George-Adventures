@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.10-beta (2026-10-12) — map, 1080p and sound
+**New in this version**
+- **Minimap and map (M):** corner minimap plus a full-screen map from a live top-down capture of the world. Quest markers: "!" new quest, "?" hand-in, gold diamonds for quest items and bosses; red dots for enemies; a pulsing ring at the well during an invasion; named places on the big map.
+- **1920x1080:** the window opens at 1080p with native 3D rendering (HUD scaled 1.5x). F11 toggles fullscreen.
+- **Music:** 9 looping tracks (day, night, wilderness, combat, boss, invasion, crypt, tavern, church) that follow what is happening and crossfade.
+- **Sound effects (about 70):** combat, footsteps by surface, all skills, UI, shops, quests, chests, doors, skeleton/archer/mage/brute/boss sounds, church bells, war horns, rooster, wolves and owls.
+- **Ambience:** birds by day, crickets at night, wind, tavern and church atmosphere, the camp fire, the pond.
+- F7 toggles music, F8 toggles sounds.
+- All audio is synthesized by `tools/gen_audio.py` (numpy only), so it is free and editable. It has only been checked numerically, not by ear: expect to tune levels.
+
+**Not done yet:** save/load, more NPCs/quests, totems (see `HANDOVER.md`).
+
 ## 0.9-beta (2026-10-12) — day, night and the invasion
 **New in this version**
 - **Day/night cycle:** 10-minute days, custom sky (sun, moon, stars), coloured sunsets and dawns, clock with sun/moon icon in the HUD.
