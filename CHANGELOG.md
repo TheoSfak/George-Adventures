@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11-beta (2026-10-12) — new quests, totems and guards
+**New in this version**
+- **Two new NPCs:** Βασίλης ο Λοχαγός (watchtower) and Στέλιος ο Μυλωνάς (windmill).
+- **Six new side quests:** "Τα Σακιά του Μυλωνά", "Ξύλα για τη Φωτιά", the chain "Οι Τοξότες" → "Οι Μάγοι" → "Οι Βάναυσοι" (reward +5 damage), and "Τα Οστέινα Τοτέμ". Quest rewards can now include power and speed potions.
+- **Bone totems:** appear while their quest is active at the camp, the quarry and the crypt gate; they have a health bar and break under George's sword.
+- **Village guards:** during a night invasion guards defend the well: 2, plus one for every finished quest of Βασίλης (up to 6).
+- New test drivers: `sidequesttest`, `guardtest`, `propshot`.
+
+**Not done yet:** more areas and story, a second dungeon, audio tuning by ear (see `HANDOVER.md`).
+
 ## 0.10.1-beta (2026-10-12) — saving, menus and remote-play fixes
 **New in this version**
 - **Save game:** plain-text JSON (`savegame.json`), autosave on quest completion, level up and at dawn, plus manual save. Saves level, gold, gear, talents, action bar, position, quests, time, defeated bosses, opened chests and collected quest items.
