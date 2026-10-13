@@ -283,7 +283,7 @@ func _aggro_sound() -> void:
 	match kind_id:
 		"brute":
 			Sfx.play("brute_roar", global_position)
-		"captain", "king", "giant_skeleton", "malakar":
+		"captain", "king", "giant_skeleton", "malakar", "night_lord":
 			Sfx.play("boss_roar", global_position)
 		"warlord":
 			Sfx.play("warlord_roar", global_position)
@@ -491,7 +491,7 @@ func _enrage() -> void:
 	Sfx.play("boss_roar", global_position)
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		player.message.emit(Strings.MALAKAR_ENRAGE)
+		player.message.emit(Strings.NIGHT_LORD_ENRAGE if kind_id == "night_lord" else Strings.MALAKAR_ENRAGE)
 
 
 ## Calls two helpers from the parent spawner (the necromancer's minions).
@@ -505,7 +505,7 @@ func _summon() -> void:
 		if _summons.size() >= summon_max:
 			return
 		var angle := randf() * TAU
-		var helper = spawner.spawn_summon(summon_kind, global_position + Vector3(cos(angle), 0.0, sin(angle)) * 3.0)
+		var helper = spawner.spawn_summon(summon_kind, global_position + Vector3(cos(angle), 0.0, sin(angle)) * 3.0, self)
 		if helper:
 			_summons.append(helper)
 

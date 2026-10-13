@@ -162,7 +162,7 @@ func _draw() -> void:
 func _draw_enemies() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		var kind: String = e.get("kind_id")
-		var boss := kind == "captain" or kind == "king" or kind == "warlord"
+		var boss := kind == "captain" or kind == "king" or kind == "warlord" or kind == "night_lord"
 		var invader: bool = e.is_in_group("invaders")
 		if big and not (boss or invader):
 			continue

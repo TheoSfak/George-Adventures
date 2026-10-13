@@ -65,6 +65,21 @@ const KINDS := {
 		"attack_hit_time": 0.6, "attack_cooldown": 1.8, "aggro_range": 22.0, "patrol_radius": 4.0,
 		"xp_reward": 160, "gold_min": 40, "gold_max": 70, "potion_chance": 1.0,
 	},
+	# Boss of every fifth night's invasion (invasion_boss.gd scales it by tier; it calls
+	# minions while fighting and enrages at half health, like Malakar)
+	"night_lord": {
+		"kind_id": "night_lord", "respawn": false, "tint_color": Color(0.25, 0.20, 0.65, 0.34),
+		"display_name": "Άρχοντας της Νύχτας", "model_scale": 2.4,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 900.0, "attack_damage": 28.0, "chase_speed": 4.0, "attack_range": 3.8,
+		"attack_hit_time": 0.65, "attack_cooldown": 1.9, "aggro_range": 26.0, "leash_range": 60.0,
+		"patrol_radius": 4.0,
+		"summon_kind": "minion", "summon_interval": 12.0, "summon_max": 4,
+		"enrage_below": 0.5, "enrage_summon": "warrior",
+		"xp_reward": 500, "gold_min": 120, "gold_max": 160, "potion_chance": 1.0,
+	},
 	# Quest bosses (they do not respawn)
 	"captain": {
 		"kind_id": "captain", "respawn": false,
@@ -196,7 +211,7 @@ const KINDS := {
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar"]
+const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -277,10 +292,14 @@ func spawn_extra(kind: String, pos: Vector3) -> Enemy:
 	return enemy
 
 
-## Helpers called by a boss (the necromancer's skeletons): they never come back.
-func spawn_summon(kind: String, pos: Vector3) -> Enemy:
+## Helpers called by a boss (the necromancer's skeletons): they never come back. The
+## helpers of a night invader march on the well too, so the invasion counts them.
+func spawn_summon(kind: String, pos: Vector3, summoner: Enemy = null) -> Enemy:
 	var enemy := _make(kind, pos)
 	enemy.aggro_range = 30.0
+	if summoner != null and summoner.invader:
+		enemy.invader = true
+		enemy.march_target = summoner.march_target
 	enemy.died.connect(_on_enemy_died.bind(-1))
 	add_child(enemy)
 	return enemy
@@ -302,8 +321,11 @@ func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
 
 
 ## A night invader: marches on the well, dies for good (index -1: no respawn).
-func spawn_invader(kind: String, pos: Vector3, target: Vector3 = Vector3.ZERO) -> Enemy:
+## `overrides` are stats set before the enemy enters the tree (the Night Lord's tier scaling).
+func spawn_invader(kind: String, pos: Vector3, target: Vector3 = Vector3.ZERO, overrides: Dictionary = {}) -> Enemy:
 	var enemy := _make(kind, pos)
+	for key in overrides:
+		enemy.set(key, overrides[key])
 	enemy.invader = true
 	enemy.march_target = target
 	enemy.aggro_range = maxf(enemy.aggro_range, 15.0)
