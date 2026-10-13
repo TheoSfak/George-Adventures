@@ -296,7 +296,7 @@ func _make_villager(pos: Vector3, mode: int, yaw: float, parent: Node) -> Villag
 	v.mode = mode
 	v.rest_yaw = yaw
 	v.model_path = VillagerData.MODELS[(_villager_count * 3 + 1) % VillagerData.MODELS.size()]
-	v.display_name = VillagerData.NAMES[(_villager_count * 7 + 2) % VillagerData.NAMES.size()]
+	v.display_name = VillagerData.name_for(v.model_path, _villager_count * 7 + 2)
 	for i in 3:
 		v.talk_lines.append(VillagerData.GOSSIP[(_villager_count * 5 + i * 4) % VillagerData.GOSSIP.size()])
 	_villager_count += 1

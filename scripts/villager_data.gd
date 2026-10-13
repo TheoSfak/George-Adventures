@@ -10,11 +10,33 @@ const MODELS: Array[String] = [
 	"res://assets/characters/Mage.glb",
 ]
 
-const NAMES: Array[String] = [
-	"Δημήτρης", "Ελένη", "Κώστας", "Αγγελική", "Βαγγέλης", "Σοφία", "Μανώλης", "Κατερίνα",
-	"Στέλιος", "Μαρίνα", "Αντώνης", "Δέσποινα", "Θανάσης", "Ζωή", "Σήφης", "Ειρήνη",
-	"Παναγιώτης", "Χρυσούλα", "Λευτέρης", "Νίκη",
+## Names of the ambient villagers by gender. Names of story NPCs and stall owners (Ελένη, Στέλιος,
+## Θανάσης, Σήφης...) are left out so nobody is a namesake of someone with a quest or a shop.
+const NAMES_MALE: Array[String] = [
+	"Δημήτρης", "Κώστας", "Βαγγέλης", "Μανώλης", "Αντώνης", "Παναγιώτης", "Λευτέρης", "Γρηγόρης",
 ]
+const NAMES_FEMALE: Array[String] = [
+	"Αγγελική", "Σοφία", "Κατερίνα", "Μαρίνα", "Δέσποινα", "Ζωή", "Ειρήνη", "Χρυσούλα", "Νίκη",
+]
+
+## How each model reads: the Barbarian (beard) and the Knight (helmet) are men, the braided Rogue is a
+## woman; the Mage and the hooded Rogue can be either (story NPCs of both genders use them).
+const MODEL_GENDER := {
+	"Barbarian": "m", "Knight": "m", "Rogue": "f", "Mage": "any", "Rogue_Hooded": "any",
+}
+
+
+## A villager name that fits the model's gender; `index` picks within the allowed names.
+static func name_for(model_path: String, index: int) -> String:
+	var gender: String = MODEL_GENDER.get(model_path.get_file().get_basename(), "any")
+	var pool: Array[String] = []
+	if gender == "m":
+		pool = NAMES_MALE
+	elif gender == "f":
+		pool = NAMES_FEMALE
+	else:
+		pool = NAMES_MALE + NAMES_FEMALE
+	return pool[index % pool.size()]
 
 ## What a villager answers when George talks to them (each picks a few).
 const GOSSIP: Array[String] = [

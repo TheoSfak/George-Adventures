@@ -24,6 +24,19 @@ var _cooldown := 0.0
 var _swing := -1.0                   # time since the swing started, -1 = not swinging
 var _leaving := false
 
+# anti-snag: a guard that pushes against a prop without getting anywhere sidesteps left or right
+# until it is free (no navigation mesh in the village, same idea as Enemy._check_blocked)
+var _blocked_time := 0.0             # trying to move but not getting anywhere
+var _detour_time := 0.0              # sidestepping around an obstacle
+var _detour_sign := 1.0              # +1 / -1 = which side
+var _detour_count := 0               # sidesteps in a row without getting free (each one lasts longer)
+var _free_time := 0.0                # moving freely
+var _since_detour := 99.0           # seconds since the last sidestep began
+var _wall_normal := Vector3.ZERO     # horizontal normal of the last obstacle that was hit
+var _goal_dir := Vector3.ZERO        # the direction the guard wants to go (before sidestepping)
+var _last_steer := Vector3.ZERO      # the direction of the current sidestep
+var _detour_extra := 0.0             # seconds the sidestep was prolonged because the way to the goal stayed blocked
+
 
 func _ready() -> void:
 	add_to_group("guards")
@@ -96,9 +109,9 @@ func _physics_process(delta: float) -> void:
 		var to := _target.global_position - global_position
 		to.y = 0.0
 		if to.length() > REACH:
-			wanted = to.normalized() * SPEED
+			wanted = _steer(to.normalized()) * SPEED
 			anim = "Running_A"
-			_face(to, delta)
+			_face(wanted if _detour_time > 0.0 else to, delta)
 		else:
 			_face(to, delta)
 			if _cooldown <= 0.0:
@@ -107,14 +120,94 @@ func _physics_process(delta: float) -> void:
 		var back := home - global_position
 		back.y = 0.0
 		if back.length() > 1.2:
-			wanted = back.normalized() * SPEED * 0.7
+			wanted = _steer(back.normalized()) * SPEED * 0.7
 			anim = "Running_A"
-			_face(back, delta)
+			_face(wanted if _detour_time > 0.0 else back, delta)
 	velocity.x = move_toward(velocity.x, wanted.x, 40.0 * delta)
 	velocity.z = move_toward(velocity.z, wanted.z, 40.0 * delta)
 	move_and_slide()
+	_check_blocked(wanted, delta)
 	if _swing < 0.0 and _anim != null and _anim.has_animation(anim) and _anim.current_animation != anim:
 		_anim.play(anim, 0.15)
+
+
+## While sidestepping the guard walks along the obstacle (the tangent of the wall it hit, to the left
+## or to the right) instead of at the goal; without a known wall it turns the goal direction 85 degrees.
+func _steer(dir: Vector3) -> Vector3:
+	_goal_dir = dir
+	if _detour_time <= 0.0:
+		return dir
+	if _wall_normal == Vector3.ZERO:
+		return dir.rotated(Vector3.UP, deg_to_rad(85.0) * _detour_sign)
+	var tangent := Vector3.UP.cross(_wall_normal) * _detour_sign
+	_last_steer = (tangent - _wall_normal * 0.2).normalized()
+	return _last_steer
+
+
+## Stuck = wants to go somewhere but makes less than a quarter of that speed toward it for 0.3 s
+## (sliding along a wall does not count as progress). Then the guard sidesteps along the obstacle,
+## longer each time it is still stuck afterwards and always to the same side (that side was free);
+## if the sidestep itself is blocked it tries the other side.
+func _check_blocked(wanted: Vector3, delta: float) -> void:
+	_since_detour += delta
+	if get_slide_collision_count() > 0:
+		var n := get_slide_collision(0).get_normal()
+		n.y = 0.0
+		if n.length() > 0.1:
+			n = n.normalized()
+			if _detour_time > 0.0 and n.dot(_last_steer) < -0.6:
+				# the sidestep ran head-on into another obstacle (a dead end): the other side, at once
+				_detour_sign = -_detour_sign
+				_detour_time = 1.5
+				_blocked_time = 0.0
+			else:
+				_wall_normal = n
+	var want := Vector2(wanted.x, wanted.z).length()
+	var progress := 0.0
+	if want > 0.01:
+		var real := get_real_velocity()
+		progress = (real.x * wanted.x + real.z * wanted.z) / want
+	var stuck := want > 0.5 and progress < want * 0.25
+	if _detour_time > 0.0:
+		_detour_time -= delta
+		if _detour_time <= 0.0 and _goal_dir != Vector3.ZERO and test_move(global_transform, _goal_dir * 0.9):
+			# still no way straight to the goal: keep sidestepping until the path is free
+			_detour_time = 0.25
+			_detour_extra += 0.25
+			if _detour_extra > 4.0:                  # a long way along this side: try the other one
+				_detour_sign = -_detour_sign
+				_detour_extra = 0.0
+		elif _detour_time <= 0.0:
+			_detour_extra = 0.0
+		if stuck:
+			_blocked_time += delta
+			if _blocked_time > 0.3:                  # the sidestep is blocked too: the other side
+				_detour_sign = -_detour_sign
+				_detour_time = 1.0
+				_blocked_time = 0.0
+		else:
+			_blocked_time = 0.0
+		return
+	if stuck:
+		_free_time = 0.0
+		_blocked_time += delta
+		if _blocked_time > 0.3:
+			if _detour_count == 0 and _since_detour > 3.0:
+				var along := _goal_dir.dot(Vector3.UP.cross(_wall_normal))
+				if absf(along) > 0.2:
+					_detour_sign = 1.0 if along > 0.0 else -1.0       # the side the goal is on
+				else:
+					_detour_sign = -1.0 if randf() < 0.5 else 1.0
+			_detour_time = minf(0.8 + 0.8 * float(_detour_count), 3.0)
+			_detour_count += 1
+			_since_detour = 0.0
+			_blocked_time = 0.0
+	else:
+		_blocked_time = 0.0
+		if want > 0.5 and progress > want * 0.6:
+			_free_time += delta
+			if _free_time > 0.6:
+				_detour_count = 0                    # free again: forget this obstacle
 
 
 func _find_target() -> Enemy:

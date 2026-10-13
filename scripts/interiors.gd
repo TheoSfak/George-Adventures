@@ -482,7 +482,7 @@ func _make_regular(parent: Node, origin: Vector3, model: String, x: float, z: fl
 	v.mode = mode
 	v.holds_mug = true
 	v.rest_yaw = deg_to_rad(yaw_deg)
-	v.display_name = VillagerData.NAMES[(_regulars * 5 + 3) % VillagerData.NAMES.size()]
+	v.display_name = VillagerData.name_for(model, _regulars * 5 + 3)
 	v.bubble_lines = VillagerData.DRINK_LINES
 	v.talk_lines = VillagerData.DRINK_LINES + [VillagerData.GOSSIP[(_regulars * 3) % VillagerData.GOSSIP.size()]]
 	_regulars += 1
