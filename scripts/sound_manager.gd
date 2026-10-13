@@ -52,6 +52,7 @@ var _player: Node3D
 var _daynight: DayNight
 var _invasion
 var _interiors
+var _weather
 var _critter_timer := 20.0
 
 
@@ -78,7 +79,7 @@ func _ready() -> void:
 		m.volume_db = -60.0
 		add_child(m)
 		_music.append(m)
-	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain"]:
+	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain", "amb_rain", "amb_rain_roof"]:
 		var a := AudioStreamPlayer.new()
 		a.bus = "Ambient"
 		a.stream = _loop_stream(SFX_DIR + id + ".wav")
@@ -280,11 +281,27 @@ func _update_ambience(delta: float) -> void:
 		"amb_church": -6.0 if inside and kind == "church" and sfx_on else -60.0,
 		"amb_crypt": -2.0 if (near_crypt or kind == "catacombs") and sfx_on else -60.0,
 		"amb_mountain": -3.0 if region and sfx_on else -60.0,
+		"amb_rain": -60.0,
+		"amb_rain_roof": -60.0,
 	}
 	# the day layer fades with the light, the night layer with the dark
 	if out > 0.0 and not near_crypt and not region:
 		target["amb_day"] = lerpf(-4.0, -45.0, clampf(dark * 1.4, 0.0, 1.0))
 		target["amb_night"] = lerpf(-45.0, -4.0, clampf(dark * 1.4 - 0.3, 0.0, 1.0))
+	# weather: the rain on the meadow outdoors, the rain on the roof inside buildings; birds and
+	# crickets are quieter in the rain and the wind rises in a storm
+	if _weather != null:
+		var rain_out: float = _weather.rain
+		var rain_all: float = _weather.rain_raw
+		if out > 0.0 and rain_out > 0.01:
+			target["amb_rain"] = lerpf(-45.0, -3.0, sqrt(rain_out))
+			for layer in ["amb_day", "amb_night"]:
+				if float(target[layer]) > -59.0:
+					target[layer] = float(target[layer]) - 18.0 * rain_out
+			if float(target["wind_loop"]) > -59.0:
+				target["wind_loop"] = float(target["wind_loop"]) + 4.0 * float(_weather.storm)
+		if inside and sfx_on and kind != "catacombs" and rain_all > 0.01:
+			target["amb_rain_roof"] = lerpf(-45.0, -9.0, sqrt(rain_all))
 	for id in _ambient:
 		var a: AudioStreamPlayer = _ambient[id]
 		a.volume_db = move_toward(a.volume_db, target[id], 30.0 * delta)
@@ -315,6 +332,7 @@ func _process(delta: float) -> void:
 		_daynight = get_tree().get_first_node_in_group("daynight") as DayNight
 		_invasion = get_tree().get_first_node_in_group("invasion")
 		_interiors = get_tree().get_first_node_in_group("interiors")
+		_weather = get_tree().get_first_node_in_group("weather")
 		if _daynight != null:
 			_daynight.dawn_started.connect(on_dawn)
 			_daynight.dusk_started.connect(func(): Sfx.play("bell_toll", Vector3.INF, -6.0, -1.0))
