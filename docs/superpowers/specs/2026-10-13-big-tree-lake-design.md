@@ -18,6 +18,8 @@ One memorable, beautiful place to walk through: a turquoise lake with a central 
 
 ## Layout (world metres, `C` = (172, -40), y up, 0 = ground)
 
+> The exact numbers were refined in the plan (`docs/superpowers/plans/2026-10-13-big-tree-lake.md`): islands spaced further apart so every bridge has a usable length, a lake of 36 x 30 m, the ramp built as a stone causeway around the central island, the moored balloon on the entry island. The plan's table is the one the code uses.
+
 | Piece | Where (from C) | Size / height |
 |---|---|---|
 | Lake | centre C | water disc radius 28 m (slightly oval), surface y 0.10 |
