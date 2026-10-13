@@ -235,6 +235,7 @@ func _build_gear() -> void:
 		if v != 0.0:
 			right.add_child(UiKit.label(Stats.line(key, v), 15, UiKit.GOOD))
 	right.add_child(UiKit.label("%s: %d" % [Strings.GOLD, player.gold], 18, UiKit.GOLD_TEXT))
+	right.add_child(UiKit.label(Strings.FISH_JOURNAL % [player.fish_seen.size(), ShopData.fish_ids().size()], 16, UiKit.MUTED))
 	cols.add_child(right)
 
 

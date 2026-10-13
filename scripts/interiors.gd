@@ -83,6 +83,8 @@ const DEFS := {
 			[I + "torch_mounted.gltf.glb", 10.6, -1.0, 270, 1.6, 2.6],
 		],
 		"chests": [[9.4, -6.6, 270, false, 10, 25, 1]],
+		# The cook behind the bar (the shopkeeper pattern of the market): [npc id, x, z, yaw in degrees]
+		"shopkeeper": ["thanasis", 0.4, -5.3, 0],
 		# Regulars: [model, x, z, yaw in degrees, "sit" | "stand"]. They drink beer and talk.
 		"npcs": [
 			[C + "Barbarian.glb", -6.5, -1.4, 0, "sit"],

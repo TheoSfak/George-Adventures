@@ -49,6 +49,27 @@ static func draw(ci: CanvasItem, rect: Rect2, icon: String, color: Color) -> voi
 			_sun(ci, c, s, color)
 		"moon":
 			_moon(ci, c, s, color)
+		"fish":
+			_fish(ci, c, s, color)
+		"food":
+			_food(ci, c, s, color)
+
+
+static func _fish(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_poly(ci, c, s, [Vector2(-0.52, 0.0), Vector2(-0.88, -0.34), Vector2(-0.88, 0.34)], color.darkened(0.2))                  # tail
+	_poly(ci, c, s, [Vector2(-0.58, 0.0), Vector2(-0.30, -0.36), Vector2(0.18, -0.42), Vector2(0.62, -0.08),
+			Vector2(0.62, 0.08), Vector2(0.18, 0.42), Vector2(-0.30, 0.36)], color)                                            # body
+	_poly(ci, c, s, [Vector2(-0.10, -0.38), Vector2(0.12, -0.62), Vector2(0.24, -0.38)], color.darkened(0.2))                 # fin
+	ci.draw_circle(c + Vector2(0.38, -0.06) * s, 0.09 * s, Color(1, 1, 1))
+	ci.draw_circle(c + Vector2(0.40, -0.06) * s, 0.04 * s, Color(0.08, 0.08, 0.1))
+
+
+static func _food(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_poly(ci, c, s, [Vector2(-0.62, 0.0), Vector2(0.62, 0.0), Vector2(0.48, 0.34), Vector2(0.20, 0.56),
+			Vector2(-0.20, 0.56), Vector2(-0.48, 0.34)], color)                                                                 # the bowl
+	_rect(ci, c, s, -0.66, -0.06, 1.32, 0.10, color.lightened(0.25))                                                          # its rim
+	for x in [-0.28, 0.0, 0.28]:                                                                                              # steam
+		ci.draw_line(c + Vector2(x, -0.12) * s, c + Vector2(x + 0.07, -0.55) * s, Color(1, 1, 1, 0.65), maxf(1.5, 0.06 * s))
 
 
 static func _poly(ci: CanvasItem, c: Vector2, s: float, pts: Array, color: Color) -> void:

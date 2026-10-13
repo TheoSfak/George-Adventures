@@ -632,7 +632,7 @@ func _build_action_bar() -> void:
 	_buff_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_buff_box.offset_bottom = -110.0
 	add_child(_buff_box)
-	for id in ["power", "speed", "guard", "frenzy", "shout", "wall"]:
+	for id in ["power", "speed", "guard", "frenzy", "shout", "wall", "food"]:
 		var l := _plain_label("", 17, Color(1.0, 0.88, 0.5))
 		l.add_theme_stylebox_override("normal", UiKit.pill_style(Color(1.0, 0.82, 0.38, 0.8), 0.85))
 		l.visible = false
@@ -651,13 +651,16 @@ func _process(_delta: float) -> void:
 	if _player == null:
 		return
 	var names := {"power": Strings.BUFF_POWER, "speed": Strings.BUFF_SPEED, "guard": Strings.BUFF_GUARD,
-		"frenzy": Strings.BUFF_FRENZY, "shout": Strings.BUFF_SHOUT, "wall": Strings.BUFF_WALL}
+		"frenzy": Strings.BUFF_FRENZY, "shout": Strings.BUFF_SHOUT, "wall": Strings.BUFF_WALL, "food": ""}
 	for id in _buff_labels:
 		var t := _player.buff_time(id)
 		var l: Label = _buff_labels[id]
 		l.visible = t > 0.0
 		if t > 0.0:
-			l.text = "%s %d δ" % [names[id], ceili(t)]
+			if id == "food":
+				l.text = "%s %d:%02d" % [_player.food_name(), floori(t / 60.0), int(t) % 60]
+			else:
+				l.text = "%s %d δ" % [names[id], ceili(t)]
 
 
 # ------------------------------------------------- clock and invasion panel ----

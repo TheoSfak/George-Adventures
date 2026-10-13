@@ -99,11 +99,14 @@ func _refresh() -> void:
 	_gold.text = "%s: %d" % [Strings.GOLD, _player.gold]
 	for c in _tabs.get_children():
 		c.queue_free()
-	_tabs.add_child(UiKit.tab_button(Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
-	_tabs.add_child(UiKit.tab_button(Strings.SHOP_SELL, _tab == "sell", _set_tab.bind("sell")))
+	var kitchen: bool = shop.get("kind", "") == "kitchen"
+	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
+	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab != "buy", _set_tab.bind("cook" if kitchen else "sell")))
 	for c in _list.get_children():
 		c.queue_free()
-	if _tab == "buy":
+	if kitchen:
+		_build_kitchen_rows()
+	elif _tab == "buy":
 		for entry in shop["stock"]:
 			_list.add_child(_buy_row(entry))
 	else:
@@ -232,6 +235,40 @@ func _build_sell_rows(shop: Dictionary) -> void:
 			count += 1
 	if count == 0:
 		_list.add_child(UiKit.paragraph(Strings.SHOP_NOTHING_TO_SELL, 18, 780.0))
+
+
+# ------------------------------------------------------------------- kitchen ----
+
+func _build_kitchen_rows() -> void:
+	for meal_id in ShopData.MEALS:
+		if ShopData.MEALS[meal_id]["tab"] == _tab:
+			_list.add_child(_meal_row(meal_id))
+
+
+func _meal_row(meal_id: String) -> Control:
+	var meal: Dictionary = ShopData.MEALS[meal_id]
+	var cost: Dictionary = meal["cost"]
+	var ok := ShopData.can_prepare(meal_id, _player.gold, _player.junk)
+	var b := UiKit.button(Strings.KITCHEN_EAT, _eat.bind(meal_id), 120)
+	b.disabled = not ok
+	var lines: Array[String] = [
+		"[color=#8cf27f]%s[/color]" % Stats.describe(meal["mods"]),
+		"[color=#c9b98a]%s[/color]" % (Strings.MEAL_DURATION % roundi(float(meal["duration"]) / 60.0)),
+	]
+	if cost.has("fish"):
+		var have_all := true
+		for rarity in cost["fish"]:
+			if ShopData.fish_have(_player.junk, rarity) < int(cost["fish"][rarity]):
+				have_all = false
+		lines.append("[color=%s]%s[/color]" % ["#c9b98a" if have_all else "#ff7366", Strings.KITCHEN_NEEDS % ShopData.fish_need_text(meal_id, _player.junk)])
+	var gold: int = cost["gold"]
+	return _row("food", Color(1.0, 0.78, 0.40), meal["name"], meal["desc"], "\n".join(lines),
+		Strings.SHOP_PRICE % gold, _player.gold >= gold, [b])
+
+
+func _eat(meal_id: String) -> void:
+	if _player.prepare_meal(meal_id):
+		_refresh()
 
 
 # ------------------------------------------------------------------- trading ----
