@@ -102,7 +102,7 @@ func _run() -> void:
 	for e in get_nodes_in_group("enemies"):
 		e.queue_free()
 	for id in QuestData.QUESTS:
-		if id in ["descent", "cguards", "pages", "wardens", "necro"]:
+		if id in ["descent", "cguards", "pages", "wardens", "necro"] or id.begins_with("f_"):
 			continue
 		q.state[id] = q.S.DONE
 	q._refresh_availability()
@@ -207,8 +207,8 @@ func _run() -> void:
 	var finished := [false]
 	q.game_finished.connect(func(): finished[0] = true)
 	await talk("stavros", "p2_06_stavros_end")
-	await create_timer(4.5).timeout
-	await shot("p2_07_the_end")
-	check("part 2 finished: " + states(), q.state["necro"] == q.S.DONE and finished[0])
+	await create_timer(2.0).timeout
+	await shot("p2_07_part3_offer")
+	check("part 2 finished and hands over to part 3 (no ending yet): " + states(), q.state["necro"] == q.S.DONE and not finished[0] and q.state["f_gate"] == q.S.AVAILABLE)
 	print("level ", p.level, " gold ", p.gold, " potions ", p.potions)
 	quit()

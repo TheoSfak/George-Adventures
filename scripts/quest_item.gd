@@ -10,6 +10,7 @@ const MODELS := {
 	"sack": {"path": "res://assets/world/decoration/props/sack.gltf", "scale": 12.0, "lift": 0.0},
 	"log": {"path": "res://assets/world/decoration/props/resource_lumber.gltf", "scale": 5.0, "lift": 0.3},
 	"page": {"path": "res://assets/furniture/book_single.gltf", "scale": 3.0, "lift": 0.9},
+	"symbol": {"path": "res://assets/graveyard/plaque_candles.gltf", "scale": 3.0, "lift": 0.9},
 }
 
 var item_id := "keg"

@@ -119,6 +119,7 @@ const BUILDING_NAMES := {
 	"market": "Παζάρι",
 	"home": "Σπίτι",
 	"catacombs": "Κατακόμβη",
+	"frontier": "Βουνίσιο Πέρασμα",
 }
 
 const CATACOMBS_SEALED := "Σφραγισμένη πύλη"
@@ -195,3 +196,15 @@ const TOTEM_NAME := "Οστέινο Τοτέμ"
 
 const GUARD_NAME := "Φρουρός"
 const GUARDS_ARRIVE := "Οι φρουροί του Βασίλη φτάνουν στο πηγάδι (%d)"
+
+# --- story part 3: the Frontier beyond the mountains
+const FRONTIER_SEALED := "Σφραγισμένη Πύλη του Περάσματος"
+const MSG_FRONTIER_SEALED := "Η Πύλη του Περάσματος είναι σφραγισμένη. Μίλησε πρώτα με τον Παπά-Σταύρο."
+const PROMPT_FRONTIER_BACK := "[R] Επιστροφή στον Άγιο Βλάση"
+const PROMPT_FORTRESS_GATE := "Η Πύλη του Φρουρίου"
+const MSG_FORTRESS_SEALED := "Η πύλη του Φρουρίου είναι σφραγισμένη. Βρες τα τρία Σύμβολα της Σκιάς."
+const MSG_FORTRESS_OPEN := "Τα Σύμβολα έσπασαν τη σφραγίδα. Η πύλη του Φρουρίου άνοιξε!"
+const INVASION_SKIPPED := "Ο Παπά-Σταύρος κράτησε το χωριό χωρίς εσένα."
+const MSG_SLOWED := "Η ψυχή σε βαραίνει!"
+const MALAKAR_ENRAGE := "Ο Μαλάκαρ καλεί τη Σκιά!"
+const MSG_NO_MAP := "Ο χάρτης του χωριού δεν δείχνει αυτά τα βουνά."
