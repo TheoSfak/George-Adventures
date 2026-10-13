@@ -1,15 +1,17 @@
 # Changelog
 
-## 0.16-beta (unreleased) — the Great Tree and its lake
+## 0.16-beta (2026-10-13) — the Great Tree and its lake, and the weather
 **New in this version**
+- **This release also carries the weather system** (the 0.15-beta entry below was never released on its own): fog, rain and thunderstorms, F6 to change them.
 - **A new place in the east of the map** (`scripts/great_tree.gd`, `scripts/tree_meshes.gd`, `scripts/balloon.gd`, about 170 m east of the well; inspired by a picture Theodore showed): a turquoise lake with a central rock island that carries a **giant tree** and two houses, four smaller islands with umbrella trees, flowers and a golden chest, **rope bridges** with rails, a **stone causeway** that winds around the central island on pillars and lands on the plateau, lanterns, and **hot-air balloons** drifting overhead (one is moored on the entry island). Follow the new signpost "Το Μεγάλο Δέντρο →" east of the market; the place is named "Η Λίμνη του Αιωνόβιου" on the big map.
 - Everything is built in code in the game's low-poly style (flat shading, vertex colours) and everything is walkable (trimesh colliders, bridge rails, slopes under 15 degrees); the lake is shallow wading water. No gameplay change; only three real lights at night (the lantern heads glow through an emissive material).
 - The quest barrel moved to (124, -26) and its two skeletons to (112, -22) and (110, -38) to make room.
+- Guards no longer wedge on the corner of a wall while walking around it (`Guard._steer` leans slightly away from the wall).
 - New test drivers: `tree_meshes_test`, `great_tree_walk_test` (a capsule like George walks three routes, rails and cliffs), `great_tree_props_test`, `balloon_test`, `great_tree_integration_test` (headless), `greattreeshot` (screenshots + fps; run its `day` and `night` parts one after the other on a GPU shared with other programs).
 
 **Not done yet:** a rideable balloon, NPCs or quests in this place, swimming, fish in this lake.
 
-## 0.15-beta (unreleased) — weather
+## 0.15-beta (2026-10-13, shipped inside 0.16-beta) — weather
 **New in this version**
 - **Weather in the village** (`scripts/weather.gd`, node `Weather`): clear, fog, rain and thunderstorm, picked at random every 2 to 5 minutes (a storm only after rain) and blended smoothly over about 25 s. Atmosphere only: nothing changes in combat, quests or the invasion.
 - **Look:** a grey sky without sun, moon or stars, thick fog, a dimmer sun, dark clouds, a darker wet ground that dries slowly after the rain (global shader uniform `wetness`), rain streaks that follow George (`GPUParticles3D`, fainter at night), lightning flashes in a storm. `DayNight` stays the only writer of the Environment and reads the weather numbers.
