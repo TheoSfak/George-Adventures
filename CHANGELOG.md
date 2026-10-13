@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.0 (unreleased) — updates, credits and the first full release
+**New in this version**
+- **Update with one click.** When the title menu opens the game asks GitHub whether a newer release exists (only the latest published release, never a pre-release). If there is one, a card at the top right shows the version and what is new with an "Ενημέρωση" button: the game downloads the zip, checks its SHA-256, replaces its own exe (the old one is kept as `.old` until the next start) and restarts, keeping the graphics mode in use. An option in the settings turns the check off. Saves and settings are untouched. (`scripts/update_logic.gd`, `update_installer.gd`, `updater.gd`.)
+- The title menu shows the version (bottom right), the creators line "Δημιουργοί: Theodore Sfakianakis & George Sfakianakis" (bottom left) and has a new "Συντελεστές" page. The title menu buttons now hang from just below the title.
+- `Play-Mobile-Renderer.bat` and `Play-Compatibility-Renderer.bat` come with the download for computers where the normal graphics mode looks broken (black surfaces on weaker or older graphics cards).
+- `tools/release.py` builds the Windows zip, the checksum and the GitHub release in one command; `export_presets.cfg` is now part of the repository.
+- New tests: `update_logic_test`, `update_installer_test`, `settings_update_test`, `updater_flow_test` (a real `Updater` against a local HTTP server) and the windowed `updatemenutest`; `updater_live_test` reads the real GitHub API.
+
+**Notes**
+- Everything from 0.16-beta (the Great Tree and its lake, the weather) is included. 0.16-beta has no updater, so it must be replaced by hand once with this version; after that updates come with one click.
+- The exe is not code-signed (Windows SmartScreen may warn on the first manual start), and the checksum protects against a damaged download, not against a hijacked GitHub account.
+
 ## 0.16-beta (2026-10-13) — the Great Tree and its lake, and the weather
 **New in this version**
 - **This release also carries the weather system** (the 0.15-beta entry below was never released on its own): fog, rain and thunderstorms, F6 to change them.
