@@ -23,6 +23,31 @@ const WALL_THICK := 3.0
 # Where the three Symbols of Shadow (quest "Τα Σύμβολα της Σκιάς") lie
 const SYMBOLS := [Vector2(-48.0, 96.0), Vector2(52.0, 58.0), Vector2(-40.0, 24.0)]
 
+# [x, z, rotation in degrees, golden, gold_min, gold_max, potions]
+const CHESTS := [
+	[14.0, 9.0, 270, false, 40, 90, 1],         # the camp
+	[-22.0, 66.0, 90, false, 40, 90, 1],        # the pass
+	[24.0, -70.0, 270, true, 90, 160, 2],       # the road to the fortress
+	[-36.0, -140.0, 90, true, 120, 200, 3],     # the courtyard
+	[34.0, -176.0, 270, true, 180, 260, 3],     # behind the keep
+]
+
+# [kind, x, z]  (enemies.gd KINDS). Nothing stands inside the camp (CAMP_RADIUS).
+const SPAWNS := [
+	# the pass
+	["shadow_knight", -14.0, 104.0], ["shadow_knight", 16.0, 94.0], ["soul_collector", -24.0, 88.0],
+	["shadow_knight", 20.0, 74.0], ["soul_collector", 26.0, 66.0], ["shadow_knight", -22.0, 62.0],
+	["shadow_knight", 12.0, 50.0], ["soul_collector", -16.0, 46.0],
+	# the road between the camp and the fortress
+	["shadow_knight", -18.0, -44.0], ["shadow_knight", 18.0, -58.0], ["soul_collector", -26.0, -72.0],
+	["soul_collector", 24.0, -86.0], ["shadow_knight", 0.0, -100.0],
+	# the courtyard
+	["shadow_knight", -22.0, -126.0], ["shadow_knight", 22.0, -126.0], ["soul_collector", -28.0, -140.0],
+	["soul_collector", 28.0, -140.0], ["shadow_knight", -20.0, -158.0], ["shadow_knight", 20.0, -158.0],
+	["giant_skeleton", 0.0, -128.0],
+	["malakar", 0.0, -156.0],
+]
+
 const G := "res://assets/graveyard/"
 const I := "res://assets/items/"
 const W := "res://assets/world/"
@@ -35,6 +60,7 @@ var _rng := RandomNumberGenerator.new()
 var _stone: StandardMaterial3D
 var _gate: Node3D
 var _gate_open := false
+var _bosses := {}                           # boss kind -> Enemy
 
 
 func _ready() -> void:
@@ -66,8 +92,10 @@ func build() -> void:
 	_build_camp()
 	_build_fortress()
 	_build_gate()
+	_build_pickups()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
+	_spawn_creatures()
 	Quests.changed.connect(_on_quests_changed)
 	_on_quests_changed()
 
@@ -473,6 +501,7 @@ func _build_gate() -> void:
 func _on_quests_changed() -> void:
 	if not _gate_open and Quests.state["f_symbols"] >= Quests.S.READY:
 		_open_gate()
+	_check_bosses()
 
 
 func _open_gate() -> void:
@@ -492,3 +521,77 @@ func _open_gate() -> void:
 		var tween := create_tween()
 		tween.tween_interval(0.6)
 		tween.tween_callback(g.queue_free)
+
+
+# ------------------------------------------------------- pickups, people, enemies ----
+
+func _build_pickups() -> void:
+	for c in CHESTS:
+		var chest := Chest.new()
+		chest.golden = c[3]
+		chest.gold_min = c[4]
+		chest.gold_max = c[5]
+		chest.potions = c[6]
+		chest.position = wp(c[0], c[1])
+		chest.rotation_degrees.y = c[2]
+		_root.add_child(chest)
+		if SaveGame.opened_chests.has(SaveGame.key_for(chest.position)):
+			chest.mark_opened()
+	for s in SYMBOLS:
+		var pos := wp(s.x, s.y)
+		if SaveGame.collected_items.has("symbol@" + SaveGame.key_for(pos)):
+			continue
+		var item := QuestItem.new()
+		item.item_id = "symbol"
+		item.position = pos
+		_root.add_child(item)
+	# the two people of the refugee camp
+	var ilarion := Npc.new()
+	ilarion.npc_id = "ilarion"
+	ilarion.rest_yaw = 0.8
+	ilarion.position = wp(-5.0, 3.0, 0.05)
+	_root.add_child(ilarion)
+	var elpida := Npc.new()
+	elpida.npc_id = "elpida"
+	elpida.rest_yaw = -0.8
+	elpida.position = wp(6.0, 3.0, 0.05)
+	_root.add_child(elpida)
+
+
+func _spawn_creatures() -> void:
+	var spawner := get_tree().get_first_node_in_group("enemy_spawner")
+	if spawner == null:
+		push_warning("frontier.gd: no enemy spawner")
+		return
+	for s in SPAWNS:
+		var enemy: Enemy = spawner.spawn_extra(s[0], wp(s[1], s[2], 0.05))
+		if enemy and s[0] in _boss_kinds():
+			_bosses[s[0]] = enemy
+
+
+func _boss_kinds() -> Array:
+	return ["giant_skeleton", "malakar"]
+
+
+## A boss that was killed before his quest began comes back when the quest is taken.
+func _check_bosses() -> void:
+	var spawner := get_tree().get_first_node_in_group("enemy_spawner")
+	if spawner == null:
+		return
+	for s in SPAWNS:
+		var kind: String = s[0]
+		if not kind in _boss_kinds():
+			continue
+		var quest: String = spawner.KINDS[kind]["quest"]
+		if Quests.state[quest] != Quests.S.ACTIVE:
+			continue
+		var alive: bool = _bosses.has(kind) and is_instance_valid(_bosses[kind]) and not _bosses[kind].is_dead()
+		var wanted := false
+		for i in QuestData.QUESTS[quest]["objectives"].size():
+			var o: Dictionary = QuestData.QUESTS[quest]["objectives"][i]
+			if o["type"] == "kill" and o["target"] == kind and Quests.progress[quest][i] < o["count"]:
+				wanted = true
+		if wanted and not alive:
+			var enemy: Enemy = spawner.spawn_extra(kind, wp(s[1], s[2], 0.05))
+			if enemy:
+				_bosses[kind] = enemy
