@@ -8,6 +8,7 @@ const ARROW := "res://assets/characters/skeleton_weapons/Skeleton_Arrow.gltf"
 var kind := "arrow"
 var velocity := Vector3.ZERO
 var damage := 10.0
+var slows := false              # a hit also slows George down (soul collectors)
 
 var _life := 4.0
 var _player: Player
@@ -36,12 +37,12 @@ func _ready() -> void:
 		orb.mesh = sphere
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(0.65, 1.0, 0.45)
+		mat.albedo_color = Color(0.45, 0.72, 1.0) if kind == "soul" else Color(0.65, 1.0, 0.45)
 		orb.material_override = mat
 		orb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(orb)
 		var glow := OmniLight3D.new()
-		glow.light_color = Color(0.55, 1.0, 0.4)
+		glow.light_color = Color(0.40, 0.65, 1.0) if kind == "soul" else Color(0.55, 1.0, 0.4)
 		glow.light_energy = 1.8
 		glow.omni_range = 6.0
 		add_child(glow)
@@ -70,5 +71,7 @@ func _physics_process(delta: float) -> void:
 		if to.distance_to(chest) < 0.95:
 			# `from` lies behind the shot so knockback and blocking use the flight direction
 			_player.take_damage(damage, _player.global_position - velocity.normalized() * 3.0)
+			if slows:
+				_player.slow(2.5)
 			Sfx.play("arrow_hit" if kind == "arrow" else "orb_hit", global_position)
 			queue_free()

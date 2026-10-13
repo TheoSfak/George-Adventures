@@ -140,6 +140,7 @@ var busy := false              # in a dialogue or a door transition: George stan
 var _interactable: Node
 var _last_prompt := ""
 var _stun := 0.0
+var _slow_time := 0.0           # a soul collector's shot: George moves slower for a while
 var _attack_serial := 0
 var _invulnerable := 0.0
 var _step_dist := 0.0
@@ -258,6 +259,7 @@ func _physics_process(delta: float) -> void:
 
 	# --- Combat state ---
 	_stun = maxf(_stun - delta, 0.0)
+	_slow_time = maxf(_slow_time - delta, 0.0)
 	_invulnerable = maxf(_invulnerable - delta, 0.0)
 	var can_act := not is_dead and _stun <= 0.0 and not busy
 	_blocking = can_act and on_floor and not _attacking and Input.is_action_pressed("block")
@@ -314,6 +316,8 @@ func _physics_process(delta: float) -> void:
 	var speed := run_speed if Input.is_action_pressed("run") else walk_speed
 	if _speed_time > 0.0:
 		speed *= 1.4
+	if _slow_time > 0.0:
+		speed *= 0.6
 	speed *= 1.0 + stats.total("speed_mult") + (0.15 if _frenzy_time > 0.0 else 0.0)
 	if forward_axis < 0.0 and strafe_axis == 0.0:
 		speed *= 0.6  # backing up is slower
@@ -632,6 +636,16 @@ func use_consumable(id: String) -> void:
 	_potion_cooldown = 0.6
 	Sfx.ui("potion_drink" if id.begins_with("health") else "potion_buff")
 	inventory_changed.emit(gold, potions)
+
+
+## Slows George for `seconds` (-40% speed).
+func slow(seconds: float) -> void:
+	_slow_time = maxf(_slow_time, seconds)
+	message.emit(Strings.MSG_SLOWED)
+
+
+func is_slowed() -> bool:
+	return _slow_time > 0.0
 
 
 ## Quest rewards: {"xp": N, "gold": N, "potions": N, "damage": N}

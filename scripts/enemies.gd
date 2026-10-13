@@ -149,10 +149,54 @@ const KINDS := {
 		"summon_kind": "minion", "summon_interval": 13.0, "summon_max": 4,
 		"xp_reward": 900, "gold_min": 200, "gold_max": 260, "potion_chance": 1.0,
 	},
+	# --- the Frontier beyond the mountains (placed by frontier.gd)
+	"shadow_knight": {
+		"kind_id": "shadow_knight", "tint_color": Color(0.30, 0.20, 0.55, 0.34), "model_scale": 1.3,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 190.0, "attack_damage": 24.0, "chase_speed": 3.4, "attack_range": 2.6,
+		"attack_hit_time": 0.65, "attack_cooldown": 2.0, "aggro_range": 15.0, "leash_range": 32.0,
+		"xp_reward": 110, "gold_min": 12, "gold_max": 26, "potion_chance": 0.5,
+	},
+	# Soul collector: a caster whose blue souls slow George down
+	"soul_collector": {
+		"kind_id": "soul_collector", "tint_color": Color(0.25, 0.55, 0.95, 0.32),
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "soul", "projectile_slows": true, "shoot_anim": "Spellcast_Shoot", "projectile_speed": 11.0,
+		"ranged_min": 8.0, "ranged_max": 16.0, "aggro_range": 20.0, "leash_range": 34.0,
+		"max_health": 85.0, "attack_damage": 16.0, "chase_speed": 3.9, "attack_cooldown": 2.5,
+		"xp_reward": 100, "gold_min": 12, "gold_max": 26, "potion_chance": 0.45,
+	},
+	# Mini-boss of the fortress courtyard
+	"giant_skeleton": {
+		"kind_id": "giant_skeleton", "respawn": false, "quest": "f_wall", "tint_color": Color(0.55, 0.50, 0.65, 0.28),
+		"display_name": "Γιγάντιος Σκελετός", "model_scale": 2.6,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 1600.0, "attack_damage": 34.0, "chase_speed": 3.6, "attack_range": 4.4,
+		"attack_hit_time": 0.8, "attack_cooldown": 2.4, "attack_anim": "1H_Melee_Attack_Chop",
+		"aggro_range": 24.0, "leash_range": 44.0, "patrol_radius": 3.0, "need_los": true,
+		"xp_reward": 700, "gold_min": 120, "gold_max": 170, "potion_chance": 1.0,
+	},
+	# The last boss: orbs from afar, and when he is hurt badly he calls shadow knights and speeds up
+	"malakar": {
+		"kind_id": "malakar", "respawn": false, "quest": "f_malakar", "tint_color": Color(0.45, 0.10, 0.70, 0.36),
+		"display_name": "Μαλάκαρ ο Σκοτεινός Άρχοντας", "model_scale": 2.5,
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 13.0,
+		"ranged_min": 7.0, "ranged_max": 16.0, "aggro_range": 28.0, "leash_range": 50.0, "patrol_radius": 2.0, "need_los": true,
+		"max_health": 3200.0, "attack_damage": 36.0, "chase_speed": 4.4, "attack_cooldown": 2.0,
+		"enrage_below": 0.5, "enrage_summon": "shadow_knight", "summon_interval": 12.0, "summon_max": 3,
+		"xp_reward": 1800, "gold_min": 300, "gold_max": 380, "potion_chance": 1.0,
+	},
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer"]
+const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [

@@ -240,7 +240,7 @@ func _pick_music() -> String:
 		if d <= 24.0:
 			fighting = true
 		var kind: String = e.get("kind_id")
-		if d <= 45.0 and (kind in ["captain", "king", "warlord", "warden_bone", "warden_flame", "warden_shadow", "necromancer"]):
+		if d <= 45.0 and (kind in ["captain", "king", "warlord", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar"]):
 			boss = true
 	if fighting:
 		_combat_until = now + COMBAT_HOLD

@@ -45,6 +45,9 @@ signal died(enemy: Enemy)
 @export var summon_kind := ""         # bosses that call helpers while fighting
 @export var summon_interval := 14.0
 @export var summon_max := 4
+@export var enrage_below := 0.0       # health share (0..1) below which a boss enrages
+@export var enrage_summon := ""       # helper kind an enraged boss starts calling
+@export var projectile_slows := false # its shots slow George down
 @export_group("Invasion")
 @export var invader := false          # marches on the village well until it meets George
 @export var march_target := Vector3.ZERO
@@ -78,6 +81,7 @@ var _detour_sign := 1.0
 var _lost_time := 0.0                 # chasing without a line of sight (dungeon enemies)
 var _summon_timer := 5.0
 var _summons: Array[Enemy] = []
+var _enraged := false
 
 
 func _ready() -> void:
@@ -108,12 +112,7 @@ func _load_model() -> void:
 		_attach(skeleton, "handslot.l", offhand_path)
 
 	if tint_color.a > 0.0:
-		var wash := StandardMaterial3D.new()
-		wash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		wash.albedo_color = tint_color
-		wash.cull_mode = BaseMaterial3D.CULL_BACK
-		for mi in model.find_children("*", "MeshInstance3D", true, false):
-			(mi as MeshInstance3D).material_overlay = wash
+		_apply_tint(model, tint_color)
 
 	_anim = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim == null:
@@ -133,6 +132,16 @@ func _attach(skeleton: Skeleton3D, bone: String, path: String) -> void:
 	holder.bone_name = bone
 	skeleton.add_child(holder)
 	holder.add_child((load(path) as PackedScene).instantiate())
+
+
+## A colour wash over every mesh of the model (the colour of the creature's kind).
+func _apply_tint(model: Node3D, color: Color) -> void:
+	var wash := StandardMaterial3D.new()
+	wash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wash.albedo_color = color
+	wash.cull_mode = BaseMaterial3D.CULL_BACK
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).material_overlay = wash
 
 
 func _build_health_bar() -> void:
@@ -274,7 +283,7 @@ func _aggro_sound() -> void:
 	match kind_id:
 		"brute":
 			Sfx.play("brute_roar", global_position)
-		"captain", "king":
+		"captain", "king", "giant_skeleton", "malakar":
 			Sfx.play("boss_roar", global_position)
 		"warlord":
 			Sfx.play("warlord_roar", global_position)
@@ -375,7 +384,9 @@ func _fire() -> void:
 	if projectile_kind == "arrow":
 		aim = aim.rotated(Vector3.UP, randf_range(-0.05, 0.05))   # archers are not perfect
 	Sfx.play("arrow_shoot" if projectile_kind == "arrow" else "orb_cast", global_position)
-	get_parent().add_child(Projectile.make(projectile_kind, muzzle, aim, projectile_speed, attack_damage))
+	var shot := Projectile.make(projectile_kind, muzzle, aim, projectile_speed, attack_damage)
+	shot.slows = projectile_slows
+	get_parent().add_child(shot)
 
 
 func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
@@ -391,6 +402,8 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 	if health <= 0.0:
 		_die(away)
 		return
+	if enrage_below > 0.0 and not _enraged and health / max_health <= enrage_below:
+		_enrage()
 	Sfx.play("skel_hurt", global_position)
 	_set_state(State.HURT)
 	_hurt_timer = 0.45
@@ -464,6 +477,21 @@ func _has_line_of_sight() -> bool:
 	var to := _player.global_position + Vector3.UP * 1.0
 	var query := PhysicsRayQueryParameters3D.create(from, to, 1)
 	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## The second phase of a boss: faster, hits more often, glows redder and starts calling helpers.
+func _enrage() -> void:
+	_enraged = true
+	chase_speed *= 1.25
+	attack_cooldown *= 0.7
+	if enrage_summon != "":
+		summon_kind = enrage_summon
+		_summon_timer = 0.5
+	_apply_tint(_model_root, Color(0.85, 0.12, 0.20, 0.42))
+	Sfx.play("boss_roar", global_position)
+	var player := get_tree().get_first_node_in_group("player")
+	if player:
+		player.message.emit(Strings.MALAKAR_ENRAGE)
 
 
 ## Calls two helpers from the parent spawner (the necromancer's minions).
