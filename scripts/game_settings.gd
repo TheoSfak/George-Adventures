@@ -23,6 +23,7 @@ const DEFAULT_VOLUMES := {"master": 1.0, "music": 0.8, "sfx": 0.9, "ambient": 0.
 static var volumes := DEFAULT_VOLUMES.duplicate()
 static var device := ""
 static var keys := {}                  # action -> physical keycode (only the re-bound ones)
+static var check_updates := true       # ask GitHub for a newer release when the title menu opens
 static var _loaded := false
 
 
@@ -31,6 +32,7 @@ static func load_file() -> void:
 	volumes = DEFAULT_VOLUMES.duplicate()
 	device = ""
 	keys = {}
+	check_updates = true
 	if not FileAccess.file_exists(PATH):
 		return
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(PATH))
@@ -43,10 +45,11 @@ static func load_file() -> void:
 	device = String(parsed.get("device", ""))
 	for action in parsed.get("keys", {}):
 		keys[String(action)] = int(parsed["keys"][action])
+	check_updates = bool(parsed.get("check_updates", true))
 
 
 static func save_file() -> void:
-	var data := {"version": VERSION, "volumes": volumes, "device": device, "keys": keys}
+	var data := {"version": VERSION, "volumes": volumes, "device": device, "keys": keys, "check_updates": check_updates}
 	var f := FileAccess.open(PATH, FileAccess.WRITE)
 	if f == null:
 		push_warning("could not write %s" % PATH)
@@ -57,6 +60,11 @@ static func save_file() -> void:
 static func ensure_loaded() -> void:
 	if not _loaded:
 		load_file()
+
+
+static func set_check_updates(on: bool) -> void:
+	check_updates = on
+	save_file()
 
 
 # ------------------------------------------------------------------- audio ----

@@ -181,6 +181,35 @@ const CONTROLS_HELP: Array = [
 	["F6", "Αλλαγή καιρού"], ["Esc", "Μενού"], ["F1", "Αυτή η σελίδα"],
 ]
 const MENU_PAUSED := "Παύση"
+const MENU_CREDITS := "Συντελεστές"
+const SET_UPDATES := "Έλεγχος για ενημερώσεις"
+const VERSION_LABEL := "v%s"
+const CREDITS_CREATORS_LINE := "Δημιουργοί: Theodore Sfakianakis & George Sfakianakis"
+const CREDITS_HEADING := "Συντελεστές"
+## [heading, text] pairs of the Credits page.
+const CREDITS_LINES := [
+	["Δημιουργοί", "Theodore Sfakianakis & George Sfakianakis"],
+	["Σχεδιασμός και προγραμματισμός", "Με τη βοήθεια τεχνητής νοημοσύνης (Claude της Anthropic)"],
+	["Γραφικά", "KayKit της Kay Lousberg (CC0): Adventurers, Skeletons, Medieval Hexagon, Dungeon Remastered, Furniture Bits, Halloween Bits"],
+	["Μηχανή παιχνιδιού", "Godot Engine (άδεια MIT)"],
+	["Ήχοι και μουσική", "Δημιουργήθηκαν από τα δικά μας scripts (Python και numpy)"],
+]
+const UPDATE_AVAILABLE := "Νέα έκδοση %s διαθέσιμη"
+const UPDATE_CURRENT := "Τρέχουσα έκδοση: %s"
+const UPDATE_BUTTON := "Ενημέρωση"
+const UPDATE_LATER := "Αργότερα"
+const UPDATE_DOWNLOADING := "Λήψη… %d%%"
+const UPDATE_VERIFYING := "Έλεγχος αρχείου…"
+const UPDATE_INSTALLING := "Εγκατάσταση…"
+const UPDATE_DONE := "Η ενημέρωση ολοκληρώθηκε. Ξεκίνα ξανά το παιχνίδι."
+const UPDATE_OPEN_PAGE := "Άνοιγμα σελίδας λήψης"
+const UPDATE_ERR_EDITOR := "Η ενημέρωση λειτουργεί μόνο στο εξαγόμενο παιχνίδι (το αρχείο exe)."
+const UPDATE_ERR_URL := "Μη αποδεκτή διεύθυνση λήψης."
+const UPDATE_ERR_SIZE := "Το αρχείο της ενημέρωσης έχει ασυνήθιστο μέγεθος."
+const UPDATE_ERR_DOWNLOAD := "Η λήψη απέτυχε. Έλεγξε τη σύνδεσή σου στο internet."
+const UPDATE_ERR_CHECKSUM := "Το αρχείο που κατέβηκε είναι κατεστραμμένο."
+const UPDATE_ERR_FILES := "Δεν ήταν δυνατή η εγγραφή των αρχείων. Ο φάκελος του παιχνιδιού δεν επιτρέπει αλλαγές."
+const UPDATE_ERR_ZIP := "Το αρχείο της ενημέρωσης δεν είναι έγκυρο."
 const SET_VOLUMES := "Ένταση ήχου"
 const SET_MASTER := "Γενική"
 const SET_MUSIC := "Μουσική"
