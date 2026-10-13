@@ -62,6 +62,13 @@ func _overlay() -> CanvasLayer:
 	loading.offset_bottom = -34.0
 	loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	layer.add_child(loading)
+	var creators := UiKit.label("Δημιουργοί: Theodore Sfakianakis & George Sfakianakis", 17, Color(0.93, 0.9, 0.82))
+	creators.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	creators.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	creators.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	creators.offset_right = -26.0
+	creators.offset_bottom = -22.0
+	layer.add_child(creators)
 	return layer
 
 
