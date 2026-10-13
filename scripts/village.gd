@@ -94,6 +94,7 @@ const SIGNPOSTS := [
 const CAMP := Vector2(-175.0, 20.0)
 const QUARRY := Vector2(140.0, 125.0)
 const CRYPT := Vector2(0.0, -178.0)
+const DOCK_ANGLE := -60.0             # where on the pond shore the fishing dock stands (degrees, 0 = east, -90 = north)
 
 const TREES := ["decoration/nature/tree_single_A.gltf", "decoration/nature/tree_single_B.gltf"]
 const FORESTS := [
@@ -608,7 +609,58 @@ func _build_terrain_details() -> void:
 		var a := TAU * float(i) / 12.0 + _rng.randf() * 0.3
 		var r := 12.4 + _rng.randf() * 3.0
 		var node := _place(ROCKS[_rng.randi() % ROCKS.size()], Vector3(pond.x + cos(a) * r, 0, pond.y + sin(a) * r * 0.72), _rng.randf() * 360.0, ST * _rng.randf_range(0.22, 0.4), rocks)
+		if absf(angle_difference(a, deg_to_rad(DOCK_ANGLE))) < 0.45:     # the dock stands here
+			node.queue_free()
+			continue
 		_add_box_collider(node, 0.8)
+	_build_dock(pond, 11.0)
+
+
+## A small wooden dock on the shore of the pond with a bucket, and the fishing spot ([R] Ψάρεμα).
+## George stands at the water end and casts toward the open water (see fishing.gd).
+func _build_dock(pond: Vector2, radius: float) -> void:
+	var a := deg_to_rad(DOCK_ANGLE)
+	var shore := Vector3(pond.x + cos(a) * radius, 0.0, pond.y + sin(a) * radius * 0.72)
+	var inland := Vector3(cos(a), 0.0, sin(a) * 0.72).normalized()     # from the water toward the land
+	var dock := Node3D.new()
+	dock.name = "Dock"
+	dock.position = shore
+	dock.rotation.y = atan2(inland.x, inland.z)                        # local +Z points inland
+	add_child(dock)
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color(0.45, 0.30, 0.17)
+	wood.roughness = 0.9
+	for i in 8:
+		var plank := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(2.4, 0.1, 0.9)
+		plank.mesh = box
+		plank.material_override = wood
+		plank.position = Vector3(0.0, 0.12, -3.5 + float(i))
+		plank.scale = Vector3.ONE * (0.97 + 0.03 * float(i % 3))
+		dock.add_child(plank)
+	for z in [-3.5, 0.0, 3.5]:
+		for x in [-1.15, 1.15]:
+			var pile := MeshInstance3D.new()
+			var cyl := CylinderMesh.new()
+			cyl.top_radius = 0.11
+			cyl.bottom_radius = 0.11
+			cyl.height = 0.9
+			pile.mesh = cyl
+			pile.material_override = wood
+			pile.position = Vector3(x, 0.30, z)
+			dock.add_child(pile)
+	_place("decoration/props/bucket_water.gltf", Vector3(1.9, 0.0, 2.6), 30.0, PS, dock)
+	var stand := shore - inland * 3.2 + Vector3(0.0, 0.1, 0.0)        # the water end of the planks
+	var target := shore - inland * 8.5 + Vector3(0.0, 0.09, 0.0)      # the float lands out on the open water
+	var start := func(player: Player):
+		var hud := get_tree().get_first_node_in_group("hud")
+		if hud != null:
+			hud.start_fishing(player, stand, target)
+	var spot := InteractSpot.make(Strings.PROMPT_FISH, start, 5.0)
+	spot.position = shore - inland * 1.5
+	add_child(spot)
+	_occupy(shore.x, shore.z, 6.0)
 
 
 func _finish_terrain() -> void:

@@ -43,6 +43,7 @@ var _buff_box: HBoxContainer
 var _buff_labels := {}
 var _hero: HeroWindow
 var _shop: ShopWindow
+var _fishing: Fishing
 var _hint: Label
 var _clock_label: Label
 var _clock_icon: Control
@@ -873,6 +874,8 @@ func _build_windows() -> void:
 	add_child(_hero)
 	_shop = ShopWindow.new()
 	add_child(_shop)
+	_fishing = Fishing.new()
+	add_child(_fishing)
 	if _player:
 		_player.talents_changed.connect(_update_hint)
 		_player.leveled_up.connect(func(_l): _update_hint())
@@ -893,6 +896,11 @@ func _update_hint() -> void:
 ## Opens a shop window (called by shopkeepers after their greeting).
 func open_shop(shop_id: String, player: Player) -> void:
 	_shop.open(shop_id, player)
+
+
+## Starts fishing: George stands at `stand` and casts toward the water spot `target` (the dock calls this).
+func start_fishing(player: Player, stand: Vector3, target: Vector3) -> void:
+	_fishing.begin(player, stand, target)
 
 
 func is_shop_open() -> bool:
