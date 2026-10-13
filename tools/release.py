@@ -90,6 +90,9 @@ def main():
         z.write(BUILD / EXE, EXE)
         for bat in sorted((ROOT / "tools" / "launchers").glob("*.bat")):
             z.write(bat, bat.name)
+        # instructions for the player (README.txt) and the legal notices that must travel with the exe
+        for extra in [ROOT / "tools" / "launchers" / "README.txt", ROOT / "LICENSE", ROOT / "THIRD_PARTY_NOTICES.md"]:
+            z.write(extra, extra.name)
     digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
     sha_path = Path(str(zip_path) + ".sha256")
     sha_path.write_text("%s  %s\n" % (digest, zip_path.name), encoding="utf-8")

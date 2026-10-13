@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 (2026-10-13) — instructions and licence in the zip
+**New in this version**
+- The release zip now also contains `README.txt` (Greek instructions: what to do when Windows blocks the unsigned exe, the graphics setting, updates), `LICENSE` (all rights reserved) and `THIRD_PARTY_NOTICES.md` (KayKit CC0 and the Godot Engine MIT notice, which must travel with the exe). The game itself did not change. The updater copies the new files next to the exe as it does with the launchers.
+
 ## 1.0.2 (2026-10-13) — update card notes
 **Fixed**
 - The update card showed the release notes from GitHub in full: long English notes pushed the "Ενημέρωση" and "Αργότερα" buttons off the bottom of the screen (found while testing a real update from 1.0.0 to 1.0.1; 1.0.1 was saved by shortening its notes on GitHub). The card now shows at most 4 lines of at most 60 characters, without markdown noise.
