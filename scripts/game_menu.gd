@@ -6,7 +6,7 @@ extends CanvasLayer
 ## Settings: volumes, audio device and key re-binding (game_settings.gd).
 ## Also autosaves on quest completion, level up and at dawn (save_game.gd).
 
-enum Page { MAIN, SETTINGS, HELP }
+enum Page { MAIN, SETTINGS, HELP, CREDITS }
 
 var _title := true                   # the title menu (true) or the pause menu (false)
 var _open := false
@@ -21,6 +21,13 @@ var _panel: PanelContainer
 var _box: VBoxContainer
 var _player: Player
 var _hud: Node
+var _updater: Updater
+var _update_hidden := false          # "Αργότερα" was pressed: no panel until the next start
+var _update_card: PanelContainer     # the update panel, top right of the title screen
+var _update_bar: FancyBar
+var _update_label: Label
+var _creators_label: Label
+var _version_label: Label
 
 
 func _ready() -> void:
@@ -32,6 +39,10 @@ func _ready() -> void:
 	layer = 60
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_root()
+	_updater = Updater.new()
+	add_child(_updater)
+	_updater.state_changed.connect(_on_update_state)
+	_updater.progress.connect(_on_update_progress)
 	_hud = get_tree().get_first_node_in_group("hud")
 	_player = get_tree().get_first_node_in_group("player") as Player
 	await get_tree().process_frame
@@ -44,6 +55,7 @@ func _ready() -> void:
 			_new_game()
 		_:
 			_show_title()
+			_updater.check()
 	var quests := Quests
 	quests.quest_done.connect(func(_id): autosave())
 	if _player:
@@ -69,6 +81,27 @@ func _build_root() -> void:
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.add_theme_constant_override("outline_size", 10)
 	_dim.add_child(_title_label)
+	_creators_label = UiKit.label(Strings.CREDITS_CREATORS_LINE, 15, UiKit.MUTED)
+	_creators_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	_creators_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_creators_label.offset_left = 22.0
+	_creators_label.offset_bottom = -14.0
+	_dim.add_child(_creators_label)
+	_version_label = UiKit.label(Strings.VERSION_LABEL % Updater.current_version(), 15, UiKit.MUTED)
+	_version_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_version_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_version_label.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_version_label.offset_right = -22.0
+	_version_label.offset_bottom = -14.0
+	_dim.add_child(_version_label)
+	_update_card = PanelContainer.new()
+	_update_card.add_theme_stylebox_override("panel", UiKit.panel_style(0.94))
+	_update_card.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_update_card.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_update_card.offset_right = -22.0
+	_update_card.offset_top = 160.0                # beside the buttons, below the title
+	_update_card.visible = false
+	_dim.add_child(_update_card)
 	_panel = PanelContainer.new()
 	_panel.add_theme_stylebox_override("panel", UiKit.panel_style(0.94))
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -85,6 +118,8 @@ func _clear() -> void:
 		_box.remove_child(c)
 		c.queue_free()
 	_key_buttons.clear()
+	_update_bar = null
+	_update_label = null
 
 
 func _menu_button(text: String, callback: Callable, disabled := false) -> Button:
@@ -157,6 +192,11 @@ func _show_page(page: Page) -> void:
 	_page = page
 	_confirm_new = false
 	_title_label.visible = _title and page == Page.MAIN
+	_creators_label.visible = _title and page == Page.MAIN
+	_version_label.visible = _title and page == Page.MAIN
+	_update_card.visible = false
+	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_panel.custom_minimum_size = Vector2.ZERO
 	_clear()
 	if page == Page.MAIN:
 		_help_from_hud = false
@@ -164,6 +204,8 @@ func _show_page(page: Page) -> void:
 		_build_settings()
 	elif page == Page.HELP:
 		_build_help()
+	elif page == Page.CREDITS:
+		_build_credits()
 	elif _title:
 		_build_title_page()
 	else:
@@ -171,8 +213,19 @@ func _show_page(page: Page) -> void:
 
 
 func _build_title_page() -> void:
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_panel.offset_top = 80.0
+	# the buttons hang from just below the title (six of them no longer fit centred under it)
+	_panel.anchor_left = 0.5
+	_panel.anchor_right = 0.5
+	_panel.anchor_top = 0.0
+	_panel.anchor_bottom = 0.0
+	_panel.grow_vertical = Control.GROW_DIRECTION_END
+	_panel.offset_left = -200.0                # a fixed 400 px wide column, independent of the last layout
+	_panel.offset_right = 200.0
+	_panel.offset_top = 150.0
+	_panel.offset_bottom = 150.0
+	_panel.custom_minimum_size.x = 400.0
+	_panel.reset_size.call_deferred()          # the height follows the buttons added below
+	_build_update_panel()
 	var has_save := SaveGame.exists() and not SaveGame.read().is_empty()
 	_menu_button(Strings.MENU_CONTINUE, _continue_game, not has_save)
 	if has_save:
@@ -193,7 +246,102 @@ func _build_title_page() -> void:
 				_new_game())
 	_menu_button(Strings.MENU_SETTINGS, func(): _show_page(Page.SETTINGS))
 	_menu_button(Strings.MENU_CONTROLS, func(): _show_page(Page.HELP))
+	_menu_button(Strings.MENU_CREDITS, func(): _show_page(Page.CREDITS))
 	_menu_button(Strings.MENU_QUIT, func(): get_tree().quit())
+
+
+## The update card in the top right corner of the title screen (nothing while there is no update
+## or after "Αργότερα").
+func _build_update_panel() -> void:
+	for c in _update_card.get_children():
+		_update_card.remove_child(c)
+		c.queue_free()
+	_update_card.visible = false
+	if _updater == null or _update_hidden:
+		return
+	var st := _updater.state
+	if st == Updater.State.IDLE or st == Updater.State.CHECKING or st == Updater.State.NONE:
+		return
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	_update_card.add_child(v)
+	_update_card.visible = true
+	match st:
+		Updater.State.AVAILABLE:
+			var head := UiKit.label(Strings.UPDATE_AVAILABLE % String(_updater.release.get("version", "")), 21, UiKit.GOLD_TEXT)
+			head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(head)
+			var cur := UiKit.label(Strings.UPDATE_CURRENT % Updater.current_version(), 14, UiKit.MUTED)
+			cur.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(cur)
+			var notes := UpdateLogic.notes_head(String(_updater.release.get("notes", "")), 12)
+			if notes != "":
+				v.add_child(UiKit.paragraph(notes, 15, 340.0))
+			var row := HBoxContainer.new()
+			row.alignment = BoxContainer.ALIGNMENT_CENTER
+			row.add_theme_constant_override("separation", 10)
+			row.add_child(UiKit.button(Strings.UPDATE_BUTTON, func(): _updater.start_update(), 170.0, 18))
+			row.add_child(UiKit.button(Strings.UPDATE_LATER, _hide_update_panel, 130.0, 18))
+			v.add_child(row)
+		Updater.State.DOWNLOADING:
+			_update_label = UiKit.label(Strings.UPDATE_DOWNLOADING % 0, 18)
+			_update_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			v.add_child(_update_label)
+			_update_bar = FancyBar.new()
+			_update_bar.custom_minimum_size = Vector2(340, 14)
+			_update_bar.glide = false
+			v.add_child(_update_bar)
+		Updater.State.VERIFYING:
+			v.add_child(UiKit.label(Strings.UPDATE_VERIFYING, 18))
+		Updater.State.INSTALLING:
+			v.add_child(UiKit.label(Strings.UPDATE_INSTALLING, 18))
+		Updater.State.DONE:
+			v.add_child(UiKit.paragraph(Strings.UPDATE_DONE, 17, 340.0, UiKit.CREAM))
+		Updater.State.FAILED:
+			v.add_child(UiKit.paragraph(_updater.error_text, 16, 340.0, UiKit.BAD))
+			var row := HBoxContainer.new()
+			row.alignment = BoxContainer.ALIGNMENT_CENTER
+			row.add_theme_constant_override("separation", 10)
+			row.add_child(UiKit.button(Strings.UPDATE_OPEN_PAGE, func():
+				OS.shell_open(String(_updater.release.get("page_url", Updater.PAGE_URL))), 220.0, 16))
+			row.add_child(UiKit.button(Strings.UPDATE_LATER, _hide_update_panel, 110.0, 16))
+			v.add_child(row)
+
+
+func _hide_update_panel() -> void:
+	_update_hidden = true
+	_show_page(Page.MAIN)
+
+
+func _on_update_state() -> void:
+	if _open and _title and _page == Page.MAIN:
+		_show_page(Page.MAIN)
+
+
+func _on_update_progress(fraction: float) -> void:
+	if is_instance_valid(_update_bar):
+		_update_bar.value = fraction
+	if is_instance_valid(_update_label):
+		_update_label.text = Strings.UPDATE_DOWNLOADING % roundi(fraction * 100.0)
+
+
+func _build_credits() -> void:
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.offset_top = 30.0 if _title else 0.0
+	_heading(Strings.CREDITS_HEADING)
+	for entry in Strings.CREDITS_LINES:
+		var head := UiKit.label(entry[0], 19, UiKit.GOLD_TEXT)
+		head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_box.add_child(head)
+		var body := UiKit.paragraph(entry[1], 17, 560.0, UiKit.CREAM)
+		body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_box.add_child(body)
+	var version := UiKit.label(Strings.VERSION_LABEL % Updater.current_version(), 15, UiKit.MUTED)
+	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(version)
+	var center := CenterContainer.new()
+	center.add_child(UiKit.button(Strings.MENU_BACK, func(): _show_page(Page.MAIN), 160.0, 18))
+	_box.add_child(center)
 
 
 func _build_pause_page() -> void:
@@ -263,6 +411,16 @@ func _build_settings() -> void:
 		_box.add_child(_volume_row(entry[0], entry[1]))
 	_box.add_child(UiKit.label(Strings.SET_DEVICE, 19, UiKit.GOLD_TEXT))
 	_box.add_child(_device_picker())
+	var updates := CheckBox.new()
+	updates.text = Strings.SET_UPDATES
+	updates.button_pressed = GameSettings.check_updates
+	updates.focus_mode = Control.FOCUS_NONE
+	updates.add_theme_font_size_override("font_size", 18)
+	updates.add_theme_color_override("font_color", UiKit.CREAM)
+	updates.add_theme_icon_override("checked", _check_icon(true))
+	updates.add_theme_icon_override("unchecked", _check_icon(false))
+	updates.toggled.connect(func(on: bool): GameSettings.set_check_updates(on))
+	_box.add_child(updates)
 	_box.add_child(UiKit.label(Strings.SET_KEYS, 19, UiKit.GOLD_TEXT))
 	_box.add_child(_key_list())
 	var row := HBoxContainer.new()
@@ -273,6 +431,27 @@ func _build_settings() -> void:
 		_show_page(Page.SETTINGS), 220.0, 18))
 	row.add_child(UiKit.button(Strings.MENU_BACK, func(): _show_page(Page.MAIN), 160.0, 18))
 	_box.add_child(row)
+
+
+## A checkbox picture that shows on the dark panel: rounded light-edged square, a gold tick when checked.
+func _check_icon(checked: bool) -> ImageTexture:
+	var s := 24
+	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
+	for y in s:
+		for x in s:
+			if (x < 3 or x >= s - 3) and (y < 3 or y >= s - 3):
+				continue
+			var edge := x < 2 or y < 2 or x >= s - 2 or y >= s - 2
+			img.set_pixel(x, y, Color(0.78, 0.8, 0.92) if edge else Color(0.17, 0.19, 0.27))
+	if checked:
+		var gold := Color(1.0, 0.82, 0.35)
+		for i in 5:
+			for t in 2:
+				img.set_pixel(5 + i, 12 + i + t, gold)
+		for i in 10:
+			for t in 2:
+				img.set_pixel(10 + i, 16 - i + t, gold)
+	return ImageTexture.create_from_image(img)
 
 
 func _volume_row(id: String, text: String) -> Control:
