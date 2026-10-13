@@ -382,6 +382,8 @@ func _footsteps() -> void:
 	var id := "footstep_grass"
 	if interiors != null and interiors.is_inside():
 		id = "footstep_stone" if interiors.current_kind == "catacombs" else "footstep_wood"
+	elif interiors != null and interiors.in_region():
+		id = "footstep_snow"
 	elif Vector2(global_position.x, global_position.z).length() < 26.0:
 		id = "footstep_stone"
 	Sfx.play(id)

@@ -46,6 +46,10 @@ func _ready() -> void:
 func start(night_number: int) -> void:
 	if active:
 		return
+	var interiors := get_tree().get_first_node_in_group("interiors")
+	if interiors != null and interiors.in_region():      # George is in the Frontier: the village holds without him
+		_say(Strings.INVASION_SKIPPED, 5.0)
+		return
 	active = true
 	night = night_number
 	wave = 0

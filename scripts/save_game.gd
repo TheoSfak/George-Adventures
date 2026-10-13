@@ -5,7 +5,8 @@ class_name SaveGame
 ## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, position),
 ## the quests, the time of day, defeated bosses, opened chests and collected quest items.
 ## Not saved: where ordinary skeletons stand (they respawn), a night invasion in progress,
-## chests inside buildings.
+## chests inside buildings. In the Frontier the real position is saved ("in_frontier": true)
+## and loading rebuilds the region.
 ##
 ## SaveGame.start_action tells the next scene load what to do ("continue", "new", or "" for
 ## the title menu); it survives scene reloads because it is a static variable.
@@ -83,9 +84,12 @@ static func save() -> bool:
 	if player == null:
 		return false
 	var position := player.global_position
+	var in_frontier := false
 	var interiors := tree.get_first_node_in_group("interiors")
 	if interiors != null and interiors.is_inside():
 		position = interiors.exit_position()        # inside a building: save the doorstep
+	elif interiors != null and interiors.in_region():
+		in_frontier = true                          # in the Frontier: save the real position, load rebuilds the region
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight
 	var data := {
 		"version": VERSION,
@@ -97,6 +101,7 @@ static func save() -> bool:
 			"gear_owned": player.gear_owned, "equipped": player.equipped,
 			"talents": player.talents, "bar": player.bar,
 			"position": [position.x, position.y, position.z], "heading": player._heading,
+			"in_frontier": in_frontier,
 		},
 		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
 		"world": {
@@ -177,7 +182,14 @@ static func apply(d: Dictionary) -> void:
 	player.health = minf(float(pd.get("health", player.max_health)), player.max_health)
 	player._update_equipment_visuals()
 	var pos: Array = pd["position"]
-	player.teleport(Vector3(float(pos[0]), float(pos[1]) + 0.05, float(pos[2])), float(pd.get("heading", PI)))
+	var saved_pos := Vector3(float(pos[0]), float(pos[1]) + 0.05, float(pos[2]))
+	var saved_heading := float(pd.get("heading", PI))
+	var region_host := tree.get_first_node_in_group("interiors")
+	if bool(pd.get("in_frontier", false)) and region_host != null:
+		# the Frontier is built on demand: this fades, builds it and places George there a moment later
+		region_host.enter_region("frontier", Frontier.VILLAGE_GATE + Vector3(0, 0.05, 5.0), 0.0, player, saved_pos, saved_heading)
+	else:
+		player.teleport(saved_pos, saved_heading)
 	player.bar_changed.emit()
 	player.talents_changed.emit()
 	player.gear_changed.emit()

@@ -239,7 +239,7 @@ func _draw_quest_markers() -> void:
 			match o["type"]:
 				"collect":
 					for it in get_tree().get_nodes_in_group("quest_items"):
-						if it.visible and it.get("item_id") == o["item"]:
+						if it.visible and it.get("item_id") == o["item"] and _inside_world(it.global_position):
 							_diamond(it.global_position)
 				"kill":
 					if o["target"] == "totem":
