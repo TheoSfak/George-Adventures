@@ -2,7 +2,7 @@ class_name SaveGame
 ## The save game: one plain-text JSON file, user://savegame.json (open it in Notepad to look at
 ## it or edit your level and gold). One slot; the previous save is kept as savegame.bak.
 ##
-## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, position),
+## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, fish journal, position),
 ## the quests, the time of day, defeated bosses, opened chests and collected quest items.
 ## Not saved: where ordinary skeletons stand (they respawn), a night invasion in progress,
 ## chests inside buildings. In the Frontier the real position is saved ("in_frontier": true)
@@ -102,6 +102,7 @@ static func save() -> bool:
 			"talents": player.talents, "bar": player.bar,
 			"position": [position.x, position.y, position.z], "heading": player._heading,
 			"in_frontier": in_frontier,
+			"fish_seen": player.fish_seen,
 		},
 		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
 		"world": {
@@ -177,6 +178,7 @@ static func apply(d: Dictionary) -> void:
 	for id in pd.get("talents", {}):
 		player.talents[id] = int(pd["talents"][id])
 	player.bar.assign(pd.get("bar", []))
+	player.fish_seen.assign(pd.get("fish_seen", []))
 	player.is_dead = false
 	player._recalc()
 	player.health = minf(float(pd.get("health", player.max_health)), player.max_health)

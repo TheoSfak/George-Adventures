@@ -104,6 +104,8 @@ var base_damage := 15.0
 var stats := Stats.new()         # equipment and talent modifiers (stats.gd)
 var gear_owned: Array[String] = []                       # ids from ShopData.GEAR that George owns
 var equipped := {"weapon": "", "armor": "", "shield": ""} # slot -> gear id ("" = George's own gear)
+var fish_seen: Array[String] = []   # fish species caught at least once (the journal)
+var food := {}                   # the meal George ate: {"id": String, "time": seconds left}; empty = none
 var junk := {}                   # junk id -> count, sold at the market
 var talents := {}                # talent id -> rank (talent_data.gd)
 var _frenzy_time := 0.0
@@ -640,6 +642,50 @@ func use_consumable(id: String) -> void:
 	inventory_changed.emit(gold, potions)
 
 
+## A caught fish goes into the bag (junk) and the journal. Returns true when the species is new.
+func add_fish(id: String) -> bool:
+	junk[id] = int(junk.get(id, 0)) + 1
+	message.emit(Strings.MSG_FISH_CAUGHT % ShopData.JUNK[id]["name"])
+	var fresh := not fish_seen.has(id)
+	if fresh:
+		fish_seen.append(id)
+		message.emit(Strings.MSG_FISH_NEW % [fish_seen.size(), ShopData.fish_ids().size()])
+	inventory_changed.emit(gold, potions)
+	return fresh
+
+
+## George eats a meal: its buff starts at once and replaces the one he had.
+func eat(meal_id: String) -> void:
+	food = {"id": meal_id, "time": float(ShopData.MEALS[meal_id]["duration"])}
+	_recalc()
+	Sfx.ui("eat")
+	message.emit(Strings.MSG_MEAL_EATEN % ShopData.MEALS[meal_id]["name"])
+
+
+## Pays gold and fish for a meal and eats it. Returns false (and spends nothing) when something is missing.
+func prepare_meal(meal_id: String) -> bool:
+	var cost: Dictionary = ShopData.MEALS[meal_id]["cost"]
+	if gold >= int(cost["gold"]) and not ShopData.can_prepare(meal_id, gold, junk):
+		message.emit(Strings.MSG_MEAL_NO_FISH)
+		return false
+	if not spend_gold(int(cost["gold"])):
+		return false
+	var used := ShopData.fish_to_use(meal_id, junk)
+	for id in used:
+		junk[id] = int(junk[id]) - int(used[id])
+	inventory_changed.emit(gold, potions)
+	eat(meal_id)
+	return true
+
+
+func food_time() -> float:
+	return float(food.get("time", 0.0))
+
+
+func food_name() -> String:
+	return "" if food.is_empty() else String(ShopData.MEALS[food["id"]]["name"])
+
+
 ## Slows George for `seconds` (-40% speed).
 func slow(seconds: float) -> void:
 	_slow_time = maxf(_slow_time, seconds)
@@ -674,6 +720,7 @@ func apply_reward(reward: Dictionary) -> void:
 func _recalc() -> void:
 	stats.set_source("equip", ShopData.equipment_mods(equipped))
 	stats.set_source("talents", TalentData.mods_for(talents))
+	stats.set_source("food", ShopData.meal_mods(food))
 	var old_max := max_health
 	max_health = base_max_health + stats.total("hp_add")
 	sword_damage = (base_damage + stats.total("damage_add")) * (1.0 + stats.total("damage_mult"))
@@ -818,6 +865,12 @@ func _tick_timers(delta: float) -> void:
 	_frenzy_time = maxf(_frenzy_time - delta, 0.0)
 	_shout_time = maxf(_shout_time - delta, 0.0)
 	_wall_time = maxf(_wall_time - delta, 0.0)
+	if not food.is_empty():
+		food["time"] = float(food["time"]) - delta
+		if float(food["time"]) <= 0.0:
+			message.emit(Strings.MSG_MEAL_OVER % ShopData.MEALS[food["id"]]["name"])
+			food = {}
+			_recalc()
 	_rebirth_cd = maxf(_rebirth_cd - delta, 0.0)
 	_crit_notice = maxf(_crit_notice - delta, 0.0)
 	_leap_time = maxf(_leap_time - delta, 0.0)
@@ -892,6 +945,8 @@ func buff_time(id: String) -> float:
 			return _shout_time
 		"wall":
 			return _wall_time
+		"food":
+			return float(food.get("time", 0.0))
 	return 0.0
 
 
