@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14-beta (unreleased) — fishing and food
+## 0.14-beta (2026-10-13) — fishing and food
 **New in this version**
 - **Fishing at the pond:** a wooden dock with a bucket on the pond shore (`Village._build_dock`, **R** at the dock). A one-button timing mini-game (`scripts/fishing.gd`): cast, wait 2 to 6 s, the float dips, then press **R / Enter / Space / left click** while the marker is in the green zone of the bar (works over AnyDesk). Escape cancels; pulling too early or too late loses the fish.
 - **13 fish** (`ShopData.JUNK`): five common (Γοβιός, Πέρκα, Σαζάνι, Κυπρίνος, Γριβάδι), four uncommon (Πέστροφα, Χέλι, Γλάνος, Λούτσος), three rare (Ηλιόψαρο only by day, Φεγγαρόψαρο only by night, Χρυσόψαρο του Αγίου) and the legendary **Ο Βασιλιάς της Λίμνης**. Rarer fish have a narrower zone and a faster marker. They are kept in the bag like the skeleton junk and the market buys them (6 to 150 gold).
@@ -8,7 +8,9 @@
 - **The tavern cook Θανάσης** behind the bar (shopkeeper pattern, `ShopData.SHOPS["kitchen"]`): the kitchen window has two tabs, **Φαγητά** (Φασολάδα, Τυρόπιτα, Κρέας με Πατάτες for gold) and **Μαγείρεμα** (Τηγανητά Ψαράκια, Ψαρόσουπα, Ψητό του Αγίου, Γιορτινό του Βασιλιά from fish of a rarity plus a little gold; the cheapest fish is used first).
 - **Food buffs:** a meal gives a timed buff (10 minutes, the feast 15) through a new `Stats` source `"food"` (health, regeneration, damage, defense, crit, speed, lifesteal). One meal at a time, a new one replaces the old; a pill with the meal name and the minutes left shows above the action bar. Not saved (like potion buffs).
 - New sounds (synthesized): `fish_cast`, `fish_bite`, `fish_catch`, `fish_escape`, `eat`. New icons `fish` and `food`.
-- New test drivers: `fish_data_test`, `kitchen_test`, `kitchen_window_test`, `fishing_test` (headless), `fishshot` (screenshots + fps).
+- **Villager names fit their model:** the Barbarian and the Knight get men's names, the braided Rogue gets women's names, the Mage and the hooded Rogue either (`VillagerData.name_for`). Names of story NPCs and stall owners are no longer used for ambient villagers.
+- **Guards no longer get stuck on props:** a guard that pushes against an obstacle sidesteps left or right along it and keeps going until the straight way to its goal is free; a dead end makes it switch side (`Guard._check_blocked`).
+- New test drivers: `fish_data_test`, `kitchen_test`, `kitchen_window_test`, `fishing_test`, `gender_test`, `guard_snag_test` (headless), `fishshot` (screenshots + fps).
 
 **Not done yet:** audio tuning by ear (the new sounds are unheard), fishing in other places, carrying meals on the action bar.
 
