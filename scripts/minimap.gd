@@ -238,7 +238,7 @@ func _draw_quest_markers() -> void:
 						continue
 					var found := false
 					for e in get_tree().get_nodes_in_group("enemies"):
-						if e.get("kind_id") == o["target"] and o["target"] != "skeleton":
+						if e.get("kind_id") == o["target"] and o["target"] != "skeleton" and _inside_world(e.global_position):
 							_diamond(e.global_position)
 							found = true
 					if not found and BOSS_AREAS.has(o["target"]):

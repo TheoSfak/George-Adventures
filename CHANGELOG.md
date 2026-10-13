@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.12-beta (2026-10-12) — the catacombs and story part 2
+**New in this version**
+- **The Catacombs** below the old crypt: a large underground level (`scripts/catacombs.gd`, layout = `ROOMS`/`CORRIDORS`/`SPAWNS`/`CHESTS`/`PAGES` at the top of the file) with a safe hall of candles, a great hall, west and east wings, three seal chambers, a vault, two alcoves and the abbot's chamber behind a sealed gate. Entered through the crypt door (R), sealed until the quest "Η Κάθοδος" is accepted. Stone textures are generated in code; torches, coloured room lights, glowing seals, pillars, coffins, bones and chests; 60 fps.
+- **New creatures:** Φύλακας της Κατακόμβης (armoured, blue), Ακόλουθος του Σκότους (red mage), three named Φύλακες των Σφραγίδων (Οστών / Φλόγας / Σκιάς) and the final boss **Αρχιερέας της Σκιάς**, who fires orbs and summons skeleton helpers. Dungeon creatures only notice George with a clear line of sight (no aggro through walls) and give up after a while.
+- **Story part 2 (5 quests, new NPC Αδελφή Θεοδώρα):** "Η Κάθοδος" → "Οι Φύλακες του Σκότους" + "Οι Σελίδες της Ευχής" (3 golden pages) → "Οι Τρεις Σφραγίδες" (the three wardens; the gate opens) → "Ο Αρχιερέας της Σκιάς" (hand in at Παπά-Σταύρος, "Συνεχίζεται…"). New objective type `reach`.
+- The end of part 1 no longer shows "Συνεχίζεται…"; it now leads into part 2 (an existing save that finished the Bone King simply gets the new quest from Παπά-Σταύρος).
+- Dying in the catacombs wakes George in the village (outdoor light restored). Cold dark lighting, crypt music and ambience, stone footsteps inside.
+- **A much richer village square** (`scripts/square.gd`, built around the well): inlaid paving rings and sun rays, a stone kerb around the flower bed, 8 benches and 8 lamp posts joined by bunting, **four market stalls** with striped awnings, goods and vendors (vegetables, bread, herbs/potions, wine; they call out Greek lines and go home at dusk), the **statue of Agios Vlasis** on a pedestal, a notice board, a small **festival stage** with two musicians, and a big tree with benches. Lamps light up at night. Still 60 fps.
+- New test drivers: `catacombtest` (screenshots, fps, door/exit), `part2test` (plays the whole of part 2), `squareshot` (square screenshots, `-- <dir> night` for night).
+
+**Not done yet:** audio tuning by ear, more areas beyond part 2 (see `HANDOVER.md`).
+
 ## 0.11-beta (2026-10-12) — new quests, totems and guards
 **New in this version**
 - **Two new NPCs:** Βασίλης ο Λοχαγός (watchtower) and Στέλιος ο Μυλωνάς (windmill).

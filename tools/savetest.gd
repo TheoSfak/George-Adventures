@@ -12,6 +12,10 @@ func _run() -> void:
 	var quests := root.get_node("/root/Quests")
 	quests.intro_seen = true
 	var save = load("res://scripts/save_game.gd")
+	# keep the player's real save safe: the test deletes and rewrites savegame.json
+	var real_backup := "user://savegame.before_test"
+	if FileAccess.file_exists(save.PATH):
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(save.PATH), ProjectSettings.globalize_path(real_backup))
 	save.delete()
 	var main := world()
 	await create_timer(2.5).timeout
@@ -59,4 +63,8 @@ func _run() -> void:
 	for chest in get_nodes_in_group("chests"):
 		if chest.opened: opened += 1
 	print("opened chests after load: ", opened, " (1 expected)")
+	save.delete()
+	if FileAccess.file_exists(real_backup):
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(real_backup), ProjectSettings.globalize_path(save.PATH))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(real_backup))
 	quit()

@@ -193,6 +193,7 @@ static func apply(d: Dictionary) -> void:
 			for i in arr.size():
 				if i < Quests.progress[id].size():
 					Quests.progress[id][i] = int(arr[i])
+	Quests._refresh_availability()    # quests added after the save was made (story part 2) unlock
 	Quests.intro_seen = bool(qd.get("intro_seen", true))
 	Quests.changed.emit()
 

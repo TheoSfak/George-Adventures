@@ -137,6 +137,20 @@ func report_defense() -> void:
 	changed.emit()
 
 
+## George arrived somewhere a quest asks for ("catacombs").
+func report_reach(place: String) -> void:
+	for id in QuestData.QUESTS:
+		if state[id] != S.ACTIVE:
+			continue
+		var objectives: Array = QuestData.QUESTS[id]["objectives"]
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if o["type"] == "reach" and o["place"] == place and progress[id][i] < o["count"]:
+				progress[id][i] += 1
+		_check_ready(id)
+	changed.emit()
+
+
 ## True while some active quest still wants something of this kind killed or destroyed.
 func target_wanted(kind: String) -> bool:
 	for id in QuestData.QUESTS:

@@ -40,6 +40,11 @@ signal died(enemy: Enemy)
 @export var ranged_max := 13.0
 @export var projectile_speed := 17.0
 @export var shoot_anim := "1H_Ranged_Shoot"
+@export_group("Dungeon")
+@export var need_los := false         # only notices George with a clear line (walls hide him), gives up after a while
+@export var summon_kind := ""         # bosses that call helpers while fighting
+@export var summon_interval := 14.0
+@export var summon_max := 4
 @export_group("Invasion")
 @export var invader := false          # marches on the village well until it meets George
 @export var march_target := Vector3.ZERO
@@ -70,6 +75,9 @@ var _bar: Sprite3D
 var _blocked_time := 0.0              # trying to move but not getting anywhere
 var _detour_time := 0.0               # walking around an obstacle
 var _detour_sign := 1.0
+var _lost_time := 0.0                 # chasing without a line of sight (dungeon enemies)
+var _summon_timer := 5.0
+var _summons: Array[Enemy] = []
 
 
 func _ready() -> void:
@@ -184,6 +192,12 @@ func _physics_process(delta: float) -> void:
 			if _hurt_timer <= 0.0:
 				_set_state(State.CHASE if _player_alive() else _idle_state())
 
+	if summon_kind != "" and (_state == State.CHASE or _state == State.ATTACK):
+		_summon_timer -= delta
+		if _summon_timer <= 0.0:
+			_summon_timer = summon_interval
+			_summon()
+
 	# Knockback and stagger decay, normal movement accelerates toward its goal.
 	var accel := 30.0 if _state != State.HURT else 8.0
 	velocity.x = move_toward(velocity.x, target_velocity.x, accel * delta)
@@ -278,11 +292,21 @@ func _chase() -> Vector3:
 		return Vector3.ZERO
 	var to_player := _flat(_player.global_position - global_position)
 	var dist := to_player.length()
+	var delta := get_physics_process_delta_time()
 	if dist > leash_range:
 		_set_state(_idle_state())
 		_patrol_target = _home
 		return Vector3.ZERO
-	var delta := get_physics_process_delta_time()
+	if need_los:
+		if _has_line_of_sight():
+			_lost_time = 0.0
+		else:
+			_lost_time += delta
+			if _lost_time > 4.0:         # lost him behind the walls: back to the post
+				_lost_time = 0.0
+				_set_state(_idle_state())
+				_patrol_target = _home
+				return Vector3.ZERO
 	_face(to_player, delta)
 	if ranged:
 		return _chase_ranged(to_player, dist, delta)
@@ -433,7 +457,33 @@ func is_dead() -> bool:
 
 
 func _can_see_player() -> bool:
-	return _player_alive() and global_position.distance_to(_player.global_position) <= aggro_range
+	if not _player_alive() or global_position.distance_to(_player.global_position) > aggro_range:
+		return false
+	return not need_los or _has_line_of_sight()
+
+
+## True when no wall (collision layer 1) stands between this skeleton and George.
+func _has_line_of_sight() -> bool:
+	var from := global_position + Vector3.UP * 1.2 * model_scale
+	var to := _player.global_position + Vector3.UP * 1.0
+	var query := PhysicsRayQueryParameters3D.create(from, to, 1)
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## Calls two helpers from the parent spawner (the necromancer's minions).
+func _summon() -> void:
+	_summons = _summons.filter(func(e): return is_instance_valid(e) and not e.is_dead())
+	var spawner := get_parent()
+	if spawner == null or not spawner.has_method("spawn_summon"):
+		return
+	Sfx.play("orb_cast", global_position)
+	for i in 2:
+		if _summons.size() >= summon_max:
+			return
+		var angle := randf() * TAU
+		var helper = spawner.spawn_summon(summon_kind, global_position + Vector3(cos(angle), 0.0, sin(angle)) * 3.0)
+		if helper:
+			_summons.append(helper)
 
 
 func _player_alive() -> bool:

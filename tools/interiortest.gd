@@ -39,7 +39,7 @@ func _run() -> void:
 	var p := get_first_node_in_group("player") as Player
 	var doors := []
 	for n in get_nodes_in_group("interactables"):
-		if n is InteractSpot and n.label.begins_with("[R] Είσοδος"):
+		if n is InteractSpot and n.label.begins_with("[R] Είσοδος") and not n.label.contains("Κατακόμβη"):   # the catacombs have their own tests
 			doors.append(n)
 	print("doors: ", doors.size())
 	var seen := {}

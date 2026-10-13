@@ -118,7 +118,14 @@ const BUILDING_NAMES := {
 	"blacksmith": "Σιδηρουργείο",
 	"market": "Παζάρι",
 	"home": "Σπίτι",
+	"catacombs": "Κατακόμβη",
 }
+
+const CATACOMBS_SEALED := "Σφραγισμένη πύλη"
+const MSG_CATACOMBS_SEALED := "Η πύλη είναι σφραγισμένη με τις σφραγίδες του Αγίου. Μίλησε πρώτα με τον Παπά-Σταύρο."
+const PROMPT_GATE_SEALED := "Η πύλη του Ηγουμένου"
+const MSG_GATE_SEALED := "Η πύλη ανοίγει μόνο όταν πέσουν οι τρεις Φύλακες των Σφραγίδων."
+const MSG_GATE_OPEN := "Οι σφραγίδες έσβησαν. Η πύλη του Ηγουμένου άνοιξε!"
 
 const DAY_WORD := "Ημέρα"
 

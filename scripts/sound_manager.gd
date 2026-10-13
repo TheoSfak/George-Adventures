@@ -223,6 +223,8 @@ func _pick_music() -> String:
 				return "tavern"
 			"church":
 				return "church"
+			"catacombs":
+				pass                      # fights and bosses below may still change the music
 			_:
 				return "night"
 	var now := Time.get_ticks_msec() / 1000.0
@@ -238,7 +240,7 @@ func _pick_music() -> String:
 		if d <= 24.0:
 			fighting = true
 		var kind: String = e.get("kind_id")
-		if d <= 45.0 and (kind == "captain" or kind == "king" or kind == "warlord"):
+		if d <= 45.0 and (kind in ["captain", "king", "warlord", "warden_bone", "warden_flame", "warden_shadow", "necromancer"]):
 			boss = true
 	if fighting:
 		_combat_until = now + COMBAT_HOLD
@@ -249,7 +251,7 @@ func _pick_music() -> String:
 	if now < _combat_until:
 		return "combat"
 	var flat := Vector2(_player.global_position.x, _player.global_position.z)
-	if flat.distance_to(CRYPT) < 62.0:
+	if flat.distance_to(CRYPT) < 62.0 or (_interiors != null and _interiors.is_inside()):
 		return "crypt"
 	if flat.length() > 105.0:
 		return "wild"
@@ -273,7 +275,7 @@ func _update_ambience(delta: float) -> void:
 		"wind_loop": -12.0 if out > 0.0 else -60.0,
 		"amb_tavern": -3.0 if inside and kind == "tavern" and sfx_on else -60.0,
 		"amb_church": -6.0 if inside and kind == "church" and sfx_on else -60.0,
-		"amb_crypt": -2.0 if near_crypt and sfx_on else -60.0,
+		"amb_crypt": -2.0 if (near_crypt or kind == "catacombs") and sfx_on else -60.0,
 	}
 	# the day layer fades with the light, the night layer with the dark
 	if out > 0.0 and not near_crypt:

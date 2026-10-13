@@ -136,5 +136,5 @@ func _run() -> void:
 	await talk("stavros", "quest_end_dialogue")
 	await create_timer(4.5).timeout
 	await shot("the_end")
-	print("7) finished: ", states(), " game_finished fired: ", finished[0], " level ", p.level, " gold ", p.gold, " potions ", p.potions)
+	print("7) finished: ", states(), " game_finished fired (must be false: part 2 follows): ", finished[0], " descent state (AVAILABLE=1): ", q.state["descent"], " level ", p.level, " gold ", p.gold, " potions ", p.potions)
 	quit()

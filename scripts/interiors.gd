@@ -182,6 +182,24 @@ var _saved_zoom := 7.0
 
 func _ready() -> void:
 	add_to_group("interiors")
+	_hook_player.call_deferred()
+
+
+## When George dies in the catacombs he wakes up in the village: put the outdoor light back.
+func _hook_player() -> void:
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player:
+		player.respawned.connect(_on_player_respawned.bind(player))
+
+
+func _on_player_respawned(player: Player) -> void:
+	if not _inside:
+		return
+	_set_indoor_light(false)
+	player.get_node("CameraRig/SpringArm3D").spring_length = _saved_zoom
+	_inside = false
+	current_kind = ""
+	current_door = ""
 
 
 func is_inside() -> bool:
@@ -203,18 +221,23 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	Sfx.ui("door_open")
 	await hud.fade_out(0.3)
 	if not _rooms.has(door_id):
-		_build_room(door_id, kind, outside_pos, outside_heading)
+		if kind == "catacombs":
+			await _build_catacombs(door_id, outside_pos, outside_heading)
+		else:
+			_build_room(door_id, kind, outside_pos, outside_heading)
 	var room: Dictionary = _rooms[door_id]
 	var size: Vector2 = room["size"]
-	_set_indoor_light(true)
-	player.teleport(room["origin"] + Vector3(0, 0.05, size.y / 2.0 - 4.4), PI)
+	_set_indoor_light(true, kind)
+	player.teleport(room["spawn"] if room.has("spawn") else room["origin"] + Vector3(0, 0.05, size.y / 2.0 - 4.4), PI)
 	_saved_zoom = player.get_node("CameraRig/SpringArm3D").spring_length
-	player.get_node("CameraRig/SpringArm3D").spring_length = 4.6   # rooms are small: zoom in
+	player.get_node("CameraRig/SpringArm3D").spring_length = 6.2 if kind == "catacombs" else 4.6   # rooms are small: zoom in
 	_inside = true
 	current_kind = kind
 	current_door = door_id
 	await hud.fade_in(0.3)
 	player.busy = false
+	if kind == "catacombs":
+		Quests.report_reach("catacombs")
 
 
 func _exit_room(door_id: String, player: Player) -> void:
@@ -236,7 +259,7 @@ func _exit_room(door_id: String, player: Player) -> void:
 
 
 ## Indoors: no sun, no fog, warm dim ambient light. Restored when going back out.
-func _set_indoor_light(indoor: bool) -> void:
+func _set_indoor_light(indoor: bool, kind: String = "") -> void:
 	var world_env := get_tree().root.find_child("WorldEnvironment", true, false) as WorldEnvironment
 	var sun := get_tree().root.find_child("Sun", true, false) as Light3D
 	if world_env == null:
@@ -252,6 +275,10 @@ func _set_indoor_light(indoor: bool) -> void:
 		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 		env.ambient_light_color = Color(0.85, 0.72, 0.58)
 		env.ambient_light_energy = 0.85
+		if kind == "catacombs":                  # cold, dark stone lit by torches
+			env.background_color = Color(0.01, 0.01, 0.02)
+			env.ambient_light_color = Color(0.42, 0.48, 0.70)
+			env.ambient_light_energy = 0.55
 		env.fog_enabled = false
 		if sun:
 			sun.visible = false
@@ -324,7 +351,7 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 		model.scale = Vector3.ONE * f[4]
 		root.add_child(model)
 		if (f.size() <= 5) and not (f[0] as String).contains("rug") and not (f[0] as String).contains("candle"):
-			_collider_for(model)
+			collider_for(model)
 
 	# Tavern regulars
 	for n in def.get("npcs", []):
@@ -378,6 +405,19 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 	root.add_child(exit_spot)
 
 
+## The catacombs below the old crypt: one big level built from catacombs.gd on the first visit.
+func _build_catacombs(door_id: String, outside_pos: Vector3, outside_heading: float) -> void:
+	var level := Catacombs.new()
+	level.name = "Catacombs"
+	level.exit_action = func(p): _exit_room(door_id, p)
+	add_child(level)
+	_rooms[door_id] = {
+		"origin": Catacombs.ORIGIN, "size": Vector2(Catacombs.GRID) * Catacombs.CELL,
+		"outside_pos": outside_pos, "outside_heading": outside_heading, "spawn": level.spawn_point(),
+	}
+	await level.build()
+
+
 var _regulars := 0
 
 
@@ -423,7 +463,7 @@ func _box(parent: Node, pos: Vector3, size: Vector3, mat: Material, solid: bool)
 
 ## A box collider around a furniture model so George cannot walk through it.
 ## The body is a child of the model, so it inherits the model's scale and rotation.
-func _collider_for(model: Node3D) -> void:
+static func collider_for(model: Node3D) -> void:
 	var have := false
 	var box := AABB()
 	for node in model.find_children("*", "MeshInstance3D", true, false):

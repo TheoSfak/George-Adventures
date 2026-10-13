@@ -377,7 +377,7 @@ func _footsteps() -> void:
 	var interiors := get_tree().get_first_node_in_group("interiors")
 	var id := "footstep_grass"
 	if interiors != null and interiors.is_inside():
-		id = "footstep_wood"
+		id = "footstep_stone" if interiors.current_kind == "catacombs" else "footstep_wood"
 	elif Vector2(global_position.x, global_position.z).length() < 26.0:
 		id = "footstep_stone"
 	Sfx.play(id)

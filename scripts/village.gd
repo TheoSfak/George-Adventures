@@ -129,6 +129,7 @@ func _ready() -> void:
 	_build_border()
 	_build_village()
 	_build_villagers()
+	add_child(VillageSquare.new())
 	_build_camp()
 	_build_quarry()
 	_build_crypt()
@@ -424,6 +425,28 @@ func _build_crypt() -> void:
 			holder.add_child(light)
 			_add_cylinder_collider(lamp, 0.5, 2.0, Vector3.ZERO)
 	_occupy(CRYPT.x, CRYPT.y - 6.0, 52)
+	_build_catacomb_door()
+## The door of the old crypt leads down to the catacombs (story part 2). It stays sealed
+## until Παπά-Σταύρος has sent George down ("Η Κάθοδος").
+func _build_catacomb_door() -> void:
+	var front := Vector3(CRYPT.x, 0.0, CRYPT.y - 22.0 + 4.0 * 2.6 + 1.2)
+	var spot := InteractSpot.make(Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["catacombs"], func(player: Player):
+		if not _catacombs_open():
+			player.message.emit(Strings.MSG_CATACOMBS_SEALED)
+			return
+		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+		if interiors:
+			interiors.enter("catacombs", "catacombs", front + Vector3(0, 0, 1.6), 0.0, player), 4.6)
+	spot.prompt_func = func():
+		return Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["catacombs"] if _catacombs_open() else "[R] " + Strings.CATACOMBS_SEALED
+	spot.position = front
+	add_child(spot)
+
+
+func _catacombs_open() -> bool:
+	return Quests.state["descent"] >= Quests.S.ACTIVE
+
+
 func _build_chests_items_signs() -> void:
 	var chests := Node3D.new()
 	chests.name = "Chests"

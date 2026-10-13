@@ -87,7 +87,72 @@ const KINDS := {
 		"patrol_radius": 3.0,
 		"xp_reward": 400, "gold_min": 100, "gold_max": 140, "potion_chance": 1.0,
 	},
+	# --- the catacombs below the old crypt (placed by catacombs.gd; "quest" = the quest that needs the boss)
+	"cguard": {
+		"kind_id": "cguard", "tint_color": Color(0.30, 0.70, 0.85, 0.26), "model_scale": 1.15,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 85.0, "attack_damage": 16.0, "chase_speed": 4.0, "attack_cooldown": 1.5,
+		"aggro_range": 14.0, "leash_range": 30.0, "need_los": true,
+		"xp_reward": 42, "gold_min": 6, "gold_max": 14, "potion_chance": 0.4,
+	},
+	"acolyte": {
+		"kind_id": "acolyte", "tint_color": Color(0.85, 0.15, 0.30, 0.30),
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 12.0,
+		"ranged_min": 8.0, "ranged_max": 15.0, "aggro_range": 18.0, "leash_range": 30.0, "need_los": true,
+		"max_health": 40.0, "attack_damage": 18.0, "chase_speed": 3.9, "attack_cooldown": 2.4,
+		"xp_reward": 40, "gold_min": 6, "gold_max": 14, "potion_chance": 0.35,
+	},
+	"warden_bone": {
+		"kind_id": "warden_bone", "respawn": false, "quest": "wardens", "tint_color": Color(0.85, 0.9, 1.0, 0.20),
+		"display_name": "Φύλακας των Οστών", "model_scale": 2.1,
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 640.0, "attack_damage": 26.0, "chase_speed": 3.9, "attack_range": 3.6,
+		"attack_hit_time": 0.7, "attack_cooldown": 2.0, "attack_anim": "1H_Melee_Attack_Chop",
+		"aggro_range": 20.0, "leash_range": 36.0, "patrol_radius": 3.0, "need_los": true,
+		"xp_reward": 320, "gold_min": 70, "gold_max": 110, "potion_chance": 1.0,
+	},
+	"warden_flame": {
+		"kind_id": "warden_flame", "respawn": false, "quest": "wardens", "tint_color": Color(1.0, 0.45, 0.10, 0.38),
+		"display_name": "Φύλακας της Φλόγας", "model_scale": 2.0,
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 13.0,
+		"ranged_min": 7.0, "ranged_max": 15.0, "aggro_range": 22.0, "leash_range": 38.0, "patrol_radius": 3.0, "need_los": true,
+		"max_health": 540.0, "attack_damage": 24.0, "chase_speed": 4.3, "attack_cooldown": 1.7,
+		"xp_reward": 320, "gold_min": 70, "gold_max": 110, "potion_chance": 1.0,
+	},
+	"warden_shadow": {
+		"kind_id": "warden_shadow", "respawn": false, "quest": "wardens", "tint_color": Color(0.35, 0.12, 0.55, 0.45),
+		"display_name": "Φύλακας της Σκιάς", "model_scale": 1.9,
+		"model_path": CHAR + "Skeleton_Rogue.glb",
+		"weapon_path": WEAPONS + "Skeleton_Crossbow.gltf",
+		"ranged": true, "projectile_kind": "arrow", "shoot_anim": "1H_Ranged_Shoot", "projectile_speed": 22.0,
+		"ranged_min": 6.0, "ranged_max": 14.0, "aggro_range": 22.0, "leash_range": 38.0, "patrol_radius": 3.0, "need_los": true,
+		"max_health": 500.0, "attack_damage": 19.0, "chase_speed": 5.0, "attack_cooldown": 1.3,
+		"xp_reward": 320, "gold_min": 70, "gold_max": 110, "potion_chance": 1.0,
+	},
+	# The last boss: fires orbs from afar and calls skeleton helpers
+	"necromancer": {
+		"kind_id": "necromancer", "respawn": false, "quest": "necro", "tint_color": Color(0.20, 0.90, 0.40, 0.32),
+		"display_name": "Αρχιερέας της Σκιάς", "model_scale": 2.3,
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 12.0,
+		"ranged_min": 7.0, "ranged_max": 15.0, "aggro_range": 26.0, "leash_range": 48.0, "patrol_radius": 2.0, "need_los": true,
+		"max_health": 1100.0, "attack_damage": 30.0, "chase_speed": 4.4, "attack_cooldown": 2.2,
+		"summon_kind": "minion", "summon_interval": 13.0, "summon_max": 4,
+		"xp_reward": 900, "gold_min": 200, "gold_max": 260, "potion_chance": 1.0,
+	},
 }
+
+# Bosses always drop buff potions and a charm.
+const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -125,6 +190,7 @@ var _loot: Node3D
 
 
 func _ready() -> void:
+	add_to_group("enemy_spawner")
 	_loot = Node3D.new()
 	_loot.name = "Loot"
 	add_child(_loot)
@@ -140,27 +206,63 @@ func _spawn(index: int) -> void:
 	var s: Array = SPAWNS[index]
 	if not KINDS[s[0]].get("respawn", true) and SaveGame.boss_defeated(s[0]):
 		return                            # this boss was killed in an earlier session
-	var enemy := ENEMY_SCENE.instantiate() as Enemy
-	var stats: Dictionary = KINDS[s[0]]
-	for key in stats:
-		if key != "respawn":
-			enemy.set(key, stats[key])
-	enemy.position = _free_spot(Vector3(s[1], 0.05, s[2]))
+	var enemy := _make(s[0], Vector3(s[1], 0.05, s[2]))
 	enemy.died.connect(_on_enemy_died.bind(index))
 	add_child(enemy)
 
 
-## A night invader: marches on the well, dies for good (index -1: no respawn).
-func spawn_invader(kind: String, pos: Vector3, target: Vector3 = Vector3.ZERO) -> Enemy:
+func _make(kind: String, pos: Vector3) -> Enemy:
 	var enemy := ENEMY_SCENE.instantiate() as Enemy
 	var stats: Dictionary = KINDS[kind]
 	for key in stats:
-		if key != "respawn":
+		if key != "respawn" and key != "quest":
 			enemy.set(key, stats[key])
+	enemy.position = _free_spot(pos)
+	return enemy
+
+
+## A creature of the catacombs (catacombs.gd calls this once the rooms exist). Ordinary
+## ones come back after a long while; the bosses stay dead once their quest is done.
+func spawn_extra(kind: String, pos: Vector3) -> Enemy:
+	var stats: Dictionary = KINDS[kind]
+	if not stats.get("respawn", true) and SaveGame.boss_defeated(kind) and Quests.state[stats["quest"]] == Quests.S.DONE:
+		return null
+	var enemy := _make(kind, pos)
+	enemy.died.connect(_on_extra_died.bind(kind, pos))
+	add_child(enemy)
+	return enemy
+
+
+## Helpers called by a boss (the necromancer's skeletons): they never come back.
+func spawn_summon(kind: String, pos: Vector3) -> Enemy:
+	var enemy := _make(kind, pos)
+	enemy.aggro_range = 30.0
+	enemy.died.connect(_on_enemy_died.bind(-1))
+	add_child(enemy)
+	return enemy
+
+
+func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player:
+		player.gain_xp(enemy.xp_reward)
+	Quests.report_kill(enemy.kind_id)
+	_drop_loot(enemy)
+	if KINDS[kind].get("respawn", true):
+		await get_tree().create_timer(respawn_time * 2.0).timeout
+		while player and player.global_position.distance_to(home) < 30.0:
+			await get_tree().create_timer(5.0).timeout
+		spawn_extra(kind, home)
+	else:
+		SaveGame.note_boss(kind)
+
+
+## A night invader: marches on the well, dies for good (index -1: no respawn).
+func spawn_invader(kind: String, pos: Vector3, target: Vector3 = Vector3.ZERO) -> Enemy:
+	var enemy := _make(kind, pos)
 	enemy.invader = true
 	enemy.march_target = target
 	enemy.aggro_range = maxf(enemy.aggro_range, 15.0)
-	enemy.position = _free_spot(pos)
 	enemy.died.connect(_on_enemy_died.bind(-1))
 	add_child(enemy)
 	return enemy
@@ -188,14 +290,15 @@ func _drop_loot(enemy: Enemy) -> void:
 	if randf() < enemy.potion_chance:
 		_drop(Pickup.make("potion", 1), enemy.global_position)
 	# rarer buff potions (bosses always drop one)
-	var rare := 1.0 if enemy.kind_id == "captain" or enemy.kind_id == "king" else 0.07
+	var is_boss := enemy.kind_id in BOSSES
+	var rare := 1.0 if is_boss else 0.07
 	if randf() < rare:
 		_drop(Pickup.make("power_potion", 1), enemy.global_position)
 	if randf() < rare:
 		_drop(Pickup.make("speed_potion", 1), enemy.global_position)
 	# loot that only sells at the market: bones are common, charms rare (bosses always drop a charm)
 	var roll := randf()
-	if enemy.kind_id == "captain" or enemy.kind_id == "king" or roll < 0.04:
+	if is_boss or roll < 0.04:
 		_drop(Pickup.make("junk_charm", 1), enemy.global_position)
 	elif roll < 0.16:
 		_drop(Pickup.make("junk_rust", 1), enemy.global_position)
