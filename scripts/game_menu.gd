@@ -421,6 +421,7 @@ func _build_settings() -> void:
 	updates.add_theme_icon_override("unchecked", _check_icon(false))
 	updates.toggled.connect(func(on: bool): GameSettings.set_check_updates(on))
 	_box.add_child(updates)
+	_box.add_child(_graphics_row())
 	_box.add_child(UiKit.label(Strings.SET_KEYS, 19, UiKit.GOLD_TEXT))
 	_box.add_child(_key_list())
 	var row := HBoxContainer.new()
@@ -497,9 +498,69 @@ func _device_picker() -> Control:
 	return option
 
 
+## "Γραφικά": the renderer drop-down, a description of the chosen mode and the apply button. A renderer
+## cannot change while the game runs, so applying writes override.cfg and restarts (graphics_mode.gd).
+func _graphics_row() -> Control:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 4)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var name := UiKit.label(Strings.SET_GRAPHICS, 19, UiKit.GOLD_TEXT)
+	name.custom_minimum_size.x = 90
+	row.add_child(name)
+	var option := OptionButton.new()
+	option.focus_mode = Control.FOCUS_NONE
+	option.custom_minimum_size = Vector2(200, 34)
+	option.add_theme_font_size_override("font_size", 17)
+	option.add_theme_color_override("font_color", UiKit.CREAM)
+	for style in ["normal", "hover", "pressed"]:
+		option.add_theme_stylebox_override(style, UiKit._button_box(Color(0.17, 0.19, 0.27, 0.96), Color(1, 1, 1, 0.20), 3))
+	var ids := GraphicsMode.ids()
+	var current := GraphicsMode.current()
+	for i in ids.size():
+		option.add_item(GraphicsMode.label(ids[i]))
+		if ids[i] == current:
+			option.select(i)
+	row.add_child(option)
+	var apply := UiKit.button(Strings.GFX_APPLY, func(): pass, 260.0, 16)
+	apply.disabled = true
+	row.add_child(apply)
+	box.add_child(row)
+	var desc := UiKit.paragraph(GraphicsMode.description(ids[option.selected]), 15, 640.0)
+	box.add_child(desc)
+	var status := UiKit.paragraph("", 15, 640.0, UiKit.BAD)
+	status.visible = false
+	box.add_child(status)
+	option.item_selected.connect(func(i: int):
+		apply.disabled = ids[i] == current
+		desc.text = GraphicsMode.description(ids[i])
+		desc.visible = true
+		status.visible = false)
+	apply.pressed.connect(func(): _apply_graphics(ids[option.selected], desc, status))
+	return box
+
+
+## A problem replaces the description line (the settings page has no room for an extra line).
+func _apply_graphics(id: String, desc: Label, status: Label) -> void:
+	var problem := ""
+	if not GraphicsMode.can_restart():
+		problem = Strings.GFX_ERR_EDITOR
+	else:
+		if not _title:
+			autosave(true)                           # the restart must not lose progress
+		var result := GraphicsMode.apply(id)
+		if result["ok"]:
+			get_tree().quit()
+			return
+		problem = Strings.GFX_ERR_WRITE if result["error"] == "write" else Strings.GFX_ERR_EDITOR
+	status.text = problem
+	status.visible = true
+	desc.visible = false
+
+
 func _key_list() -> Control:
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(640, 210)
+	scroll.custom_minimum_size = Vector2(640, 120)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var grid := GridContainer.new()
 	grid.columns = 4

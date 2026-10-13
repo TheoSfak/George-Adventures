@@ -10,11 +10,12 @@ as a manual workaround. The renderer cannot be changed while the game runs, so a
 
 ## Behaviour
 
-- Settings page (title and pause menu) gets a row **Γραφικά**: a drop-down with three modes and a button
-  **Εφαρμογή και επανεκκίνηση**. The heading carries the hint "(αν φαίνονται μαύρα ή σπασμένα, δοκίμασε «Μεσαία»)".
-  - `forward_plus` — "Υψηλά (προτείνεται)" (the project default, Vulkan Forward+, SSAO)
-  - `mobile` — "Μεσαία — για πιο αδύναμες κάρτες" (Vulkan Mobile renderer, no SSAO, looks almost the same)
-  - `gl_compatibility` — "Συμβατά — για πολύ παλιές κάρτες" (OpenGL, paler colours)
+- Settings page (title and pause menu) gets a row **Γραφικά**: a drop-down with three modes, a button
+  **Εφαρμογή και επανεκκίνηση** and, below, a one-line description of the chosen mode (the page has no room for
+  longer labels; a problem message replaces the description line instead of adding a line).
+  - `forward_plus` — "Υψηλά" (the project default, Vulkan Forward+, SSAO); its description says "αν τα γραφικά φαίνονται μαύρα ή σπασμένα, δοκίμασε «Μεσαία»"
+  - `mobile` — "Μεσαία" (Vulkan Mobile renderer, no SSAO, looks almost the same; for weaker or older cards)
+  - `gl_compatibility` — "Συμβατά" (OpenGL, paler colours; for very old cards)
 - The drop-down starts on the renderer in use (`RenderingServer.get_current_rendering_method()`); the button is
   disabled while the selection equals it.
 - **How the choice persists:** the game writes `override.cfg` next to the exe (Godot reads it at start and it
@@ -34,12 +35,12 @@ as a manual workaround. The renderer cannot be changed while the game runs, so a
 ## Components
 
 - `scripts/graphics_mode.gd` (`class_name GraphicsMode`, static, no autoload references): `ids()`, `is_valid(id)`,
-  `label(id)`, `current()`, `can_restart()`, `override_text(id)`, `write_override(dir, id) -> bool`,
+  `label(id)`, `description(id)`, `current()`, `can_restart()`, `override_text(id)`, `write_override(dir, id) -> bool`,
   `read_override(dir) -> String`, `restart_args(id, user_args) -> PackedStringArray`, `apply(id, dir) -> Dictionary`
   (`{"ok": bool, "error": "" | "editor" | "invalid" | "write"}`; on success it has already started the new
   instance when `restart` is allowed; the caller quits).
-- `scripts/strings_el.gd`: `SET_GRAPHICS`, `GFX_HIGH`, `GFX_MEDIUM`, `GFX_COMPAT`, `GFX_APPLY`, `GFX_ERR_EDITOR`, `GFX_ERR_WRITE`.
-- `scripts/game_menu.gd`: the row in `_build_settings` (the key list gets 30 px shorter to make room), the
+- `scripts/strings_el.gd`: `SET_GRAPHICS`, `GFX_HIGH/MEDIUM/COMPAT`, `GFX_DESC_HIGH/MEDIUM/COMPAT`, `GFX_APPLY`, `GFX_ERR_EDITOR`, `GFX_ERR_WRITE`.
+- `scripts/game_menu.gd`: the row in `_build_settings` (the key list gets 90 px shorter to make room), the
   apply handler (autosave, `GraphicsMode.apply`, quit).
 
 ## Tests

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 (unreleased) — graphics setting
+**New in this version**
+- **A "Γραφικά" setting in the settings page** (title and pause menu) for computers where the normal graphics mode draws black or broken surfaces: Υψηλά (default), Μεσαία (Vulkan Mobile renderer, almost the same picture) and Συμβατά (OpenGL, for very old cards). "Εφαρμογή και επανεκκίνηση" saves the game (from the pause menu), writes an `override.cfg` next to the exe and starts the game again; the choice stays for every later start, no `.bat` needed. Choosing "Υψηλά" removes the file again (only a file the game wrote itself; a hand-made `override.cfg` is never touched). It works only in the exported game; in the editor it says so and writes nothing.
+- The settings page got more compact (the key list is shorter) to make room.
+- New tests: `graphics_mode_test` (headless) and the windowed `graphicsmenutest`.
+
 ## 1.0.0 (2026-10-13) — updates, credits, a splash screen and the first full release
 **New in this version**
 - **Update with one click.** When the title menu opens the game asks GitHub whether a newer release exists (only the latest published release, never a pre-release). If there is one, a card at the top right shows the version and what is new with an "Ενημέρωση" button: the game downloads the zip, checks its SHA-256, replaces its own exe (the old one is kept as `.old` until the next start) and restarts, keeping the graphics mode in use. An option in the settings turns the check off. Saves and settings are untouched. (`scripts/update_logic.gd`, `update_installer.gd`, `updater.gd`.)
