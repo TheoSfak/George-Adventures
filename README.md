@@ -36,6 +36,7 @@ The mouse cursor is free. Hold a mouse button to move the camera.
 | Music on/off, sounds on/off | F7, F8 | |
 | Fullscreen | F11 | |
 | Audio output device (if silent) | F9 | |
+| Change the weather (try it) | F6 | |
 | Input/audio diagnostics | F12 | |
 
 ## Project layout

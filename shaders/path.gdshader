@@ -7,6 +7,7 @@ uniform vec3 base_color : source_color = vec3(0.66, 0.52, 0.33);
 uniform vec3 edge_color : source_color = vec3(0.40, 0.33, 0.20);
 uniform bool cobble = false;
 uniform float edge_soft = 0.22;
+global uniform float wetness;            // see ground.gdshader
 
 uniform vec2 world_offset = vec2(0.0);   // see ground.gdshader
 varying vec3 wpos;
@@ -49,7 +50,7 @@ void fragment() {
 	float ragged = (vnoise(p * 1.3) - 0.5) * 0.35;
 	float inside = 1.0 - smoothstep(1.0 - edge_soft, 1.0, across + ragged);
 	c = mix(edge_color, c, smoothstep(0.0, 0.5, inside));
-	ALBEDO = c;
+	ALBEDO = c * (1.0 - 0.28 * wetness);
 	ALPHA = clamp(inside * 1.6, 0.0, 1.0);
 	ROUGHNESS = 1.0;
 }

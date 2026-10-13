@@ -8,6 +8,7 @@ uniform vec3 grass_mid : source_color = vec3(0.34, 0.56, 0.21);
 uniform vec3 grass_dark : source_color = vec3(0.23, 0.42, 0.17);
 uniform vec3 dry_grass : source_color = vec3(0.66, 0.63, 0.32);
 uniform float darken = 1.0;
+global uniform float wetness;            // 0 dry .. 1 soaked (set by Weather); darkens the ground
 
 uniform vec2 world_offset = vec2(0.0);   // far-away regions (the Frontier) subtract their origin: float noise breaks at thousands of metres
 varying vec3 wpos;
@@ -52,7 +53,7 @@ void fragment() {
 	c = mix(c, dry_grass, smoothstep(0.62, 0.86, fbm(p * 0.011 + 31.0)) * 0.5);
 	c *= 0.90 + 0.20 * fine;
 	c += (speck - 0.5) * 0.06;
-	ALBEDO = c * darken;
+	ALBEDO = c * darken * (1.0 - 0.28 * wetness);
 	ROUGHNESS = 0.97;
 	SPECULAR = 0.04;
 }

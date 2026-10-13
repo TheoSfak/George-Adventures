@@ -178,7 +178,7 @@ const CONTROLS_HELP: Array = [
 	["Ροδέλα", "Ζουμ κάμερας"], ["F ή κλικ", "Επίθεση"], ["K", "Άμυνα"], ["H", "Φίλτρο υγείας"],
 	["R / Enter", "Δράση, συνομιλία"], ["1 – 8", "Ικανότητες και φίλτρα"], ["P", "Ικανότητες"], ["T", "Ταλέντα"],
 	["I", "Εξοπλισμός"], ["M", "Χάρτης"], ["+ / −", "Ζουμ μικρού χάρτη"], ["F11", "Πλήρης οθόνη"],
-	["Esc", "Μενού"], ["F1", "Αυτή η σελίδα"],
+	["F6", "Αλλαγή καιρού"], ["Esc", "Μενού"], ["F1", "Αυτή η σελίδα"],
 ]
 const MENU_PAUSED := "Παύση"
 const SET_VOLUMES := "Ένταση ήχου"
@@ -196,6 +196,15 @@ const TOTEM_NAME := "Οστέινο Τοτέμ"
 
 const GUARD_NAME := "Φρουρός"
 const GUARDS_ARRIVE := "Οι φρουροί του Βασίλη φτάνουν στο πηγάδι (%d)"
+
+# --- weather (scripts/weather.gd)
+const WEATHER_CLEAR := "Ο ουρανός καθαρίζει."
+const WEATHER_FOG := "Η ομίχλη πέφτει πάνω στο χωριό…"
+const WEATHER_RAIN := "Άρχισε να βρέχει…"
+const WEATHER_STORM := "Μπουρίνι! Ακούγονται βροντές…"
+## Index = Weather.State (CLEAR, FOG, RAIN, STORM).
+const WEATHER_MESSAGES: Array[String] = [WEATHER_CLEAR, WEATHER_FOG, WEATHER_RAIN, WEATHER_STORM]
+const WEATHER_NAMES: Array[String] = ["Καθαρός", "Ομίχλη", "Βροχή", "Καταιγίδα"]
 
 # --- story part 3: the Frontier beyond the mountains
 const FRONTIER_SEALED := "Σφραγισμένη Πύλη του Περάσματος"

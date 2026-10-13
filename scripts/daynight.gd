@@ -55,6 +55,7 @@ var _lamp_level := -1.0
 var _fireflies: CPUParticles3D
 var _player: Node3D
 var _interiors: Node
+var _weather: Node
 
 
 func _ready() -> void:
@@ -175,6 +176,18 @@ func _sample(column: int, hour: float) -> Variant:
 	return KEYS[0][column]
 
 
+func _weather_node() -> Node:
+	if _weather == null or not is_instance_valid(_weather):
+		_weather = get_tree().get_first_node_in_group("weather")
+	return _weather
+
+
+## `c` with its colour drained toward the grey of the same brightness.
+func _greyed(c: Color, amount: float) -> Color:
+	var g := c.get_luminance()
+	return c.lerp(Color(g, g, g), clampf(amount, 0.0, 1.0))
+
+
 func _inside() -> bool:
 	if _interiors == null:
 		_interiors = get_tree().get_first_node_in_group("interiors")
@@ -185,18 +198,26 @@ func _apply(_force: bool) -> void:
 	var sun_dir := _sun_direction()
 	var moon_dir := _moon_direction()
 	var inside := _inside()
+	var overcast := 0.0
+	var fog_amount := 0.0
+	var flash := 0.0
+	var weather := _weather_node()
+	if weather != null:
+		overcast = weather.overcast
+		fog_amount = weather.fog
+		flash = weather.flash
 
 	if _sun != null and not inside:
 		var elev := sun_dir.y
 		var strength := smoothstep(-0.06, 0.22, elev)
 		_sun.basis = Basis.looking_at(-sun_dir, Vector3.UP)
-		_sun.light_energy = SUN_ENERGY * strength
+		_sun.light_energy = SUN_ENERGY * strength * lerpf(1.0, 0.35, overcast)
 		_sun.light_color = Color(1.0, 0.55, 0.3).lerp(Color(1.0, 0.97, 0.92), smoothstep(0.0, 0.5, elev))
 		_sun.visible = strength > 0.01
 	if _moon != null:
 		var up := smoothstep(-0.02, 0.25, moon_dir.y) * darkness()
 		_moon.basis = Basis.looking_at(-moon_dir, Vector3.UP)
-		_moon.light_energy = MOON_ENERGY * up
+		_moon.light_energy = MOON_ENERGY * up * lerpf(1.0, 0.5, overcast)
 		_moon.visible = up > 0.01 and not inside
 
 	if _env == null or inside:
@@ -204,6 +225,10 @@ func _apply(_force: bool) -> void:
 	var top: Color = _sample(1, time_of_day)
 	var horizon: Color = _sample(2, time_of_day)
 	var fog: Color = _sample(3, time_of_day)
+	if overcast > 0.0:                      # clouds: the sky and the fog lose their colour
+		top = _greyed(top, overcast * 0.8)
+		horizon = _greyed(horizon, overcast * 0.8)
+		fog = _greyed(fog, overcast * 0.8)
 	if _sky_mat != null:
 		_sky_mat.set_shader_parameter("top_color", top)
 		_sky_mat.set_shader_parameter("horizon_color", horizon)
@@ -211,12 +236,15 @@ func _apply(_force: bool) -> void:
 		_sky_mat.set_shader_parameter("sun_dir", sun_dir)
 		_sky_mat.set_shader_parameter("sun_color", Color(1.0, 0.6, 0.3).lerp(Color(1.0, 0.95, 0.8), smoothstep(0.0, 0.5, sun_dir.y)))
 		_sky_mat.set_shader_parameter("moon_dir", moon_dir)
-		_sky_mat.set_shader_parameter("star_amount", smoothstep(0.0, -0.25, sun_dir.y))
-	_env.ambient_light_energy = _sample(4, time_of_day)
+		_sky_mat.set_shader_parameter("star_amount", smoothstep(0.0, -0.25, sun_dir.y) * (1.0 - overcast))
+		_sky_mat.set_shader_parameter("overcast", overcast)
+		_sky_mat.set_shader_parameter("flash", flash)
+	# overcast days keep a little of the light the hidden sun loses; a lightning flash lights everything
+	_env.ambient_light_energy = _sample(4, time_of_day) + lerpf(0.0, 0.25, overcast) * (1.0 - darkness()) + flash * 1.5
 	_env.ambient_light_sky_contribution = _sample(5, time_of_day)
 	_env.ambient_light_color = AMBIENT_COLOR
 	_env.fog_light_color = fog
-	_env.fog_density = lerpf(0.0006, 0.0011, darkness())
+	_env.fog_density = lerpf(0.0006, 0.0011, darkness()) + fog_amount * 0.0045
 
 
 ## Outdoor villagers go home at dusk (one by one) and come back at dawn.

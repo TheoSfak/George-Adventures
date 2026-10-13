@@ -53,6 +53,12 @@ static func draw(ci: CanvasItem, rect: Rect2, icon: String, color: Color) -> voi
 			_fish(ci, c, s, color)
 		"food":
 			_food(ci, c, s, color)
+		"cloud":
+			_cloud(ci, c, s, color)
+		"rain":
+			_rain(ci, c, s, color)
+		"storm":
+			_storm(ci, c, s, color)
 
 
 static func _fish(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
@@ -70,6 +76,24 @@ static func _food(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
 	_rect(ci, c, s, -0.66, -0.06, 1.32, 0.10, color.lightened(0.25))                                                          # its rim
 	for x in [-0.28, 0.0, 0.28]:                                                                                              # steam
 		ci.draw_line(c + Vector2(x, -0.12) * s, c + Vector2(x + 0.07, -0.55) * s, Color(1, 1, 1, 0.65), maxf(1.5, 0.06 * s))
+
+
+static func _cloud(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	ci.draw_circle(c + Vector2(-0.34, 0.10) * s, 0.30 * s, color)
+	ci.draw_circle(c + Vector2(0.02, -0.10) * s, 0.40 * s, color)
+	ci.draw_circle(c + Vector2(0.38, 0.12) * s, 0.28 * s, color)
+	_rect(ci, c, s, -0.34, 0.10, 0.72, 0.30, color)
+
+
+static func _rain(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_cloud(ci, c + Vector2(0.0, -0.24) * s, s * 0.9, Color(0.80, 0.85, 0.92))
+	for x in [-0.30, 0.0, 0.30]:
+		ci.draw_line(c + Vector2(x, 0.34) * s, c + Vector2(x - 0.08, 0.76) * s, color, maxf(1.5, 0.08 * s))
+
+
+static func _storm(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_cloud(ci, c + Vector2(0.0, -0.24) * s, s * 0.9, Color(0.58, 0.62, 0.72))
+	_bolt(ci, c + Vector2(0.0, 0.34) * s, s * 0.55, color)
 
 
 static func _poly(ci: CanvasItem, c: Vector2, s: float, pts: Array, color: Color) -> void:
