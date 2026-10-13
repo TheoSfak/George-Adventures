@@ -178,6 +178,9 @@ var _inside := false
 var current_door := ""         # id of the door George went through, "" outside
 var current_kind := ""        # kind of the room George is in ("tavern", "church"...), "" outside
 var _saved_zoom := 7.0
+var _in_region := false            # George is in the Frontier (outdoors, far away from the village)
+var _region_outside := {}          # {"pos": Vector3, "heading": float} where the way back leads
+var _frontier: Frontier
 
 
 func _ready() -> void:
@@ -193,6 +196,10 @@ func _hook_player() -> void:
 
 
 func _on_player_respawned(player: Player) -> void:
+	if _in_region:                    # died in the Frontier: he wakes in the village, nothing else to restore
+		_in_region = false
+		current_kind = ""
+		return
 	if not _inside:
 		return
 	_set_indoor_light(false)
@@ -204,6 +211,12 @@ func _on_player_respawned(player: Player) -> void:
 
 func is_inside() -> bool:
 	return _inside
+
+
+## True while George is in the Frontier. It is outdoors (sun, sky and clock keep running),
+## so is_inside() stays false there; ask in_region() for the few things that differ.
+func in_region() -> bool:
+	return _in_region
 
 
 ## Where the door of the current room leads outside (used by the save game).
@@ -238,6 +251,46 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	player.busy = false
 	if kind == "catacombs":
 		Quests.report_reach("catacombs")
+
+
+## Teleports George to a far-away outdoor region (only "frontier" for now) with a fade. Unlike
+## enter() it leaves the light alone. outside_pos / outside_heading is where he stands again when
+## he comes back; spawn_override / spawn_heading place him somewhere else than the entry (loading a save).
+func enter_region(region_id: String, outside_pos: Vector3, outside_heading: float, player: Player, spawn_override: Vector3 = Vector3.INF, spawn_heading: float = PI) -> void:
+	if player.busy or region_id != "frontier":
+		return
+	player.busy = true
+	var hud := get_tree().get_first_node_in_group("hud")
+	Sfx.ui("door_open")
+	await hud.fade_out(0.3)
+	if _frontier == null:
+		_frontier = Frontier.new()
+		_frontier.name = "Frontier"
+		_frontier.exit_action = func(p): exit_region(p)
+		add_child(_frontier)
+		await _frontier.build()
+	_region_outside = {"pos": outside_pos, "heading": outside_heading}
+	player.teleport(_frontier.spawn_point() if spawn_override == Vector3.INF else spawn_override, spawn_heading)
+	_in_region = true
+	current_kind = "frontier"
+	await hud.fade_in(0.3)
+	player.busy = false
+	Quests.report_reach("frontier")
+
+
+func exit_region(player: Player) -> void:
+	if player.busy or not _in_region:
+		return
+	player.busy = true
+	var hud := get_tree().get_first_node_in_group("hud")
+	Sfx.ui("door_close")
+	await hud.fade_out(0.3)
+	player.teleport(_region_outside["pos"] + Vector3(0, 0.05, 0), _region_outside["heading"])
+	_in_region = false
+	current_kind = ""
+	await hud.fade_in(0.3)
+	player.busy = false
+	Quests.report_reach("village")
 
 
 func _exit_room(door_id: String, player: Player) -> void:

@@ -426,6 +426,7 @@ func _build_crypt() -> void:
 			_add_cylinder_collider(lamp, 0.5, 2.0, Vector3.ZERO)
 	_occupy(CRYPT.x, CRYPT.y - 6.0, 52)
 	_build_catacomb_door()
+	_build_pass_gate()
 ## The door of the old crypt leads down to the catacombs (story part 2). It stays sealed
 ## until Παπά-Σταύρος has sent George down ("Η Κάθοδος").
 func _build_catacomb_door() -> void:
@@ -445,6 +446,44 @@ func _build_catacomb_door() -> void:
 
 func _catacombs_open() -> bool:
 	return Quests.state["descent"] >= Quests.S.ACTIVE
+
+
+## The stone arch in the northern mountains that leads to the Frontier (story part 3). It stays
+## sealed until Παπά-Σταύρος has told George about the Fortress of Shadow ("Η Πύλη του Περάσματος").
+func _build_pass_gate() -> void:
+	var gate_pos: Vector3 = Frontier.VILLAGE_GATE
+	var holder := Node3D.new()
+	holder.name = "PassGate"
+	add_child(holder)
+	_place_abs(GRAVE + "arch_gate.gltf", gate_pos, 0.0, 3.4, holder)
+	for dx in [-7.0, 7.0]:
+		var lamp := _place_abs(GRAVE + "lantern_standing.gltf", gate_pos + Vector3(dx, 0, 3.0), 0.0, 2.4, holder)
+		_add_cylinder_collider(lamp, 0.5, 2.0, Vector3.ZERO)
+		var light := OmniLight3D.new()
+		light.position = gate_pos + Vector3(dx, 2.4, 3.0)
+		light.light_color = Color(0.6, 0.7, 1.0)
+		light.light_energy = 1.2
+		light.omni_range = 11.0
+		light.add_to_group("night_lights")
+		holder.add_child(light)
+	_occupy(gate_pos.x, gate_pos.z, 14.0)
+	var front := gate_pos + Vector3(0, 0, 3.0)
+	var enter := func(player: Player):
+		if not _frontier_open():
+			player.message.emit(Strings.MSG_FRONTIER_SEALED)
+			return
+		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+		if interiors:
+			interiors.enter_region("frontier", front + Vector3(0, 0, 2.0), 0.0, player)
+	var spot := InteractSpot.make(Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["frontier"], enter, 4.6)
+	spot.prompt_func = func():
+		return Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["frontier"] if _frontier_open() else "[R] " + Strings.FRONTIER_SEALED
+	spot.position = front
+	add_child(spot)
+
+
+func _frontier_open() -> bool:
+	return Quests.state["f_gate"] >= Quests.S.ACTIVE
 
 
 func _build_chests_items_signs() -> void:
