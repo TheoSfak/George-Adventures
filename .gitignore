@@ -4,3 +4,4 @@ export_presets.cfg
 _to_delete/
 .claude/
 tools/_shots/
+build/
