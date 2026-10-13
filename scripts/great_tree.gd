@@ -42,6 +42,7 @@ func _ready() -> void:
 	for pair in bridge_list():
 		_build_bridge(pair[0], pair[1])
 	_build_ramp()
+	_build_props()
 	# >>> the later tasks add their builders here
 
 
@@ -243,6 +244,244 @@ func _build_ramp() -> void:
 		body.position = Vector3(p.x, (top_y - 1.6) * 0.5, p.z)
 		body.add_child(shape)
 		add_child(body)
+
+
+# ------------------------------------------------------------ tree and props ----
+
+const TREE_POS := Vector3(4.0, 7.0, -1.0)         # the foot of the great tree on the plateau
+const TREE_FOOT := Vector3(9.5, 7.0, 3.0)         # a spot on the plateau a few metres from the trunk
+const CHEST_POS := Vector3(-8.2, 5.6, 22.5)       # on the south island
+const BENCH_POS := Vector3(23.5, 6.2, 17.6)       # on the east island
+const HOUSE_SCALE := 5.0
+const HOUSES := [
+	["buildings/blue/building_home_A_blue.gltf", Vector3(-3.5, 7.0, -4.5)],
+	["buildings/yellow/building_home_B_yellow.gltf", Vector3(4.5, 7.0, -9.0)],
+]
+# [island, offset on the island (x, z), trunk height, canopy radius]
+const UMBRELLAS := [
+	["south", Vector2(-1.5, 0.8), 5.5, 3.6], ["south", Vector2(1.8, -1.6), 4.2, 2.8],
+	["east", Vector2(-1.4, -0.6), 5.0, 3.3],
+	["far", Vector2(0.8, 1.2), 5.8, 3.9], ["far", Vector2(-1.8, -0.8), 4.0, 2.6],
+	["entry", Vector2(-1.2, -1.4), 3.6, 2.4],
+]
+const ROCK_SCALE := 3.2
+const TREE_SCALE := 9.5
+const ROCKS := [
+	"decoration/nature/rock_single_A.gltf", "decoration/nature/rock_single_B.gltf", "decoration/nature/rock_single_C.gltf",
+	"decoration/nature/rock_single_D.gltf", "decoration/nature/rock_single_E.gltf",
+]
+const SHORE_TREES := ["decoration/nature/tree_single_A.gltf", "decoration/nature/tree_single_B.gltf"]
+
+
+func _build_props() -> void:
+	_build_tree()
+	_build_houses()
+	_build_deck_and_lanterns()
+	_build_umbrella_trees()
+	_build_chest_and_bench()
+	_build_flowers_and_pads()
+	_build_shore()
+
+
+func _build_tree() -> void:
+	_add_visual(TreeMeshes.great_tree(21), "Tree", TREE_POS)
+	var body := StaticBody3D.new()
+	body.name = "TreeTrunk"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.position = TREE_POS
+	var shape := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = 3.4
+	cyl.height = 14.0
+	shape.shape = cyl
+	shape.position = Vector3(0.0, 7.0, 0.0)
+	body.add_child(shape)
+	add_child(body)
+
+
+## One box collider around a model (its meshes, in the local space of `node`).
+func _box_collider_for(node: Node3D, shrink := 0.9) -> void:
+	var inv := node.global_transform.affine_inverse()
+	var have := false
+	var box := AABB()
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		var a: AABB = (inv * (mi as MeshInstance3D).global_transform) * (mi as MeshInstance3D).get_aabb()
+		box = a if not have else box.merge(a)
+		have = true
+	if not have:
+		return
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(box.size.x * shrink, maxf(box.size.y, 0.5), box.size.z * shrink)
+	shape.shape = bs
+	shape.position = box.get_center()
+	body.add_child(shape)
+	node.add_child(body)
+
+
+## A KayKit model placed at `pos` (local) with a box collider.
+func _place_model(path: String, pos: Vector3, rot_deg: float, model_scale: float, parent: Node3D) -> Node3D:
+	var root := Node3D.new()
+	root.name = path.get_file().get_basename()
+	root.position = pos
+	root.rotation_degrees.y = rot_deg
+	var model := (load(WORLD + path) as PackedScene).instantiate() as Node3D
+	model.scale = Vector3.ONE * model_scale
+	root.add_child(model)
+	parent.add_child(root)
+	_box_collider_for(root, 0.8)
+	return root
+
+
+func _build_houses() -> void:
+	for i in HOUSES.size():
+		var h: Array = HOUSES[i]
+		var pos: Vector3 = h[1]
+		var d: Vector3 = TREE_POS - pos
+		var house := _place_model(h[0], pos, rad_to_deg(atan2(d.x, d.z)), HOUSE_SCALE, self)
+		house.name = "House_%d" % i
+		var light := OmniLight3D.new()
+		light.name = "HouseLight_%d" % i
+		light.light_color = Color(1.0, 0.72, 0.4)
+		light.light_energy = 1.4
+		light.omni_range = 12.0
+		light.position = pos + Vector3(0.0, 3.5, 0.0) + d.normalized() * 3.5
+		light.add_to_group("night_lights")
+		add_child(light)
+
+
+func _build_deck_and_lanterns() -> void:
+	_add_visual(TreeMeshes.deck_ring(5.4, 7.6, 28), "DeckRing", TREE_POS + Vector3(0.0, 0.03, 0.0))
+	var pts: Array[Vector3] = []
+	for a in [20.0, 90.0, 160.0, 240.0, 305.0]:
+		var ang := deg_to_rad(a)
+		pts.append(Vector3(TREE_POS.x + cos(ang) * 8.4, TREE_POS.y, TREE_POS.z + sin(ang) * 8.4))
+	for key in ["entry", "south", "east", "far"]:
+		var d: Dictionary = ISLANDS[key]
+		var ip: Vector2 = d["pos"]
+		pts.append(Vector3(ip.x + 1.6, float(d["top"]), ip.y - 1.6))
+	_add_visual(TreeMeshes.lanterns_posts(pts), "LanternPosts")
+	var heads := _add_visual(TreeMeshes.lanterns_heads(pts), "LanternHeads")
+	var glow := StandardMaterial3D.new()
+	glow.vertex_color_use_as_albedo = true
+	glow.vertex_color_is_srgb = true
+	glow.emission_enabled = true
+	glow.emission = Color(1.0, 0.75, 0.35)
+	glow.emission_energy_multiplier = 1.2
+	heads.material_override = glow
+	var deck_light := OmniLight3D.new()                    # the third light: over the deck, lighting the trunk
+	deck_light.name = "DeckLight"
+	deck_light.light_color = Color(1.0, 0.76, 0.45)
+	deck_light.light_energy = 1.4
+	deck_light.omni_range = 13.0
+	deck_light.position = TREE_POS + Vector3(0.0, 4.5, 0.0)
+	deck_light.add_to_group("night_lights")
+	add_child(deck_light)
+
+
+func _build_umbrella_trees() -> void:
+	for i in UMBRELLAS.size():
+		var u: Array = UMBRELLAS[i]
+		var d: Dictionary = ISLANDS[u[0]]
+		var ip: Vector2 = d["pos"]
+		var off: Vector2 = u[1]
+		var pos := Vector3(ip.x + off.x, float(d["top"]), ip.y + off.y)
+		_add_visual(TreeMeshes.umbrella_tree(float(u[2]), float(u[3]), 40 + i), "Umbrella_%d" % i, pos)
+		var body := StaticBody3D.new()
+		body.name = "Umbrella_%dBody" % i
+		body.collision_layer = 1
+		body.collision_mask = 0
+		body.position = pos + Vector3(0.0, float(u[2]) * 0.5, 0.0)
+		var shape := CollisionShape3D.new()
+		var cyl := CylinderShape3D.new()
+		cyl.radius = 0.4
+		cyl.height = float(u[2])
+		shape.shape = cyl
+		body.add_child(shape)
+		add_child(body)
+
+
+func _build_chest_and_bench() -> void:
+	var chest := Chest.new()
+	chest.position = CHEST_POS
+	chest.rotation_degrees.y = 200.0
+	chest.golden = true
+	chest.gold_min = 40
+	chest.gold_max = 80
+	chest.potions = 2
+	add_child(chest)
+	_add_visual(TreeMeshes.bench(), "Bench", BENCH_POS)
+	var body := StaticBody3D.new()
+	body.name = "BenchBody"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	body.position = BENCH_POS + Vector3(0.0, 0.45, 0.0)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(1.8, 0.9, 0.6)
+	shape.shape = box
+	body.add_child(shape)
+	add_child(body)
+
+
+func _build_flowers_and_pads() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	for key in ISLANDS:
+		var d: Dictionary = ISLANDS[key]
+		var ip: Vector2 = d["pos"]
+		var r := float(d["r"])
+		var pts: Array[Vector3] = []
+		for i in (26 if key == "central" else 14):
+			var a := rng.randf() * TAU
+			var rr := sqrt(rng.randf()) * r * 0.7
+			pts.append(Vector3(ip.x + cos(a) * rr, float(d["top"]), ip.y + sin(a) * rr))
+		_add_visual(TreeMeshes.flowers(pts, int(d["seed"]) + 100), "Flowers_" + key)
+	var pads: Array[Vector3] = []
+	for i in 40:
+		if pads.size() >= 16:
+			break
+		var a := rng.randf() * TAU
+		var rr := sqrt(rng.randf()) * 0.88
+		var p := Vector3(cos(a) * LAKE.x * rr, WATER_Y + 0.03, sin(a) * LAKE.y * rr)
+		var on_island := false
+		for key in ISLANDS:
+			var d: Dictionary = ISLANDS[key]
+			var ip: Vector2 = d["pos"]
+			if Vector2(p.x - ip.x, p.z - ip.y).length() < float(d["r"]) * 1.2 + 1.5:
+				on_island = true
+		if not on_island:
+			pads.append(p)
+	_add_visual(TreeMeshes.lily_pads(pads, 5), "LilyPads")
+
+
+## Rocks and a few trees around the shore (the side toward the village stays open) and flowers on the ground.
+func _build_shore() -> void:
+	var holder := Node3D.new()
+	holder.name = "Dressing"
+	add_child(holder)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 91
+	for i in 12:
+		var a := TAU * float(i) / 12.0 + rng.randf_range(-0.15, 0.15)
+		if absf(angle_difference(a, PI)) < 0.45:
+			continue
+		var f := rng.randf_range(1.08, 1.2)
+		_place_model(ROCKS[rng.randi() % ROCKS.size()], Vector3(cos(a) * LAKE.x * f, 0.0, sin(a) * LAKE.y * f),
+				rng.randf() * 360.0, ROCK_SCALE * rng.randf_range(0.7, 1.2), holder)
+	for i in 8:
+		var a := TAU * (float(i) + 0.5) / 8.0 + rng.randf_range(-0.1, 0.1)
+		if absf(angle_difference(a, PI)) < 0.5:
+			continue
+		var f := rng.randf_range(1.22, 1.32)
+		_place_model(SHORE_TREES[rng.randi() % SHORE_TREES.size()], Vector3(cos(a) * LAKE.x * f, 0.0, sin(a) * LAKE.y * f),
+				rng.randf() * 360.0, TREE_SCALE * rng.randf_range(0.8, 1.1), holder)
+	if terrain != null:
+		terrain.add_flower_ring(CENTER, 38.0, 43.0, 70)
 
 
 # >>> more builders are added below this line
