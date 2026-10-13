@@ -197,6 +197,15 @@ const TOTEM_NAME := "Οστέινο Τοτέμ"
 const GUARD_NAME := "Φρουρός"
 const GUARDS_ARRIVE := "Οι φρουροί του Βασίλη φτάνουν στο πηγάδι (%d)"
 
+# --- weather (scripts/weather.gd)
+const WEATHER_CLEAR := "Ο ουρανός καθαρίζει."
+const WEATHER_FOG := "Η ομίχλη πέφτει πάνω στο χωριό…"
+const WEATHER_RAIN := "Άρχισε να βρέχει…"
+const WEATHER_STORM := "Μπουρίνι! Ακούγονται βροντές…"
+## Index = Weather.State (CLEAR, FOG, RAIN, STORM).
+const WEATHER_MESSAGES: Array[String] = [WEATHER_CLEAR, WEATHER_FOG, WEATHER_RAIN, WEATHER_STORM]
+const WEATHER_NAMES: Array[String] = ["Καθαρός", "Ομίχλη", "Βροχή", "Καταιγίδα"]
+
 # --- story part 3: the Frontier beyond the mountains
 const FRONTIER_SEALED := "Σφραγισμένη Πύλη του Περάσματος"
 const MSG_FRONTIER_SEALED := "Η Πύλη του Περάσματος είναι σφραγισμένη. Μίλησε πρώτα με τον Παπά-Σταύρο."
