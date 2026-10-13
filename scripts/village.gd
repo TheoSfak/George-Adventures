@@ -472,6 +472,10 @@ func _build_pass_gate() -> void:
 		if not _frontier_open():
 			player.message.emit(Strings.MSG_FRONTIER_SEALED)
 			return
+		var invasion := get_tree().get_first_node_in_group("invasion")
+		if invasion != null and invasion.active:       # the village needs its hero tonight
+			player.message.emit(Strings.MSG_FRONTIER_INVASION)
+			return
 		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
 		if interiors:
 			interiors.enter_region("frontier", front + Vector3(0, 0, 2.0), 0.0, player)

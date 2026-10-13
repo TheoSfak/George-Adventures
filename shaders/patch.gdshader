@@ -8,6 +8,7 @@ uniform vec3 edge_color : source_color = vec3(0.40, 0.34, 0.22);
 uniform bool cobble = false;
 uniform float cobble_size = 1.7;
 
+uniform vec2 world_offset = vec2(0.0);   // see ground.gdshader
 varying vec3 wpos;
 
 float hash(vec2 p) {
@@ -25,7 +26,7 @@ float vnoise(vec2 p) {
 }
 
 void vertex() {
-	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz - vec3(world_offset.x, 0.0, world_offset.y);
 }
 
 void fragment() {

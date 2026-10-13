@@ -49,6 +49,15 @@ func _run() -> void:
 
 	q.state["f_gate"] = q.S.ACTIVE
 	check("open prompt after the quest", spot.interact_prompt().contains(Strings.BUILDING_NAMES["frontier"]))
+	# while the village is attacked George cannot leave it
+	var invasion = get_first_node_in_group("invasion")
+	invasion.start(1)
+	check("an invasion is running", invasion.active)
+	spot.interact(p)
+	await create_timer(0.6).timeout
+	check("George cannot leave while the village is attacked", not interiors.in_region())
+	invasion._on_dawn()
+	check("the invasion ended", not invasion.active)
 	spot.interact(p)
 	for i in 100:
 		await create_timer(0.1).timeout

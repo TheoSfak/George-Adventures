@@ -25,6 +25,7 @@ var _path_dirt: ShaderMaterial
 var _path_cobble: ShaderMaterial
 var _plant_mat: ShaderMaterial
 var _water_mat: ShaderMaterial
+var world_offset := Vector2.ZERO  # see set_world_offset()
 var _patch_shader: Shader
 var _path_cells := {}            # Vector2i -> Array[Vector3(x, z, half width)]
 var _edge_paths: Array = []      # [[Vector2 samples...], half width] for flower borders
@@ -43,6 +44,15 @@ func setup(seed_value: int) -> void:
 	_plant_mat = _shader_mat("plant")
 	_water_mat = _shader_mat("water")
 	_patch_shader = load(SH + "patch.gdshader") as Shader
+
+
+## For a Terrain far from the origin (the Frontier at x = -6000): the shaders' noise loses its
+## precision at thousands of metres and turns into hard squares, so they subtract this offset
+## (the Terrain node's own position) from the world position. Call after setup(), before building.
+func set_world_offset(offset: Vector2) -> void:
+	world_offset = offset
+	for m in [_ground_mat, _path_dirt, _path_cobble]:
+		m.set_shader_parameter("world_offset", offset)
 
 
 func _shader_mat(shader_name: String) -> ShaderMaterial:
@@ -85,6 +95,7 @@ func add_patch(center: Vector2, radius: float, color: Color, cobble := false, ed
 	mat.set_shader_parameter("base_color", color)
 	mat.set_shader_parameter("edge_color", edge)
 	mat.set_shader_parameter("cobble", cobble)
+	mat.set_shader_parameter("world_offset", world_offset)
 	mi.material_override = mat
 	mi.position = Vector3(center.x, 0.04, center.y)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

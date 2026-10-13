@@ -9,6 +9,7 @@ uniform vec3 grass_dark : source_color = vec3(0.23, 0.42, 0.17);
 uniform vec3 dry_grass : source_color = vec3(0.66, 0.63, 0.32);
 uniform float darken = 1.0;
 
+uniform vec2 world_offset = vec2(0.0);   // far-away regions (the Frontier) subtract their origin: float noise breaks at thousands of metres
 varying vec3 wpos;
 
 float hash(vec2 p) {
@@ -37,7 +38,7 @@ float fbm(vec2 p) {
 }
 
 void vertex() {
-	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz - vec3(world_offset.x, 0.0, world_offset.y);
 }
 
 void fragment() {

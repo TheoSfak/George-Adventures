@@ -108,6 +108,7 @@ func _build_ground() -> void:
 	terrain.position = ORIGIN                  # its geometry is local, the shaders use world noise
 	_root.add_child(terrain)
 	terrain.setup(7731)
+	terrain.set_world_offset(Vector2(ORIGIN.x, ORIGIN.z))     # the noise needs small numbers (see Terrain.set_world_offset)
 	var mat: ShaderMaterial = terrain._ground_mat
 	mat.set_shader_parameter("grass_light", Color(0.93, 0.95, 1.0))
 	mat.set_shader_parameter("grass_mid", Color(0.80, 0.84, 0.92))
@@ -301,7 +302,7 @@ func _build_camp() -> void:
 	for i in 6:                                   # six tents in a ring, doors toward the fire
 		var a := TAU * (float(i) + 0.5) / 6.0
 		var p := CAMP + Vector2(cos(a), sin(a)) * 19.0
-		var tent := _prop(W + "decoration/props/tent.gltf", p.x, p.y, rad_to_deg(atan2(-p.x, -p.y)), 14.0)
+		var tent := _prop(W + "decoration/props/tent.gltf", p.x, p.y, rad_to_deg(atan2(-p.x, -p.y)), 10.0)
 		Interiors.collider_for(tent)
 	_fire(CAMP.x, CAMP.y, 3.2, 24.0, 3.0)         # the big fire in the middle
 	for off in [Vector2(-10, -7), Vector2(10, -7), Vector2(-10, 10), Vector2(10, 10)]:
