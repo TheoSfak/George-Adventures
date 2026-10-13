@@ -77,7 +77,7 @@ HUD               -> weather icon in the clock capsule, message feed (Player.mes
 
 - Indoors (`Interiors.is_inside()`), in the catacombs and in the Frontier: no particles, no fog or overcast (DayNight already leaves the environment alone indoors; in the Frontier `outdoor` fades the values to 0), no lightning flash; only the muffled rain loop inside buildings.
 - The night invasion and the day/night cycle are unchanged; fog and rain simply sit on top of them.
-- The minimap capture (`Minimap._capture_world`) hides the clouds and fixes the sun for one frame; it must also read the weather as clear for that frame (set `Weather` effective values to 0 around the capture, or skip rain/fog by forcing `outdoor` to 0 during it).
+- The minimap picture (`Minimap._capture_world`) is taken once in the first frames of the game. The weather always starts CLEAR and the first change comes after at least 120 s, so the capture never sees rain, fog or wet ground; `weather_test` asserts that, so `minimap.gd` needs no change.
 
 ## HUD
 
@@ -95,7 +95,6 @@ HUD               -> weather icon in the clock capsule, message feed (Player.mes
 | `shaders/ground.gdshader`, `path.gdshader`, `patch.gdshader`, `scripts/terrain.gd` | `wet` uniform and `set_wetness`. |
 | `scripts/sound_manager.gd`, `tools/audio/sfx.py`, generated `sfx_ids.gd`, `assets/audio/sfx/*` | Rain loops, thunder, ambience mixing. |
 | `scripts/hud.gd`, `scripts/icons.gd`, `scripts/strings_el.gd` | Clock weather icon, messages, help line. |
-| `scripts/minimap.gd` | Weather off during the capture. |
 | `tools/weather_test.gd`, `tools/weathershot.gd` (new) | Tests and screenshots. |
 | `CLAUDE.md`, `HANDOVER.md`, `CHANGELOG.md` | Documentation (unreleased `0.15-beta`). |
 
