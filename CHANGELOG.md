@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1 (unreleased) — graphics setting
+## 1.0.1 (2026-10-13) — graphics setting
 **New in this version**
 - **A "Γραφικά" setting in the settings page** (title and pause menu) for computers where the normal graphics mode draws black or broken surfaces: Υψηλά (default), Μεσαία (Vulkan Mobile renderer, almost the same picture) and Συμβατά (OpenGL, for very old cards). "Εφαρμογή και επανεκκίνηση" saves the game (from the pause menu), writes an `override.cfg` next to the exe and starts the game again; the choice stays for every later start, no `.bat` needed. Choosing "Υψηλά" removes the file again (only a file the game wrote itself; a hand-made `override.cfg` is never touched). It works only in the exported game; in the editor it says so and writes nothing.
 - The settings page got more compact (the key list is shorter) to make room.
