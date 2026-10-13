@@ -204,6 +204,43 @@ def _(rng, i):
     return out
 
 
+@sfx("amb_rain", 1, 0.5, True)
+def _(rng, i):
+    d = 14.0
+    hiss = S.highpass(S.lowpass(nz(d + 2, rng), 9000, 1), 800, 2)
+    body = S.bandpass(nz(d + 2, rng), 2800, 1300)
+    gust = np.clip(0.55 + 0.45 * S.lowpass(nz(d + 2, rng), 0.3, 2) * 40, 0.0, 1.0)
+    out = (hiss * 0.5 + body * 0.35) * (0.78 + 0.22 * gust)
+    out += crackle(d + 2, rng, 110, 5200) * 0.22
+    return loopable(out, 2.0)
+
+
+@sfx("amb_rain_roof", 1, 0.45, True)
+def _(rng, i):
+    d = 14.0
+    out = S.lowpass(nz(d + 2, rng), 1800, 2) * 0.5 + S.lowpass(nz(d + 2, rng), 220, 2) * 0.35
+    out += crackle(d + 2, rng, 45, 1600) * 0.5
+    for _k in range(int(d * 2.5)):
+        S.place(out, thump(rng.uniform(150, 260), 0.08, 90), rng.uniform(0, d), rng.uniform(0.03, 0.09))
+    return loopable(out, 2.0)
+
+
+@sfx("thunder", 2, 0.85)
+def _(rng, i):
+    d = 4.5 + 0.6 * i
+    n = int(d * S.SR)
+    out = np.zeros(n)
+    t = np.linspace(0, 1, n)
+    crack = S.bandpass(nz(0.25, rng), 1800, 900) * S.expdecay(int(0.25 * S.SR), 0.06)
+    S.place(out, crack, 0.0, 0.45)
+    rumble = S.sweep_lowpass(nz(d, rng), 500, 70, 16)
+    roll = 0.55 + 0.45 * np.sin(2 * np.pi * (1.1 + 0.5 * i) * d * t + rng.uniform(0, 6))
+    env = np.minimum(t / 0.05, 1.0) * np.exp(-t * 3.2)
+    S.place(out, rumble * roll * env, 0.0, 1.0)
+    S.place(out, S.sine(S.pitch_curve(60, 38, d, 1.5), d) * env, 0.0, 0.35)
+    return out
+
+
 @sfx("fish_cast", 1, 0.7)
 def _(rng, i):
     out = np.zeros(int(0.9 * S.SR))
