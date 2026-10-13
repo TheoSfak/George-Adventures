@@ -43,6 +43,7 @@ func _ready() -> void:
 		_build_bridge(pair[0], pair[1])
 	_build_ramp()
 	_build_props()
+	_build_balloons()
 	# >>> the later tasks add their builders here
 
 
@@ -482,6 +483,37 @@ func _build_shore() -> void:
 				rng.randf() * 360.0, TREE_SCALE * rng.randf_range(0.8, 1.1), holder)
 	if terrain != null:
 		terrain.add_flower_ring(CENTER, 38.0, 43.0, 70)
+
+
+# ------------------------------------------------------------------ balloons ----
+
+# [stripe colours, ellipse radii (x, z), height, angular speed, start angle, seed]
+const BALLOONS := [
+	[[Color(1.0, 0.55, 0.18), Color(0.98, 0.90, 0.72)], Vector2(40.0, 34.0), 30.0, 0.024, 0.0, 1],
+	[[Color(0.82, 0.24, 0.34), Color(0.98, 0.92, 0.75)], Vector2(46.0, 38.0), 38.0, -0.018, 1.7, 2],
+	[[Color(0.26, 0.60, 0.80), Color(0.98, 0.92, 0.75)], Vector2(36.0, 31.0), 42.0, 0.030, 3.3, 3],
+	[[Color(0.96, 0.80, 0.22), Color(0.88, 0.34, 0.20)], Vector2(50.0, 40.0), 33.0, -0.022, 4.9, 4],
+]
+
+
+func _build_balloons() -> void:
+	for i in BALLOONS.size():
+		var b: Array = BALLOONS[i]
+		var balloon := Balloon.new()
+		balloon.name = "Balloon_%d" % i
+		balloon.setup(b[0], int(b[5]))
+		balloon.center = Vector3(0.0, float(b[2]), 0.0)
+		balloon.radii = b[1]
+		balloon.angle = float(b[4])
+		balloon.angular_speed = float(b[3])
+		add_child(balloon)
+	var moored := Balloon.new()
+	moored.name = "Balloon_moored"
+	moored.moored = true
+	moored.setup([Color(0.30, 0.62, 0.85), Color(0.98, 0.92, 0.75)], 9)
+	moored.position = Vector3(-24.0, float(ISLANDS["entry"]["top"]), -1.2)
+	moored.rotation.y = 0.6
+	add_child(moored)
 
 
 # >>> more builders are added below this line
