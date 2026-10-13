@@ -28,6 +28,13 @@ window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 
+[shader_globals]
+
+wetness={
+"type": "float",
+"value": 0.0
+}
+
 [rendering]
 
 anti_aliasing/quality/msaa_3d=2

@@ -55,6 +55,10 @@ var _thunder_pending := false
 var _rng := RandomNumberGenerator.new()
 var _player: Player
 var _interiors: Node
+var _wet_sent := -1.0
+var _clouds: Node
+var _cloud_mat: StandardMaterial3D
+var _clouds_tinted := false
 
 
 func _ready() -> void:
@@ -215,6 +219,31 @@ func _play_thunder() -> void:
 	Sfx.ui("thunder", 0.0 if outdoor > 0.5 else -10.0)
 
 
-## Applies the numbers to the world: the rain, the wet ground, the clouds (filled in by later tasks).
+## Applies the numbers to the world: the wet ground, the clouds (and the rain, see _apply_rain).
 func apply_effects() -> void:
-	pass
+	if absf(wet - _wet_sent) > 0.002:
+		_wet_sent = wet
+		RenderingServer.global_shader_parameter_set("wetness", wet)
+	_tint_clouds()
+
+
+## In the overcast all the clouds share one grey material (the models are plain white, nothing is lost);
+## when the sky is clear again they get their own look back.
+func _tint_clouds() -> void:
+	if _clouds == null:
+		var village := get_parent().get_node_or_null("Village")
+		_clouds = village.get_node_or_null("Clouds") if village != null else null
+		if _clouds == null:
+			return
+	var tinted := overcast > 0.02
+	if not tinted and not _clouds_tinted:
+		return
+	if tinted:
+		if _cloud_mat == null:
+			_cloud_mat = StandardMaterial3D.new()
+			_cloud_mat.roughness = 1.0
+		_cloud_mat.albedo_color = Color(1.0, 1.0, 1.0).lerp(Color(0.34, 0.36, 0.40), overcast)
+	if tinted != _clouds_tinted:
+		_clouds_tinted = tinted
+		for m in _clouds.find_children("*", "MeshInstance3D", true, false):
+			(m as MeshInstance3D).material_override = _cloud_mat if tinted else null
