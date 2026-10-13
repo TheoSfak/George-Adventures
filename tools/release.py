@@ -5,7 +5,8 @@
     python tools/release.py 1.0.0 --dry-run  # everything except the upload (git checks only warn)
 
 Needs: godot and gh on the PATH, the export templates installed, `export_presets.cfg` (committed).
-The release notes are the CHANGELOG.md section whose heading starts with "## <version>".
+The release notes are docs/release-notes/<version>.md when it exists (short, Greek: the game's update card
+shows the first 4 lines), otherwise the CHANGELOG.md section whose heading starts with "## <version>".
 The updater (scripts/update_logic.gd) expects exactly these asset names:
     George-Adventures-<version>-win64.zip  and  George-Adventures-<version>-win64.zip.sha256
 """
@@ -69,6 +70,14 @@ def main():
     notes = changelog_section(version)
     if not notes:
         problem("CHANGELOG.md has no '## %s' section" % version, args.dry_run, problems)
+    # The notes are shown in the game's update card, so a short Greek text is preferred:
+    # docs/release-notes/<version>.md (3 to 4 short lines) replaces the CHANGELOG section as the release body.
+    notes_file = ROOT / "docs" / "release-notes" / (version + ".md")
+    if notes_file.exists():
+        notes = notes_file.read_text(encoding="utf-8")
+    else:
+        print("WARN  no docs/release-notes/%s.md: the long CHANGELOG section becomes the release body "
+              "(the game's update card only shows its first 4 lines)" % version)
     if problems and not args.dry_run:
         sys.exit(1)
 

@@ -274,7 +274,7 @@ func _build_update_panel() -> void:
 			var cur := UiKit.label(Strings.UPDATE_CURRENT % Updater.current_version(), 14, UiKit.MUTED)
 			cur.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			v.add_child(cur)
-			var notes := UpdateLogic.notes_head(String(_updater.release.get("notes", "")), 12)
+			var notes := UpdateLogic.notes_head(String(_updater.release.get("notes", "")), 4, 60)
 			if notes != "":
 				v.add_child(UiKit.paragraph(notes, 15, 340.0))
 			var row := HBoxContainer.new()

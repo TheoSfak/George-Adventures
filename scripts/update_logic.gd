@@ -105,15 +105,19 @@ static func parse_sha256(text: String) -> String:
 	return token
 
 
-## The first `max_lines` non-empty lines of the release notes with the markdown noise removed.
-static func notes_head(text: String, max_lines: int) -> String:
+## The first `max_lines` non-empty lines of the release notes with the markdown noise removed; with
+## `max_chars` > 0 a longer line is cut and ends in "…" (the update card has little room: the notes come
+## from GitHub and may be very long).
+static func notes_head(text: String, max_lines: int, max_chars := 0) -> String:
 	var out := PackedStringArray()
 	for line in text.replace("\r\n", "\n").split("\n"):
-		var t := line.replace("**", "").strip_edges().lstrip("#").strip_edges()
+		var t := line.replace("**", "").replace("`", "").strip_edges().lstrip("#").strip_edges()
 		if t == "":
 			continue
 		if t.begins_with("- "):
 			t = "• " + t.substr(2)
+		if max_chars > 0 and t.length() > max_chars:
+			t = t.substr(0, max_chars - 1).strip_edges() + "…"
 		out.append(t)
 		if out.size() >= max_lines:
 			break

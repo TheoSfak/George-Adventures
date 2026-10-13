@@ -67,6 +67,22 @@ func _run() -> void:
 	check("panel shows the new version", has_label(menu, Strings.UPDATE_AVAILABLE % "1.1.0"))
 	check("panel has the update button", find_button(menu, Strings.UPDATE_BUTTON) != null)
 	await shot("update_1_available")
+	# very long release notes (they come from GitHub): the buttons must stay on screen
+	var long_notes := "## New in this version\n"
+	for i in 12:
+		long_notes += "- **Line %d** with a lot of words that would wrap over many lines in the card `code` " % i + "and more words ".repeat(8) + "\n"
+	u.release["notes"] = long_notes
+	menu._show_page(0)
+	await create_timer(0.3).timeout
+	var update_button := find_button(menu, Strings.UPDATE_BUTTON)
+	var later_button := find_button(menu, Strings.UPDATE_LATER)
+	var screen_bottom := float(ProjectSettings.get_setting("display/window/size/viewport_height"))
+	check("long notes: the update button is on screen", update_button != null and update_button.get_global_rect().end.y <= screen_bottom)
+	check("long notes: the later button is on screen", later_button != null and later_button.get_global_rect().end.y <= screen_bottom)
+	await shot("update_1b_long_notes")
+	u.release["notes"] = "## Novo\n- Prwto\n- Deftero"
+	menu._show_page(0)
+	await create_timer(0.2).timeout
 	find_button(menu, Strings.UPDATE_LATER).pressed.emit()
 	await create_timer(0.2).timeout
 	check("Later hides the panel", find_button(menu, Strings.UPDATE_BUTTON) == null)

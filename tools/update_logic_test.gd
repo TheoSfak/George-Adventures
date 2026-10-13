@@ -87,6 +87,12 @@ func _run() -> void:
 	var notes := "## What is new\n\n- **Updater** works\n- Credits\n\nmore\nmore2"
 	check("notes_head limits and cleans", UpdateLogic.notes_head(notes, 3) == "What is new\n• Updater works\n• Credits")
 	check("notes_head of empty text", UpdateLogic.notes_head("", 5) == "")
+	check("notes_head cuts long lines", UpdateLogic.notes_head("abcdefghijklmnopqrstuvwxyz", 3, 10) == "abcdefghi…")
+	check("notes_head keeps short lines whole", UpdateLogic.notes_head("short\nlines", 3, 10) == "short\nlines")
+	check("notes_head removes backticks", UpdateLogic.notes_head("writes `override.cfg` now", 2) == "writes override.cfg now")
+	var long_notes := "## New\n- " + "very long line ".repeat(30) + "\n- two\n- three\n- four\n- five"
+	var head := UpdateLogic.notes_head(long_notes, 4, 60)
+	check("notes_head: at most 4 lines of at most 60 characters", head.split("\n").size() == 4 and head.split("\n")[1].length() <= 62)
 	# --- urls and zip entries
 	check("release url allowed", UpdateLogic.url_allowed(UpdateLogic.RELEASE_PREFIX + "v1/x.zip"))
 	check("other github path refused", not UpdateLogic.url_allowed("https://github.com/someone/else/releases/download/v1/x.zip"))
