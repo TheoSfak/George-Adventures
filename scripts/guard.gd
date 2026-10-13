@@ -140,7 +140,7 @@ func _steer(dir: Vector3) -> Vector3:
 	if _wall_normal == Vector3.ZERO:
 		return dir.rotated(Vector3.UP, deg_to_rad(85.0) * _detour_sign)
 	var tangent := Vector3.UP.cross(_wall_normal) * _detour_sign
-	_last_steer = (tangent - _wall_normal * 0.2).normalized()
+	_last_steer = (tangent + _wall_normal * 0.1).normalized()      # slightly away from the wall: pressing into it wedges the capsule on a corner
 	return _last_steer
 
 
