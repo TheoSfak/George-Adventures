@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0 (unreleased) — updates, credits and the first full release
+## 1.0.0 (2026-10-13) — updates, credits, a splash screen and the first full release
 **New in this version**
 - **Update with one click.** When the title menu opens the game asks GitHub whether a newer release exists (only the latest published release, never a pre-release). If there is one, a card at the top right shows the version and what is new with an "Ενημέρωση" button: the game downloads the zip, checks its SHA-256, replaces its own exe (the old one is kept as `.old` until the next start) and restarts, keeping the graphics mode in use. An option in the settings turns the check off. Saves and settings are untouched. (`scripts/update_logic.gd`, `update_installer.gd`, `updater.gd`.)
 - The title menu shows the version (bottom right), the creators line "Δημιουργοί: Theodore Sfakianakis & George Sfakianakis" (bottom left) and has a new "Συντελεστές" page. The title menu buttons now hang from just below the title.
