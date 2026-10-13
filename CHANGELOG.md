@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.15-beta (unreleased) — weather
+**New in this version**
+- **Weather in the village** (`scripts/weather.gd`, node `Weather`): clear, fog, rain and thunderstorm, picked at random every 2 to 5 minutes (a storm only after rain) and blended smoothly over about 25 s. Atmosphere only: nothing changes in combat, quests or the invasion.
+- **Look:** a grey sky without sun, moon or stars, thick fog, a dimmer sun, dark clouds, a darker wet ground that dries slowly after the rain (global shader uniform `wetness`), rain streaks that follow George (`GPUParticles3D`, fainter at night), lightning flashes in a storm. `DayNight` stays the only writer of the Environment and reads the weather numbers.
+- **Sound** (synthesized): a rain loop outdoors, a duller roof loop inside buildings, thunder after each lightning flash, quieter birds and crickets in the rain, more wind in a storm.
+- **HUD:** a weather icon (cloud, rain, storm) replaces the sun or moon next to the clock, a Greek message when the weather changes, and **F6** changes the weather by hand (listed in the "i" help page).
+- Indoors, in the catacombs and in the Frontier there is no weather. Not saved (the weather starts clear on every launch).
+- New test drivers: `weather_logic_test`, `weather_look_test`, `weather_rain_test`, `weather_hud_test`, `weather_sound_test` (headless), `weathershot` (screenshots + fps; run its `day` and `night` parts one after the other on a GPU shared with another Godot).
+
+**Not done yet:** the new sounds are unheard (audio tuning by ear), wind on the grass and trees, puddles and splashes, snow in the village.
+
 ## 0.14-beta (2026-10-13) — fishing and food
 **New in this version**
 - **Fishing at the pond:** a wooden dock with a bucket on the pond shore (`Village._build_dock`, **R** at the dock). A one-button timing mini-game (`scripts/fishing.gd`): cast, wait 2 to 6 s, the float dips, then press **R / Enter / Space / left click** while the marker is in the green zone of the bar (works over AnyDesk). Escape cancels; pulling too early or too late loses the fish.
