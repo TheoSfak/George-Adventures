@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.16-beta (unreleased) — the Great Tree and its lake
+**New in this version**
+- **A new place in the east of the map** (`scripts/great_tree.gd`, `scripts/tree_meshes.gd`, `scripts/balloon.gd`, about 170 m east of the well; inspired by a picture Theodore showed): a turquoise lake with a central rock island that carries a **giant tree** and two houses, four smaller islands with umbrella trees, flowers and a golden chest, **rope bridges** with rails, a **stone causeway** that winds around the central island on pillars and lands on the plateau, lanterns, and **hot-air balloons** drifting overhead (one is moored on the entry island). Follow the new signpost "Το Μεγάλο Δέντρο →" east of the market; the place is named "Η Λίμνη του Αιωνόβιου" on the big map.
+- Everything is built in code in the game's low-poly style (flat shading, vertex colours) and everything is walkable (trimesh colliders, bridge rails, slopes under 15 degrees); the lake is shallow wading water. No gameplay change; only three real lights at night (the lantern heads glow through an emissive material).
+- The quest barrel moved to (124, -26) and its two skeletons to (112, -22) and (110, -38) to make room.
+- New test drivers: `tree_meshes_test`, `great_tree_walk_test` (a capsule like George walks three routes, rails and cliffs), `great_tree_props_test`, `balloon_test`, `great_tree_integration_test` (headless), `greattreeshot` (screenshots + fps; run its `day` and `night` parts one after the other on a GPU shared with other programs).
+
+**Not done yet:** a rideable balloon, NPCs or quests in this place, swimming, fish in this lake.
+
 ## 0.14-beta (2026-10-13) — fishing and food
 **New in this version**
 - **Fishing at the pond:** a wooden dock with a bucket on the pond shore (`Village._build_dock`, **R** at the dock). A one-button timing mini-game (`scripts/fishing.gd`): cast, wait 2 to 6 s, the float dips, then press **R / Enter / Space / left click** while the marker is in the green zone of the bar (works over AnyDesk). Escape cancels; pulling too early or too late loses the fish.
