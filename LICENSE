@@ -1,0 +1,25 @@
+Copyright (c) 2026 Theodore Sfakianakis and George Sfakianakis.
+All rights reserved.
+
+This license covers "George Adventures at Agios Vlasis" (Οι Περιπέτειες του Γιώργου
+στον Άγιο Βλάση): the source code, the story and all texts, the artwork (including the
+splash image) and the tools in this repository.
+
+Permission is granted to
+  - read the source code in this repository, and
+  - download the game from the releases page of this repository and play it, for
+    personal, non-commercial use.
+
+No other rights are granted. Without the prior written permission of the copyright
+holders you may not copy, modify, redistribute, sublicense or sell this repository, the
+game, or any part of them.
+
+Third-party material in this repository is NOT covered by this license and stays under
+its own license. See THIRD_PARTY_NOTICES.md.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR
+ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
