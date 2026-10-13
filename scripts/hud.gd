@@ -48,6 +48,10 @@ var _hint: Label
 var _clock_label: Label
 var _clock_icon: Control
 var _clock_is_night := false
+var _clock_weather := ""                 # "", "cloud", "rain" or "storm" (replaces the sun or moon)
+const WEATHER_ICON_COLORS := {
+	"cloud": Color(0.85, 0.90, 0.97), "rain": Color(0.55, 0.78, 1.0), "storm": Color(1.0, 0.85, 0.35),
+}
 var _daynight: DayNight
 var _def_box: Control
 var _def_label: Label
@@ -683,8 +687,12 @@ func _build_clock() -> void:
 	_clock_icon.custom_minimum_size = Vector2(28, 28)
 	_clock_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_clock_icon.draw.connect(func():
-		Icons.draw(_clock_icon, Rect2(Vector2.ZERO, _clock_icon.size), "moon" if _clock_is_night else "sun",
-				Color(0.85, 0.9, 1.0) if _clock_is_night else Color(1.0, 0.82, 0.3)))
+		var rect := Rect2(Vector2.ZERO, _clock_icon.size)
+		if _clock_weather != "":
+			Icons.draw(_clock_icon, rect, _clock_weather, WEATHER_ICON_COLORS[_clock_weather])
+		else:
+			Icons.draw(_clock_icon, rect, "moon" if _clock_is_night else "sun",
+					Color(0.85, 0.9, 1.0) if _clock_is_night else Color(1.0, 0.82, 0.3)))
 	row.add_child(_clock_icon)
 	_clock_label = _plain_label("", 21)
 	row.add_child(_clock_label)
@@ -728,6 +736,11 @@ func _update_clock() -> void:
 	var night := _daynight.darkness() > 0.5
 	if night != _clock_is_night:
 		_clock_is_night = night
+		_clock_icon.queue_redraw()
+	var weather := get_tree().get_first_node_in_group("weather")
+	var wid: String = weather.icon_id() if weather != null else ""
+	if wid != _clock_weather:
+		_clock_weather = wid
 		_clock_icon.queue_redraw()
 
 
