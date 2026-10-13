@@ -89,6 +89,15 @@ def crackle(dur, rng, rate=60, f=3500, decay=0.004):
     return out
 
 
+def plop(rng, f0=900, f1=260, dur=0.16):
+    """A drop in water: a falling sine and a puff of filtered noise."""
+    n = int(dur * S.SR)
+    f = S.pitch_curve(f0, f1, dur, 4.0)
+    tone = np.sin(2 * np.pi * np.cumsum(f) / S.SR) * S.expdecay(n, dur * 0.3)
+    splash = S.bandpass(nz(dur, rng), 3000, 1500) * S.expdecay(n, dur * 0.2) * 0.35
+    return tone + splash
+
+
 def loopable(sig, tail):
     """Make a seamless loop: fold the last `tail` seconds onto the start with a crossfade."""
     n = int(tail * S.SR)
@@ -192,6 +201,49 @@ def _(rng, i):
         S.place(out, g, t0, 0.8)
     S.place(out, S.lowpass(nz(0.5, rng), 1800, 1) * swell(int(0.5 * S.SR)) * 0.25, 0.0)
     S.place(out, shimmer(0.55, 1500, rng, 8), 0.6, 0.5)
+    return out
+
+
+@sfx("fish_cast", 1, 0.7)
+def _(rng, i):
+    out = np.zeros(int(0.9 * S.SR))
+    whoosh = sweep_band(nz(0.35, rng), 2500, 700, 0.5) * swell(int(0.35 * S.SR), 0.5)
+    S.place(out, whoosh, 0.0, 0.6)
+    S.place(out, plop(rng), 0.38, 0.9)
+    return out
+
+
+@sfx("fish_bite", 1, 0.7)
+def _(rng, i):
+    out = np.zeros(int(0.5 * S.SR))
+    S.place(out, plop(rng, 700, 300, 0.12), 0.0, 0.8)
+    S.place(out, plop(rng, 1100, 400, 0.10), 0.10, 0.6)
+    return out
+
+
+@sfx("fish_catch", 1, 0.75)
+def _(rng, i):
+    out = np.zeros(int(1.0 * S.SR))
+    S.place(out, S.bandpass(nz(0.3, rng), 2500, 1800) * swell(int(0.3 * S.SR), 0.3), 0.0, 0.5)
+    S.place(out, plop(rng, 800, 300, 0.2), 0.05, 0.7)
+    S.place(out, shimmer(0.6, 1400, rng, 10), 0.25, 0.6)
+    return out
+
+
+@sfx("fish_escape", 1, 0.65)
+def _(rng, i):
+    out = np.zeros(int(0.6 * S.SR))
+    S.place(out, thump(160, 0.3, 70), 0.0, 0.6)
+    S.place(out, plop(rng, 600, 200, 0.2), 0.12, 0.7)
+    return out
+
+
+@sfx("eat", 2, 0.6)
+def _(rng, i):
+    out = np.zeros(int(0.8 * S.SR))
+    for k, t0 in enumerate([0.0, 0.22, 0.46]):
+        S.place(out, S.bandpass(nz(0.12, rng), 1400 + 200 * k + 100 * i, 700) * S.expdecay(int(0.12 * S.SR), 0.04), t0, 0.7)
+    S.place(out, shimmer(0.4, 1200, rng, 6), 0.6, 0.35)
     return out
 
 
