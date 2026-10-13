@@ -32,6 +32,9 @@ var exit_action := Callable()               # set by Interiors: leaves the Front
 
 var _root: Node3D
 var _rng := RandomNumberGenerator.new()
+var _stone: StandardMaterial3D
+var _gate: Node3D
+var _gate_open := false
 
 
 func _ready() -> void:
@@ -59,8 +62,14 @@ func build() -> void:
 	_build_ground()
 	_build_boundary()
 	_build_exit()
+	_build_pass()
+	_build_camp()
+	_build_fortress()
+	_build_gate()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
+	Quests.changed.connect(_on_quests_changed)
+	_on_quests_changed()
 
 
 ## Snow instead of meadow: the village ground shader with cold colours, a trampled camp,
@@ -174,3 +183,312 @@ func _prop(path: String, x: float, z: float, yaw_deg: float, scale_: float, lift
 	if solid:
 		Interiors.collider_for(model)
 	return model
+
+
+# ------------------------------------------------------------------- the pass ----
+
+## True where nothing may stand: the tracks, the camp, the fortress with its road, the arch
+## and the places the Symbols of Shadow lie.
+func _blocked(p: Vector2) -> bool:
+	if p.length() < CAMP_RADIUS + 8.0:
+		return true
+	if absf(p.x) < 14.0 and (p.y > 20.0 or (p.y < -20.0 and p.y > GATE_Z - 8.0)):
+		return true
+	if FORT.grow(12.0).has_point(p) or COURT.distance_to(p) < 60.0:
+		return true
+	if ENTRY.distance_to(p) < 14.0 or EXIT.distance_to(p) < 10.0:
+		return true
+	for s in SYMBOLS:
+		if s.distance_to(p) < 7.0:
+			return true
+	return false
+
+
+## Dead trees, boulders, three lantern posts and skull posts along the track.
+func _build_pass() -> void:
+	var rocks := ["A", "B", "C", "D", "E"]
+	var trees := [G + "tree_dead_large.gltf", G + "tree_dead_medium.gltf", G + "tree_dead_small.gltf"]
+	var placed := 0
+	var tries := 0
+	while placed < 150 and tries < 1500:
+		tries += 1
+		var p := Vector2(_rng.randf_range(BOUNDS.position.x + 6.0, BOUNDS.end.x - 6.0),
+				_rng.randf_range(BOUNDS.position.y + 6.0, BOUNDS.end.y - 6.0))
+		if _blocked(p):
+			continue
+		placed += 1
+		if _rng.randf() < 0.7:
+			_prop(trees[_rng.randi() % trees.size()], p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(2.6, 3.4))
+			_trunk(p, 0.9)
+		else:
+			var rock := _prop(W + "decoration/nature/rock_single_%s.gltf" % rocks[_rng.randi() % rocks.size()],
+					p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(7.0, 14.0))
+			Interiors.collider_for(rock)
+	for z in [100.0, 70.0, 42.0]:
+		_lamp(8.0 if z != 70.0 else -8.0, z)
+	for z in [110.0, 80.0, 52.0]:
+		_prop(G + "post_skull.gltf", -12.0, z, 90.0, 1.6)
+		_prop(G + "post_skull.gltf", 12.0, z + 6.0, 270.0, 1.6)
+
+
+## A thin collider for the trunk of a tree.
+func _trunk(p: Vector2, radius: float) -> void:
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = radius
+	cyl.height = 6.0
+	shape.shape = cyl
+	body.add_child(shape)
+	body.position = wp(p.x, p.y, 3.0)
+	_root.add_child(body)
+
+
+## A lantern post with a cold light that switches on after dusk (group night_lights).
+func _lamp(x: float, z: float) -> void:
+	_prop(G + "lantern_standing.gltf", x, z, 0.0, 2.4, 0.0, true)
+	var light := OmniLight3D.new()
+	light.position = wp(x, z, 2.4)
+	light.light_color = Color(0.65, 0.75, 1.0)
+	light.light_energy = 1.2
+	light.omni_range = 11.0
+	light.add_to_group("night_lights")
+	_root.add_child(light)
+
+
+## A fire that burns day and night: a torch model and a warm light.
+func _fire(x: float, z: float, scale_: float, range_m: float, energy: float) -> void:
+	_prop(I + "torch_lit.gltf.glb", x, z, 0.0, scale_)
+	var light := OmniLight3D.new()
+	light.position = wp(x, z, 2.6)
+	light.light_color = Color(1.0, 0.62, 0.30)
+	light.light_energy = energy
+	light.omni_range = range_m
+	_root.add_child(light)
+
+
+# -------------------------------------------------------------------- the camp ----
+
+func _build_camp() -> void:
+	for i in 6:                                   # six tents in a ring, doors toward the fire
+		var a := TAU * (float(i) + 0.5) / 6.0
+		var p := CAMP + Vector2(cos(a), sin(a)) * 19.0
+		var tent := _prop(W + "decoration/props/tent.gltf", p.x, p.y, rad_to_deg(atan2(-p.x, -p.y)), 14.0)
+		Interiors.collider_for(tent)
+	_fire(CAMP.x, CAMP.y, 3.2, 24.0, 3.0)         # the big fire in the middle
+	for off in [Vector2(-10, -7), Vector2(10, -7), Vector2(-10, 10), Vector2(10, 10)]:
+		_fire(off.x, off.y, 2.4, 9.0, 1.4)
+	var P := W + "decoration/props/"
+	_prop(P + "crate_A_big.gltf", 13.0, -3.0, 20.0, 7.0, 0.0, true)
+	_prop(P + "barrel.gltf", 15.0, -1.0, 0.0, 7.0, 0.0, true)
+	_prop(P + "sack.gltf", -13.0, -4.0, 40.0, 7.0)
+	_prop(P + "weaponrack.gltf", -4.0, 13.0, 180.0, 7.0, 0.0, true)
+	_prop(P + "wheelbarrow.gltf", 6.0, 13.0, 60.0, 7.0)
+
+
+# ----------------------------------------------------------------- the fortress ----
+
+func _stone_material() -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = Catacombs._brick_texture()
+	m.albedo_color = Color(0.75, 0.72, 0.85)
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE * 0.25
+	m.roughness = 0.95
+	return m
+
+
+## The scale that makes a model `width` metres wide (its longest horizontal side).
+func _fit_scale(model: Node3D, width: float) -> float:
+	var box := _aabb(model)
+	return width / maxf(maxf(box.size.x, box.size.z), 0.01)
+
+
+## Merged bounding box of all meshes of a model, in the model's own space.
+func _aabb(model: Node3D) -> AABB:
+	var have := false
+	var box := AABB()
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		var t := Transform3D.IDENTITY
+		var n: Node = mi
+		while n != model and n != null:
+			t = (n as Node3D).transform * t
+			n = n.get_parent()
+		var a: AABB = t * mi.get_aabb()
+		box = a if not have else box.merge(a)
+		have = true
+	return box
+
+
+## A colour wash over every mesh of a model (the castle gets a dark violet tone).
+func _tint(model: Node3D, color: Color) -> void:
+	var wash := StandardMaterial3D.new()
+	wash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	wash.albedo_color = color
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		(node as MeshInstance3D).material_overlay = wash
+
+
+## One straight stone wall with battlements between two points (axis-aligned).
+func _wall(a: Vector2, b: Vector2) -> void:
+	var horizontal := absf(b.x - a.x) > absf(b.y - a.y)
+	var length := absf(b.x - a.x) if horizontal else absf(b.y - a.y)
+	var mid := (a + b) / 2.0
+	var size := Vector3(length, WALL_HEIGHT, WALL_THICK) if horizontal else Vector3(WALL_THICK, WALL_HEIGHT, length)
+	_box(wp(mid.x, mid.y, WALL_HEIGHT / 2.0), size, _stone, true)
+	var count := maxi(int(length / 4.0), 1)
+	for i in count:
+		var p := a.lerp(b, (float(i) + 0.5) / float(count))
+		var merlon := Vector3(1.8, 1.2, WALL_THICK + 0.2) if horizontal else Vector3(WALL_THICK + 0.2, 1.2, 1.8)
+		_box(wp(p.x, p.y, WALL_HEIGHT + 0.6), merlon, _stone, false)
+
+
+## A round tower with a dark cone roof.
+func _tower(at: Vector2) -> void:
+	var body := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 5.0
+	cyl.bottom_radius = 5.4
+	cyl.height = WALL_HEIGHT + 6.0
+	body.mesh = cyl
+	body.material_override = _stone
+	body.position = wp(at.x, at.y, cyl.height / 2.0)
+	_root.add_child(body)
+	var collider := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var shape_cyl := CylinderShape3D.new()
+	shape_cyl.radius = 5.4
+	shape_cyl.height = cyl.height
+	shape.shape = shape_cyl
+	collider.add_child(shape)
+	body.add_child(collider)
+	var roof := MeshInstance3D.new()
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.0
+	cone.bottom_radius = 6.6
+	cone.height = 6.0
+	roof.mesh = cone
+	var roof_mat := StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.16, 0.10, 0.24)
+	roof_mat.roughness = 0.9
+	roof.material_override = roof_mat
+	roof.position = wp(at.x, at.y, cyl.height + 3.0)
+	_root.add_child(roof)
+
+
+func _build_fortress() -> void:
+	_stone = _stone_material()
+	var f := FORT
+	var half_gap := GATE_WIDTH / 2.0
+	_wall(Vector2(f.position.x, f.end.y), Vector2(-half_gap, f.end.y))      # south wall, left of the gate
+	_wall(Vector2(half_gap, f.end.y), Vector2(f.end.x, f.end.y))            # south wall, right of the gate
+	_wall(Vector2(f.position.x, f.position.y), Vector2(f.end.x, f.position.y))   # north wall
+	_wall(Vector2(f.position.x, f.position.y), Vector2(f.position.x, f.end.y))   # west wall
+	_wall(Vector2(f.end.x, f.position.y), Vector2(f.end.x, f.end.y))             # east wall
+	for corner in [f.position, Vector2(f.end.x, f.position.y), Vector2(f.position.x, f.end.y), f.end]:
+		_tower(corner)
+	_tower(Vector2(-half_gap - 5.8, f.end.y))                               # the two gate towers
+	_tower(Vector2(half_gap + 5.8, f.end.y))
+	# the keep at the back of the courtyard: the red castle, darkened
+	var keep := (load(W + "buildings/red/building_castle_red.gltf") as PackedScene).instantiate() as Node3D
+	keep.scale = Vector3.ONE * _fit_scale(keep, 26.0)
+	keep.position = wp(0.0, -172.0)
+	_tint(keep, Color(0.10, 0.06, 0.18, 0.55))
+	_root.add_child(keep)
+	Interiors.collider_for(keep)
+	# purple braziers along the courtyard
+	for z in [-126.0, -146.0, -166.0]:
+		for x in [-30.0, 30.0]:
+			_brazier(x, z)
+	# bones and skulls on the stones
+	var bones := [G + "bone_A.gltf", G + "bone_B.gltf", G + "bone_C.gltf", G + "skull.gltf", G + "ribcage.gltf"]
+	var yard := f.grow(-7.0)
+	for i in 26:
+		var p := Vector2(_rng.randf_range(yard.position.x, yard.end.x), _rng.randf_range(yard.position.y, yard.end.y))
+		if absf(p.x) < 9.0 and p.y > -160.0:
+			continue                                                  # keep the middle lane clear for the fights
+		_prop(bones[_rng.randi() % bones.size()], p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(1.2, 1.8))
+
+
+func _brazier(x: float, z: float) -> void:
+	_prop(I + "torch_lit.gltf.glb", x, z, 0.0, 3.2)
+	var light := OmniLight3D.new()
+	light.position = wp(x, z, 3.0)
+	light.light_color = Color(0.75, 0.55, 1.0)
+	light.light_energy = 1.6
+	light.omni_range = 15.0
+	_root.add_child(light)
+
+
+## The sealed fortress gate: it dissolves when the quest "Τα Σύμβολα της Σκιάς" is ready.
+func _build_gate() -> void:
+	_gate = Node3D.new()
+	_root.add_child(_gate)
+	var body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(GATE_WIDTH, WALL_HEIGHT, 0.8)
+	shape.shape = box
+	body.add_child(shape)
+	body.position = wp(0.0, GATE_Z, WALL_HEIGHT / 2.0)
+	_gate.add_child(body)
+	var barrier := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(GATE_WIDTH, WALL_HEIGHT, 0.4)
+	barrier.mesh = mesh
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.6, 0.3, 1.0, 0.45)
+	mat.emission_enabled = true
+	mat.emission = Color(0.6, 0.3, 1.0)
+	mat.emission_energy_multiplier = 1.4
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	barrier.material_override = mat
+	barrier.position = body.position
+	barrier.add_to_group("frontier_gate")
+	_gate.add_child(barrier)
+	var light := OmniLight3D.new()
+	light.light_color = Color(0.65, 0.35, 1.0)
+	light.light_energy = 2.0
+	light.omni_range = 14.0
+	light.position = wp(0.0, GATE_Z + 2.0, 4.0)
+	_gate.add_child(light)
+	var label := Label3D.new()
+	label.text = Strings.PROMPT_FORTRESS_GATE
+	label.font_size = 52
+	label.pixel_size = 0.0085
+	label.outline_size = 16
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.modulate = Color(0.85, 0.7, 1.0)
+	label.no_depth_test = true
+	label.position = wp(0.0, GATE_Z + 1.2, WALL_HEIGHT * 0.8)
+	_gate.add_child(label)
+	var spot := InteractSpot.make(Strings.PROMPT_FORTRESS_GATE, func(p: Player): p.message.emit(Strings.MSG_FORTRESS_SEALED), 5.0)
+	spot.position = wp(0.0, GATE_Z + 3.0)
+	_gate.add_child(spot)
+
+
+func _on_quests_changed() -> void:
+	if not _gate_open and Quests.state["f_symbols"] >= Quests.S.READY:
+		_open_gate()
+
+
+func _open_gate() -> void:
+	_gate_open = true
+	if is_instance_valid(_gate):
+		var player := get_tree().get_first_node_in_group("player") as Player
+		if player:
+			player.message.emit(Strings.MSG_FORTRESS_OPEN)
+		Sfx.ui("quest_ready")
+		var g := _gate
+		_gate = null
+		for child in g.get_children():
+			if child is StaticBody3D or child is InteractSpot:
+				child.queue_free()
+			if child.is_in_group("frontier_gate"):
+				child.remove_from_group("frontier_gate")
+		var tween := create_tween()
+		tween.tween_interval(0.6)
+		tween.tween_callback(g.queue_free)
