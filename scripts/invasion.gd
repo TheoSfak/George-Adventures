@@ -26,6 +26,7 @@ var wave := 0
 var safety := 100.0
 var night := 0
 var last_success := false
+var waves_total := WAVES            # 4 on a boss night (the last wave is the Night Lord's)
 
 var _alive: Array[Enemy] = []
 var _wave_size := 0
@@ -55,6 +56,7 @@ func start(night_number: int) -> void:
 	wave = 0
 	safety = 100.0
 	last_success = false
+	waves_total = InvasionBoss.total_waves(night, WAVES)
 	_alive.clear()
 	_wave_size = 0
 	_say(Strings.INVASION_BANNER, 5.0)
@@ -79,6 +81,9 @@ func _process(delta: float) -> void:
 		return
 	_tick = 0.0
 	_alive = _alive.filter(func(e): return is_instance_valid(e) and not e.is_dead())
+	for e in get_tree().get_nodes_in_group("invaders"):      # helpers a boss called also have to die
+		if e is Enemy and not _alive.has(e):
+			_alive.append(e)
 	var near := 0
 	for e in _alive:
 		if _flat_distance(e.global_position, WELL) < WELL_RADIUS:
@@ -88,7 +93,7 @@ func _process(delta: float) -> void:
 	if safety <= 0.0:
 		_fail()
 		return
-	if wave < WAVES:
+	if wave < waves_total:
 		if float(_alive.size()) <= float(_wave_size) * WAVE_CLEARED or _wave_time >= WAVE_TIMEOUT:
 			_spawn_wave()
 	elif _alive.is_empty():
@@ -109,17 +114,14 @@ func _spawn_wave() -> void:
 	if spawner == null:
 		return
 	var level: int = player.level if player else 1
-	_wave_size = clampi(3 + night * 2 + wave - 1, 4, 14)
-	var pool := ["minion", "minion", "warrior", "warrior"]
-	if level >= 3:
-		pool.append_array(["rogue", "rogue"])
-	if level >= 6:
-		pool.append("mage")
-	if level >= 9:
-		pool.append("brute")
-	# every wave comes through two gates; the last wave through three
+	var pool := _kind_pool(level)
 	var gates := GATES.duplicate()
 	gates.shuffle()
+	if InvasionBoss.is_boss_night(night) and wave == waves_total:
+		_spawn_boss_wave(spawner, pool, gates)
+		return
+	_wave_size = clampi(3 + night * 2 + wave - 1, 4, 14)
+	# every wave comes through two gates; the last wave through three
 	var gate_count := 3 if wave == WAVES else 2
 	for i in _wave_size:
 		var kind: String = pool.pick_random()
@@ -134,6 +136,39 @@ func _spawn_wave() -> void:
 	_say(Strings.INVASION_WAVE_BANNER % wave, 3.0)
 	if wave > 1:
 		Sfx.ui("wave_horn")
+	_emit()
+
+
+## The kinds an ordinary invader can be, by George's level.
+func _kind_pool(level: int) -> Array:
+	var pool := ["minion", "minion", "warrior", "warrior"]
+	if level >= 3:
+		pool.append_array(["rogue", "rogue"])
+	if level >= 6:
+		pool.append("mage")
+	if level >= 9:
+		pool.append("brute")
+	return pool
+
+
+## The last wave of a boss night: the Night Lord from one gate, an escort through two others.
+func _spawn_boss_wave(spawner: Node, pool: Array, gates: Array) -> void:
+	var tier := InvasionBoss.tier_of(night)
+	var escort := InvasionBoss.escort_size(tier)
+	var boss_gate: Vector3 = gates[0]
+	var boss: Enemy = spawner.spawn_invader(InvasionBoss.KIND, boss_gate * GATE_DISTANCE, WELL,
+			InvasionBoss.overrides(tier, spawner.KINDS[InvasionBoss.KIND]))
+	_alive.append(boss)
+	for i in escort:
+		var kind: String = pool.pick_random()
+		var gate: Vector3 = gates[1 + i % 2]
+		var side := Vector3(gate.z, 0, gate.x)
+		var pos: Vector3 = gate * GATE_DISTANCE + side * randf_range(-10.0, 10.0)
+		_alive.append(spawner.spawn_invader(kind, pos, WELL))
+	_wave_size = escort + 1
+	_say(Strings.INVASION_BOSS_COMING, 4.0)
+	Sfx.ui("wave_horn")
+	Sfx.ui("boss_roar", -3.0)
 	_emit()
 
 
@@ -170,15 +205,21 @@ func _succeed() -> void:
 	active = false
 	last_success = true
 	var player := get_tree().get_first_node_in_group("player") as Player
+	var boss_night := InvasionBoss.is_boss_night(night)
 	var xp := 80 + 40 * night
 	var gold := 40 + 25 * night
+	if boss_night:
+		xp += InvasionBoss.bonus_xp(InvasionBoss.tier_of(night))
 	if player:
 		player.gain_xp(xp)
 		player.collect("gold", gold)
 		player.collect("potion", 2 + night / 2)
-	_spawn_reward_chest()
+		if boss_night:
+			player.collect("power_potion", 1)
+			player.collect("speed_potion", 1)
+	_spawn_reward_chest(boss_night)
 	Quests.report_defense()
-	_say(Strings.INVASION_WON, 5.0)
+	_say(Strings.INVASION_BOSS_WON if boss_night else Strings.INVASION_WON, 5.0)
 	Sfx.ui("village_saved")
 	_emit()
 	finished.emit(true)
@@ -188,9 +229,8 @@ func _fail() -> void:
 	_dismiss_guards()
 	active = false
 	last_success = false
-	for e in _alive:
-		if is_instance_valid(e):
-			e.dissolve()
+	for e in get_tree().get_nodes_in_group("invaders"):      # includes the helpers of a boss
+		e.dissolve()
 	_alive.clear()
 	var player := get_tree().get_first_node_in_group("player") as Player
 	var lost := 0
@@ -221,12 +261,13 @@ func _on_dawn() -> void:
 	finished.emit(false)
 
 
-func _spawn_reward_chest() -> void:
+func _spawn_reward_chest(boss_night: bool = false) -> void:
 	var chests := get_parent().get_node_or_null("Village/Chests")
 	var chest := Chest.new()
 	chest.golden = true
-	chest.gold_min = 30 + 15 * night
-	chest.gold_max = 50 + 25 * night
+	var share := 2 if boss_night else 1
+	chest.gold_min = (30 + 15 * night) * share
+	chest.gold_max = (50 + 25 * night) * share
 	chest.potions = 1
 	chest.position = Vector3(6.0, 0.05, 8.0)
 	chest.rotation_degrees.y = 200.0
@@ -238,4 +279,4 @@ func _say(text: String, seconds: float) -> void:
 
 
 func _emit() -> void:
-	updated.emit(active, wave, WAVES, _alive.size(), safety)
+	updated.emit(active, wave, waves_total, _alive.size(), safety)
