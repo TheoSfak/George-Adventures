@@ -89,6 +89,8 @@ func _ready() -> void:
 	_add_positional_loop("fire_loop", Vector3(CAMP.x, 1.2, CAMP.y), 7.0, 45.0, -2.0)
 	_add_positional_loop("water_loop", Vector3(POND.x, 0.5, POND.y), 8.0, 40.0, -4.0)
 	_add_positional_loop("wind_loop", Vector3(CRYPT.x, 6.0, CRYPT.y), 14.0, 60.0, -10.0)
+	_add_positional_loop("water_loop", Vector3(GreatTree.CENTER.x, 0.5, GreatTree.CENTER.y), 10.0, 50.0, -6.0)
+	_add_positional_loop("wind_loop", Vector3(GreatTree.CENTER.x, 22.0, GreatTree.CENTER.y), 12.0, 55.0, -12.0)
 	# the sounds used most are loaded up front so the first swing does not stutter
 	for id in SfxIds.VARIANTS:
 		if not SfxIds.LOOPS.has(id) and SfxIds.VARIANTS[id] > 0:

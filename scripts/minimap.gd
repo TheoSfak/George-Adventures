@@ -20,7 +20,7 @@ const RED := Color(0.9, 0.2, 0.15)
 const PLACES := [
 	["church", 0.0, -59.0], ["tavern", -59.0, -9.8], ["market", 59.0, -11.5], ["smith", -93.5, 29.5],
 	["mill", 95.1, 39.4], ["windmill", -100.0, -54.1], ["tower", 95.1, -78.7], ["well", 0.0, 0.0],
-	["camp", -175.0, 20.0, -24.0], ["quarry", 140.0, 125.0], ["crypt", 0.0, -178.0],
+	["camp", -175.0, 20.0, -24.0], ["quarry", 140.0, 125.0], ["crypt", 0.0, -178.0], ["bigtree", 172.0, -40.0],
 ]
 const SHOPS := [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)]
 # where a boss quest points when the boss itself cannot be found (x, z)

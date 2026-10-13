@@ -63,7 +63,7 @@ const BUILDING_PROPS := {
 
 # [quest item id, x, z]   (see quest_data.gd; they only appear while their quest is active)
 const QUEST_ITEMS := [
-	["keg", -30.0, -142.0], ["keg", 143.0, -29.0], ["keg", 26.0, 152.0], ["keg", -122.0, 111.0],
+	["keg", -30.0, -142.0], ["keg", 124.0, -26.0], ["keg", 26.0, 152.0], ["keg", -122.0, 111.0],
 	["key", -176.0, 24.0],
 	# flour sacks scattered around the windmill, logs around the lumber mill
 	["sack", -113.0, -41.0], ["sack", -87.0, -67.0], ["sack", -121.0, -63.0], ["sack", -96.0, -33.0], ["sack", -109.0, -81.0],
@@ -88,6 +88,7 @@ const CHESTS := [
 const SIGNPOSTS := [
 	["Δυτικό Στρατόπεδο  ←", -138.0, 4.0, 90],
 	["Λατομείο  ↘", 104.0, 84.0, 20],
+	["Το Μεγάλο Δέντρο  →", 112.0, -44.0, 270],
 	["Παλιά Κρύπτη  ↑\nΚίνδυνος!", 14.0, -118.0, 0],
 ]
 
