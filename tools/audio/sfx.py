@@ -180,6 +180,7 @@ sfx("footstep_grass", 4, 0.28)(_step("g", 500, 2600, 0.14, 0.2, 0.04))
 sfx("footstep_stone", 4, 0.3)(_step("s", 1200, 4800, 0.12, 0.5, 0.025))
 sfx("footstep_wood", 3, 0.32)(_step("w", 300, 1800, 0.16, 0.9, 0.05))
 sfx("footstep_heavy", 2, 0.5)(_step("h", 200, 1000, 0.3, 1.6, 0.09))
+sfx("footstep_snow", 4, 0.3)(_step("n", 300, 2200, 0.2, 0.15, 0.07))
 
 
 @sfx("potion_drink", 1, 0.7)
@@ -742,6 +743,14 @@ def _(rng, i):
     for _k in range(7):
         t0 = rng.uniform(0, d)
         S.place(out, S.partials(1500, 0.3, [1, 2.3], [0.5, 0.25], [0.06, 0.04]), t0, 0.15)
+    return loopable(out, 2.0)
+
+
+@sfx("amb_mountain", 1, 0.5, True)
+def _(rng, i):
+    d = 22.0
+    out = wind(d + 2, rng, 1.5)
+    out += S.bandpass(nz(d + 2, rng), 1400, 500) * 0.05 * (0.5 + 0.5 * np.sin(2 * np.pi * 0.11 * S.t_axis(d + 2)))
     return loopable(out, 2.0)
 
 

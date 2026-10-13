@@ -386,6 +386,20 @@ SPECS["church"] = dict(
     ])
 
 
+# --- the Frontier beyond the mountains: cold, wide, a lonely horn -----------------
+SPECS["mountain"] = dict(
+    key=45, mode="minor", bpm=58, bars=16, seed=21, reverb=(3.0, 0.45),
+    chords=[(0, "min"), (8, "maj"), (3, "maj"), (10, "maj")],
+    parts=[
+        dict(type="drone", gain=0.22, oct=-24, fifth=0.3),
+        dict(type="pad", inst="strings", gain=0.38, every=2, oct=-12),
+        dict(type="pad", inst="choir", vowel="o", gain=0.25, every=4, oct=0, voices=3),
+        dict(type="bells", every=4, oct=-12, gain=0.35, dur=5.0, fifth=True),
+        dict(type="melody", inst="brass", range=(55, 70), scale="minor", seed=88, gain=0.35, phrase_bars=4, rest_every=2, legato=1.4,
+             rhythms=[[(0, 3), (3, 1)], [(0, 2), (2, 2)]]),
+    ])
+
+
 def make(name):
     def run():
         return Song(SPECS[name]).render()

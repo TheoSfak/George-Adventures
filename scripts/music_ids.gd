@@ -11,4 +11,5 @@ const ALL := [
 	"crypt",
 	"tavern",
 	"church",
+	"mountain",
 ]
