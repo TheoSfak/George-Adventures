@@ -30,6 +30,10 @@ const STORM_MIN := 0.6                # lightning only while the storm is this s
 const BOLT_MIN := 6.0
 const BOLT_MAX := 18.0
 const BOLT_SECONDS := 0.25
+const RAIN_AMOUNT := 2400             # fixed particle count; the intensity scales amount_ratio
+const RAIN_LIFETIME := 0.5            # seconds; a drop falls about 14 m in that time
+const RAIN_HEIGHT := 14.0             # the emitter hangs this high above George
+const RAIN_HALF := 15.0               # half the side of the rain box (30 x 30 m)
 
 var state := State.CLEAR
 # What everybody reads (already multiplied by `outdoor`):
@@ -55,6 +59,7 @@ var _thunder_pending := false
 var _rng := RandomNumberGenerator.new()
 var _player: Player
 var _interiors: Node
+var _rain: GPUParticles3D
 var _wet_sent := -1.0
 var _clouds: Node
 var _cloud_mat: StandardMaterial3D
@@ -65,6 +70,7 @@ func _ready() -> void:
 	add_to_group("weather")
 	_rng.randomize()
 	time_to_next = _rng.randf_range(CHANGE_MIN, CHANGE_MAX)
+	_build_rain()
 
 
 ## The state that follows `current`, by weight. Never the same state; a storm only comes after rain.
@@ -219,8 +225,49 @@ func _play_thunder() -> void:
 	Sfx.ui("thunder", 0.0 if outdoor > 0.5 else -10.0)
 
 
+## One particle system that follows George: thin streaks falling in a 30 m box above him. One draw
+## call; the intensity scales `amount_ratio`. No per-particle collision (the box is high enough).
+func _build_rain() -> void:
+	_rain = GPUParticles3D.new()
+	_rain.name = "Rain"
+	_rain.top_level = true
+	_rain.amount = RAIN_AMOUNT
+	_rain.lifetime = RAIN_LIFETIME
+	_rain.emitting = false
+	_rain.local_coords = false
+	_rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_rain.visibility_aabb = AABB(Vector3(-20.0, -16.0, -20.0), Vector3(40.0, 20.0, 40.0))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(RAIN_HALF, 0.5, RAIN_HALF)
+	pm.direction = Vector3(0.12, -1.0, 0.05)
+	pm.spread = 1.5
+	pm.initial_velocity_min = 26.0
+	pm.initial_velocity_max = 30.0
+	pm.gravity = Vector3.ZERO
+	pm.particle_flag_align_y = true
+	_rain.process_material = pm
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.03, 0.9)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.78, 0.86, 1.0, 0.38)
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.billboard_keep_scale = true
+	mat.disable_receive_shadows = true
+	quad.material = mat
+	_rain.draw_pass_1 = quad
+	add_child(_rain)
+
+
 ## Applies the numbers to the world: the wet ground, the clouds (and the rain, see _apply_rain).
 func apply_effects() -> void:
+	if _rain != null:
+		if _player != null:
+			_rain.global_position = _player.global_position + Vector3(0.0, RAIN_HEIGHT, 0.0)
+		_rain.amount_ratio = clampf(rain, 0.02, 1.0)
+		_rain.emitting = rain > 0.02
 	if absf(wet - _wet_sent) > 0.002:
 		_wet_sent = wet
 		RenderingServer.global_shader_parameter_set("wetness", wet)
