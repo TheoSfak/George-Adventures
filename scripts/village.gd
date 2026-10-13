@@ -136,6 +136,7 @@ func _ready() -> void:
 	_build_crypt()
 	_build_chests_items_signs()
 	_build_totems()
+	_build_great_tree()
 	_build_terrain_details()
 	_build_scatter()
 	_finish_terrain()
@@ -529,6 +530,14 @@ func _build_totems() -> void:
 		totem.position = Vector3(t.x, 0.0, t.y)
 		holder.add_child(totem)
 		_occupy(t.x, t.y, 5.0)
+
+
+## The Great Tree area in the east: a lake with rock islands, bridges and a giant tree (great_tree.gd).
+func _build_great_tree() -> void:
+	var area := GreatTree.new()
+	area.terrain = _terrain
+	add_child(area)
+	_occupy(GreatTree.CENTER.x, GreatTree.CENTER.y, GreatTree.AREA_RADIUS)
 
 
 func _signpost(text: String, pos: Vector3, rot_deg: float, parent: Node) -> void:
