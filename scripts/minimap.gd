@@ -9,7 +9,8 @@ extends Control
 
 const WORLD_HALF := 300.0           # the captured picture covers x, z in -300 .. 300 m
 const CAPTURE_SIZE := 2048
-const MINI_VIEW_HALF := 85.0        # metres from the centre to the edge of the corner minimap
+# metres from the centre to the edge of the corner minimap, one entry per zoom step ([+] / [-] buttons)
+const ZOOM_LEVELS: Array[float] = [35.0, 50.0, 70.0, 85.0, 120.0, 170.0]
 const GOLD := Color(1.0, 0.82, 0.25)
 const GREEN := Color(0.6, 0.95, 0.5)
 const INK := Color(0.1, 0.07, 0.03)
@@ -26,10 +27,20 @@ const SHOPS := [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)]
 const BOSS_AREAS := {"captain": Vector2(142.0, 128.0), "king": Vector2(0.0, -190.0)}
 
 static var world_texture: Texture2D
+static var zoom_index := 3          # kept while the game runs
 
 var big := false
 var _player: Player
 var _invasion
+
+
+## Zoom the corner minimap: +1 = closer, -1 = farther away.
+static func zoom(step: int) -> void:
+	zoom_index = clampi(zoom_index - step, 0, ZOOM_LEVELS.size() - 1)
+
+
+static func view_half() -> float:
+	return ZOOM_LEVELS[zoom_index]
 
 
 func _ready() -> void:
@@ -119,7 +130,7 @@ func _to_map(p: Vector3) -> Vector2:
 	if big:
 		return (Vector2(p.x, p.z) + Vector2.ONE * WORLD_HALF) / (WORLD_HALF * 2.0) * size
 	var centre := Vector2(_player.global_position.x, _player.global_position.z)
-	return size / 2.0 + (Vector2(p.x, p.z) - centre) / MINI_VIEW_HALF * (size.x / 2.0)
+	return size / 2.0 + (Vector2(p.x, p.z) - centre) / view_half() * (size.x / 2.0)
 
 
 func _inside_world(p: Vector3) -> bool:
@@ -136,7 +147,7 @@ func _draw() -> void:
 			draw_texture_rect(world_texture, Rect2(Vector2.ZERO, size), false)
 		else:
 			var centre := Vector2(_player.global_position.x, _player.global_position.z)
-			var src_half := MINI_VIEW_HALF * ppm
+			var src_half := view_half() * ppm
 			var src_centre := (centre + Vector2.ONE * WORLD_HALF) * ppm
 			draw_texture_rect_region(world_texture, Rect2(Vector2.ZERO, size),
 					Rect2(src_centre - Vector2.ONE * src_half, Vector2.ONE * src_half * 2.0))

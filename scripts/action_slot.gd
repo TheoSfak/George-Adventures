@@ -12,13 +12,39 @@ var fixed_entry := ""         # the entry shown when slot_index == -1
 var key_label := ""           # "1".."8"
 
 var _style := StyleBoxFlat.new()
+var _gloss := StyleBoxFlat.new()
+var _shade_style := StyleBoxFlat.new()
+var _badge := StyleBoxFlat.new()
+var _hover := false
 
 
 func _init() -> void:
 	custom_minimum_size = Vector2(SIZE, SIZE)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	_style.set_corner_radius_all(9)
-	_style.set_border_width_all(2)
+	_style.set_corner_radius_all(14)
+	_style.set_border_width_all(1)
+	_style.border_width_top = 2
+	_style.anti_aliasing = true
+	_style.shadow_color = Color(0, 0, 0, 0.5)
+	_style.shadow_size = 5
+	_style.shadow_offset = Vector2(0, 3)
+	_gloss.corner_radius_top_left = 13
+	_gloss.corner_radius_top_right = 13
+	_gloss.bg_color = Color(1, 1, 1, 0.08)
+	_gloss.anti_aliasing = true
+	_shade_style.anti_aliasing = true
+	_badge.set_corner_radius_all(7)
+	_badge.bg_color = Color(0, 0, 0, 0.55)
+	_badge.anti_aliasing = true
+	mouse_entered.connect(func(): _hover = true)
+	mouse_exited.connect(func(): _hover = false)
+
+
+## A rounded dark veil over (part of) the slot: cooldown sweep, locked, out of potions.
+func _shade(rect: Rect2, alpha: float) -> void:
+	_shade_style.bg_color = Color(0, 0, 0, alpha)
+	_shade_style.set_corner_radius_all(int(minf(12.0, rect.size.y / 2.0)))
+	draw_style_box(_shade_style, rect)
 
 
 func entry() -> String:
@@ -46,26 +72,31 @@ func _draw() -> void:
 		count = player.consumables.get(info["id"], 0)
 	var empty_item: bool = not info.is_empty() and info["item"] and count <= 0
 
-	_style.bg_color = Color(0.09, 0.07, 0.05, 0.92)
-	_style.border_color = Color(0.72, 0.55, 0.25) if (not info.is_empty() and not locked) else Color(0.35, 0.30, 0.25)
+	var usable := not info.is_empty() and not locked
+	_style.bg_color = Color(0.09, 0.10, 0.15, 0.94) if not _hover else Color(0.15, 0.16, 0.23, 0.96)
+	_style.border_color = Color(1.0, 0.82, 0.40, 0.85) if usable else Color(1, 1, 1, 0.14)
+	if _hover and usable:
+		_style.border_color = Color(1.0, 0.92, 0.6, 1.0)
 	draw_style_box(_style, Rect2(Vector2.ZERO, size))
+	draw_style_box(_gloss, Rect2(Vector2(2, 2), Vector2(size.x - 4.0, size.y * 0.45)))      # light from above
 	if not info.is_empty():
 		var tint: Color = info["color"]
 		if locked or empty_item:
 			tint = tint.darkened(0.55)
-		Icons.draw(self, Rect2(Vector2(7, 7), size - Vector2(14, 14)), info["icon"], tint)
+		var pad := 7.0 * size.x / SIZE
+		Icons.draw(self, Rect2(Vector2(pad, pad), size - Vector2(pad, pad) * 2.0), info["icon"], tint)
 		# cooldown sweep
 		if not info["item"] and player != null:
 			var left := player.cooldown_left(info["id"])
 			if left > 0.0:
 				var total: float = player.cooldown_total(info["id"])
 				var h := (size.y - 4.0) * clampf(left / total, 0.0, 1.0)
-				draw_rect(Rect2(Vector2(2, 2), Vector2(size.x - 4.0, h)), Color(0, 0, 0, 0.62))
+				_shade(Rect2(Vector2(2, 2), Vector2(size.x - 4.0, h)), 0.66)
 				_text(str(ceili(left)), size * 0.5 + Vector2(0, 8), 22, Color(1, 1, 1))
 		elif info["item"] and player != null and player.potion_cooldown() > 0.0 and slot_index >= 0:
-			draw_rect(Rect2(Vector2(2, 2), size - Vector2(4, 4)), Color(0, 0, 0, 0.35))
+			_shade(Rect2(Vector2(2, 2), size - Vector2(4, 4)), 0.35)
 		if locked:
-			draw_rect(Rect2(Vector2(2, 2), size - Vector2(4, 4)), Color(0, 0, 0, 0.55))
+			_shade(Rect2(Vector2(2, 2), size - Vector2(4, 4)), 0.58)
 			if SkillData.is_talent_skill(info["id"]):
 				_text(Strings.HERO_TAB_TALENTS, size * 0.5 + Vector2(0, 5), 13, Color(1, 0.85, 0.4))
 			else:
@@ -73,10 +104,13 @@ func _draw() -> void:
 		if info["item"] and slot_index != -2:
 			_text(str(count), Vector2(size.x - 8, size.y - 6), 17, Color(1, 1, 1) if count > 0 else Color(1, 0.4, 0.4), HORIZONTAL_ALIGNMENT_RIGHT)
 	if key_label != "":
-		_text(key_label, Vector2(7, 17), 15, Color(1, 0.92, 0.7), HORIZONTAL_ALIGNMENT_LEFT)
+		var k := size.x / SIZE
+		draw_style_box(_badge, Rect2(Vector2(4, 4) * k, Vector2(18, 17) * k))
+		_text(key_label, Vector2(13, 17) * k, 13, Color(1, 0.92, 0.7))
 
 
 func _text(t: String, pos: Vector2, font_size: int, color: Color, align := HORIZONTAL_ALIGNMENT_CENTER) -> void:
+	font_size = maxi(9, roundi(font_size * size.x / SIZE))      # compact slots (the action bar) use smaller text
 	var font := ThemeDB.fallback_font
 	var w := 0.0
 	var origin := pos

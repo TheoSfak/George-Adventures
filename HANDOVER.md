@@ -1,6 +1,6 @@
 # HANDOVER — George Adventures at Agios Vlasis
 
-Updated 2026-10-12 (release **0.12-beta**) so a **new chat window** can continue seamlessly. Read this first, then `CLAUDE.md` (detailed facts for every system), `README.md` (controls) and `CHANGELOG.md`. Repo: https://github.com/TheoSfak/George-Adventures (private, branch `main`).
+Updated 2026-10-13 (release **0.12.1-beta**) so a **new chat window** can continue seamlessly. Read this first, then `CLAUDE.md` (detailed facts for every system), `README.md` (controls) and `CHANGELOG.md`. Repo: https://github.com/TheoSfak/George-Adventures (private, branch `main`).
 
 ---
 ## 1. Who and how to work with Theodore
@@ -26,9 +26,9 @@ Updated 2026-10-12 (release **0.12-beta**) so a **new chat window** can continue
   - A long animation (spin) must be ended by a timer (`_end_skill_attack`). `Variant` inference: write `var x: bool = ...` / `var s: String = dict["k"]`. Scripts in `--script` tests cannot use a `class_name` that mentions an autoload (see above).
   - Do not scale a physics body in a tween (scale the visual child).
 
-## 3. What exists (release 0.12-beta; everything tested; details in CLAUDE.md)
+## 3. What exists (release 0.12.1-beta; everything tested; details in CLAUDE.md)
 Player with WoW-style controls, XP/levels to 20, skills + action bar, talent tree, shops and equipment; big map (~200 m) with procedural meadow, paths, grass, village with enterable interiors, three story areas (west camp, SE quarry, north crypt); 7 NPCs + main story (5 quests, prologue) + side quests + **story part 2 in the Catacombs** (5 quests, 3 wardens + final boss, ending "Συνεχίζεται…"); skeleton mobs (warrior, minion, archer, mage, brute, bosses, warlord); **day/night cycle** with sky shader, lamps, villagers going indoors; **night invasion** (3 waves, safety bar, rewards, guards); **minimap + map (M)** with quest markers; **audio** (all synthesized: 9 music loops, ~70 sound effects, ambience); **save/load** (plain-text JSON, autosave) with **title/pause menus and settings** (volumes, audio device, key re-binding); 1080p; remote-play robustness.
-Release history: 0.8-beta (shops/talents), 0.9-beta (day/night + invasion), 0.10-beta (minimap, 1080p, audio), 0.10.1-beta (save/menus/AnyDesk fixes), 0.11-beta (Βασίλης + Στέλιος, 6 side quests, totems, guards), **0.12-beta** (the Catacombs dungeon + story part 2). Process: bump `config/version` in `project.godot`, add a `CHANGELOG.md` entry, commit, tag `vX.Y-beta`, `git push origin main vX.Y-beta`, `gh release create vX.Y-beta --prerelease --notes ...` (see memory `github-releases`).
+Release history: 0.8-beta (shops/talents), 0.9-beta (day/night + invasion), 0.10-beta (minimap, 1080p, audio), 0.10.1-beta (save/menus/AnyDesk fixes), 0.11-beta (Βασίλης + Στέλιος, 6 side quests, totems, guards), 0.12-beta (the Catacombs dungeon + story part 2 + village square), **0.12.1-beta** (modern HUD with rounded bars and glass panels, minimap zoom and map button, compact action bar, "i" controls help). Process: bump `config/version` in `project.godot`, add a `CHANGELOG.md` entry, commit, tag `vX.Y-beta`, `git push origin main vX.Y-beta`, `gh release create vX.Y-beta --prerelease --notes ...` (see memory `github-releases`).
 
 ## 4. Next steps (nothing is half-built; pick one with Theodore)
 Recommended order, in my view:

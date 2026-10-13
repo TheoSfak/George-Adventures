@@ -54,7 +54,7 @@ enum State { PATROL, MARCH, CHASE, ATTACK, HURT, DEAD }
 const LOOPED: Array[String] = ["Idle", "Walking_D_Skeletons", "Running_A", "Running_B", "Walking_Backwards"]
 const ATTACKS: Array[String] = ["1H_Melee_Attack_Chop", "1H_Melee_Attack_Slice_Horizontal"]
 const HITS: Array[String] = ["Hit_A", "Hit_B"]
-const HEALTH_BAR_SIZE := Vector2i(48, 6)
+const HEALTH_BAR_SIZE := Vector2i(96, 12)       # drawn at double resolution (pixel_size is halved)
 
 @onready var _model_root: Node3D = $Model
 
@@ -141,7 +141,7 @@ func _build_health_bar() -> void:
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.shaded = false
 	_bar.position = Vector3(0.0, 2.35 * model_scale, 0.0)
-	_bar.pixel_size = 0.028 * maxf(1.0, model_scale * 0.8)
+	_bar.pixel_size = 0.014 * maxf(1.0, model_scale * 0.8)
 	_bar.visible = display_name != ""
 	add_child(_bar)
 	_update_health_bar()
@@ -159,12 +159,8 @@ func _build_health_bar() -> void:
 
 
 func _update_health_bar() -> void:
-	var img := Image.create(HEALTH_BAR_SIZE.x, HEALTH_BAR_SIZE.y, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.08, 0.05, 0.05, 0.9))
-	var inner := HEALTH_BAR_SIZE - Vector2i(2, 2)
-	var filled := ceili(inner.x * clampf(health / max_health, 0.0, 1.0))
-	img.fill_rect(Rect2i(1, 1, filled, inner.y), Color(0.85, 0.15, 0.12))
-	_bar.texture = ImageTexture.create_from_image(img)
+	_bar.texture = FancyBar.texture(HEALTH_BAR_SIZE.x, HEALTH_BAR_SIZE.y, clampf(health / max_health, 0.0, 1.0),
+			Color(1.0, 0.50, 0.44), Color(0.74, 0.10, 0.14))
 
 
 func _physics_process(delta: float) -> void:

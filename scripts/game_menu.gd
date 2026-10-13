@@ -6,12 +6,13 @@ extends CanvasLayer
 ## Settings: volumes, audio device and key re-binding (game_settings.gd).
 ## Also autosaves on quest completion, level up and at dawn (save_game.gd).
 
-enum Page { MAIN, SETTINGS }
+enum Page { MAIN, SETTINGS, HELP }
 
 var _title := true                   # the title menu (true) or the pause menu (false)
 var _open := false
 var _page := Page.MAIN
 var _confirm_new := false
+var _help_from_hud := false         # the help page was opened with the "i" button / F1: Back closes the menu
 var _capturing := ""                 # action waiting for a key press in the settings window
 var _key_buttons := {}
 var _dim: ColorRect
@@ -110,7 +111,9 @@ func _show_title() -> void:
 
 func toggle_pause() -> void:
 	if _open:
-		if _page == Page.SETTINGS:
+		if _page == Page.HELP and _help_from_hud:
+			_close_menu()
+		elif _page != Page.MAIN:
 			_show_page(Page.MAIN)
 		elif not _title:
 			_close_menu()
@@ -118,6 +121,16 @@ func toggle_pause() -> void:
 	_title = false
 	_open_menu()
 	_show_page(Page.MAIN)
+
+
+## The controls help page, opened from the HUD ("i" button or F1). Pauses the game like the menu.
+func open_help() -> void:
+	if _open or _title or (_player != null and _player.busy):
+		return
+	_title = false
+	_help_from_hud = true
+	_open_menu()
+	_show_page(Page.HELP)
 
 
 func _open_menu() -> void:
@@ -131,6 +144,7 @@ func _open_menu() -> void:
 
 func _close_menu() -> void:
 	_open = false
+	_help_from_hud = false
 	_dim.visible = false
 	_capturing = ""
 	get_tree().paused = false
@@ -144,8 +158,12 @@ func _show_page(page: Page) -> void:
 	_confirm_new = false
 	_title_label.visible = _title and page == Page.MAIN
 	_clear()
+	if page == Page.MAIN:
+		_help_from_hud = false
 	if page == Page.SETTINGS:
 		_build_settings()
+	elif page == Page.HELP:
+		_build_help()
 	elif _title:
 		_build_title_page()
 	else:
@@ -174,6 +192,7 @@ func _build_title_page() -> void:
 			else:
 				_new_game())
 	_menu_button(Strings.MENU_SETTINGS, func(): _show_page(Page.SETTINGS))
+	_menu_button(Strings.MENU_CONTROLS, func(): _show_page(Page.HELP))
 	_menu_button(Strings.MENU_QUIT, func(): get_tree().quit())
 
 
@@ -186,10 +205,53 @@ func _build_pause_page() -> void:
 		autosave(true)
 		_close_menu())
 	_menu_button(Strings.MENU_SETTINGS, func(): _show_page(Page.SETTINGS))
+	_menu_button(Strings.MENU_CONTROLS, func(): _show_page(Page.HELP))
 	_menu_button(Strings.MENU_TITLE_SCREEN, _to_title)
 	_menu_button(Strings.MENU_QUIT, func():
 		autosave(true)
 		get_tree().quit())
+
+
+## The controls help: every key and mouse action in two columns, each with a key cap.
+func _build_help() -> void:
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_panel.offset_top = 30.0 if _title else 0.0
+	_heading(Strings.MENU_CONTROLS)
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 46)
+	grid.add_theme_constant_override("v_separation", 7)
+	var entries: Array = Strings.CONTROLS_HELP
+	var half := ceili(entries.size() / 2.0)
+	for i in half:
+		for col in 2:
+			var idx := i + col * half
+			if idx >= entries.size():
+				grid.add_child(Control.new())
+				continue
+			var row := HBoxContainer.new()
+			row.add_theme_constant_override("separation", 12)
+			var cap_holder := Control.new()
+			cap_holder.custom_minimum_size = Vector2(150, 0)
+			var cap := UiKit.key_cap(entries[idx][0], 16)
+			cap_holder.add_child(cap)
+			cap_holder.custom_minimum_size.y = 34
+			cap.position = Vector2(0, 3)
+			row.add_child(cap_holder)
+			var text := UiKit.label(entries[idx][1], 17)
+			text.custom_minimum_size = Vector2(210, 34)
+			text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			row.add_child(text)
+			grid.add_child(row)
+	_box.add_child(grid)
+	var back := UiKit.button(Strings.MENU_BACK, func():
+		if _help_from_hud:
+			_close_menu()
+		else:
+			_show_page(Page.MAIN), 160.0, 18)
+	var center := CenterContainer.new()
+	center.add_child(back)
+	_box.add_child(center)
 
 
 func _build_settings() -> void:
@@ -244,7 +306,7 @@ func _device_picker() -> Control:
 	option.add_theme_font_size_override("font_size", 17)
 	option.add_theme_color_override("font_color", UiKit.CREAM)
 	for style in ["normal", "hover", "pressed"]:
-		option.add_theme_stylebox_override(style, UiKit._button_box(Color(0.30, 0.20, 0.09), UiKit.BORDER))
+		option.add_theme_stylebox_override(style, UiKit._button_box(Color(0.17, 0.19, 0.27, 0.96), Color(1, 1, 1, 0.20), 3))
 	var devices := AudioServer.get_output_device_list()
 	for i in devices.size():
 		option.add_item(devices[i])

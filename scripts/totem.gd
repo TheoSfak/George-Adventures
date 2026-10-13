@@ -6,7 +6,7 @@ extends StaticBody3D
 
 const MODEL := "res://assets/graveyard/post_skull.gltf"
 const SCALE := 1.7
-const BAR_SIZE := Vector2i(64, 8)
+const BAR_SIZE := Vector2i(128, 16)      # drawn at double resolution (pixel_size is halved)
 
 @export var max_health := 90.0
 var health := 0.0
@@ -55,7 +55,7 @@ func _ready() -> void:
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.shaded = false
-	_bar.pixel_size = 0.035
+	_bar.pixel_size = 0.0175
 	_bar.position.y = 8.7
 	add_child(_bar)
 	_update_bar()
@@ -73,11 +73,8 @@ func _refresh() -> void:
 
 
 func _update_bar() -> void:
-	var img := Image.create(BAR_SIZE.x, BAR_SIZE.y, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.08, 0.05, 0.05, 0.9))
-	var inner := BAR_SIZE - Vector2i(2, 2)
-	img.fill_rect(Rect2i(1, 1, ceili(inner.x * clampf(health / max_health, 0.0, 1.0)), inner.y), Color(0.45, 0.9, 0.35))
-	_bar.texture = ImageTexture.create_from_image(img)
+	_bar.texture = FancyBar.texture(BAR_SIZE.x, BAR_SIZE.y, clampf(health / max_health, 0.0, 1.0),
+			Color(0.65, 1.0, 0.50), Color(0.20, 0.62, 0.28))
 
 
 func take_damage(amount: float, _from: Vector3, _knock: float = 0.0) -> void:

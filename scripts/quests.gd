@@ -207,7 +207,7 @@ func _complete(id: String) -> void:
 # ------------------------------------------------------------- HUD data ----
 
 ## Active and ready quests for the tracker:
-## [{"title": String, "lines": [String], "ready": bool}]
+## [{"title": String, "lines": [String], "objectives": [{"text", "cur", "max"}], "ready": bool}]
 func tracker() -> Array:
 	var out := []
 	for id in QuestData.QUESTS:
@@ -215,11 +215,13 @@ func tracker() -> Array:
 			continue
 		var q: Dictionary = QuestData.QUESTS[id]
 		var lines := []
+		var bars := []                    # one entry per objective, for the progress bars of the tracker
 		if state[id] == S.READY:
 			lines.append(Strings.RETURN_TO % npc_name(q["turn_in"]))
 		else:
 			var objectives: Array = q["objectives"]
 			for i in objectives.size():
 				lines.append("%s: %d/%d" % [objectives[i]["text"], progress[id][i], objectives[i]["count"]])
-		out.append({"title": q["title"], "lines": lines, "ready": state[id] == S.READY})
+				bars.append({"text": objectives[i]["text"], "cur": progress[id][i], "max": objectives[i]["count"]})
+		out.append({"title": q["title"], "lines": lines, "objectives": bars, "ready": state[id] == S.READY})
 	return out
