@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2 (unreleased) — update card notes
+## 1.0.2 (2026-10-13) — update card notes
 **Fixed**
 - The update card showed the release notes from GitHub in full: long English notes pushed the "Ενημέρωση" and "Αργότερα" buttons off the bottom of the screen (found while testing a real update from 1.0.0 to 1.0.1; 1.0.1 was saved by shortening its notes on GitHub). The card now shows at most 4 lines of at most 60 characters, without markdown noise.
 - `tools/release.py` uses `docs/release-notes/<version>.md` (short, Greek) as the release body when it exists, and warns when it falls back to the long CHANGELOG section.
