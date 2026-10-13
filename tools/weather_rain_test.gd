@@ -79,4 +79,15 @@ func _run() -> void:
 	for i in 1000:
 		w.step(0.02)
 	check("no lightning in plain rain", w.bolts == calm_bolts)
+
+	# --- the streaks are unshaded, so they are fainter at night
+	var dn = get_first_node_in_group("daynight")
+	dn.running = false
+	dn.set_time(12.0)
+	w.apply_effects()
+	var day_alpha: float = w._rain_mat.albedo_color.a
+	dn.set_time(2.0)
+	w.apply_effects()
+	var night_alpha: float = w._rain_mat.albedo_color.a
+	check("the rain is fainter at night (alpha %.2f by day, %.2f at night)" % [day_alpha, night_alpha], day_alpha > 0.3 and night_alpha < 0.25 and night_alpha < day_alpha)
 	quit(1 if failed else 0)

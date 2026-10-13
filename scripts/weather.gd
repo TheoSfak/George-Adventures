@@ -30,7 +30,9 @@ const STORM_MIN := 0.6                # lightning only while the storm is this s
 const BOLT_MIN := 6.0
 const BOLT_MAX := 18.0
 const BOLT_SECONDS := 0.25
-const RAIN_AMOUNT := 2400             # fixed particle count; the intensity scales amount_ratio
+const RAIN_AMOUNT := 3200             # fixed particle count; the intensity scales amount_ratio
+const RAIN_ALPHA_DAY := 0.34          # the streaks are unshaded, so they are made fainter at night
+const RAIN_ALPHA_NIGHT := 0.2
 const RAIN_LIFETIME := 0.5            # seconds; a drop falls about 14 m in that time
 const RAIN_HEIGHT := 14.0             # the emitter hangs this high above George
 const RAIN_HALF := 15.0               # half the side of the rain box (30 x 30 m)
@@ -60,6 +62,8 @@ var _rng := RandomNumberGenerator.new()
 var _player: Player
 var _interiors: Node
 var _rain: GPUParticles3D
+var _rain_mat: StandardMaterial3D
+var _daynight: Node
 var _wet_sent := -1.0
 var _clouds: Node
 var _cloud_mat: StandardMaterial3D
@@ -248,15 +252,15 @@ func _build_rain() -> void:
 	pm.particle_flag_align_y = true
 	_rain.process_material = pm
 	var quad := QuadMesh.new()
-	quad.size = Vector2(0.03, 0.9)
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.78, 0.86, 1.0, 0.38)
-	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	mat.billboard_keep_scale = true
-	mat.disable_receive_shadows = true
-	quad.material = mat
+	quad.size = Vector2(0.02, 0.8)
+	_rain_mat = StandardMaterial3D.new()
+	_rain_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_rain_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_rain_mat.albedo_color = Color(0.78, 0.86, 1.0, RAIN_ALPHA_DAY)
+	_rain_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	_rain_mat.billboard_keep_scale = true
+	_rain_mat.disable_receive_shadows = true
+	quad.material = _rain_mat
 	_rain.draw_pass_1 = quad
 	add_child(_rain)
 
@@ -268,6 +272,11 @@ func apply_effects() -> void:
 			_rain.global_position = _player.global_position + Vector3(0.0, RAIN_HEIGHT, 0.0)
 		_rain.amount_ratio = clampf(rain, 0.02, 1.0)
 		_rain.emitting = rain > 0.02
+		if rain > 0.02:
+			if _daynight == null:
+				_daynight = get_tree().get_first_node_in_group("daynight")
+			var dark: float = _daynight.darkness() if _daynight != null else 0.0
+			_rain_mat.albedo_color = Color(0.78, 0.86, 1.0, lerpf(RAIN_ALPHA_DAY, RAIN_ALPHA_NIGHT, dark))
 	if absf(wet - _wet_sent) > 0.002:
 		_wet_sent = wet
 		RenderingServer.global_shader_parameter_set("wetness", wet)
