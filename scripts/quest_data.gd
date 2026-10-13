@@ -93,6 +93,14 @@ const NPCS := {
 			"Οι σφραγίδες του Αγίου αντέχουν ακόμα… αλλά όχι για πολύ.",
 		],
 	},
+	# The cook of the tavern: fish are cooked into meals (see shop_data.gd, SHOPS["kitchen"]).
+	"thanasis": {
+		"name": "Θανάσης ο Μάγειρας",
+		"model": "res://assets/characters/Barbarian.glb",
+		"show": ["Mug"],
+		"shop": "kitchen",
+		"idle": ["Ένα καλό φαγητό αξίζει όσο ένα καλό σπαθί.", "Φέρε μου ψάρια και θα δεις τι μπορώ να κάνω."],
+	},
 	# Part 3: the refugee camp in the Frontier (see frontier.gd).
 	"ilarion": {
 		"name": "Μοναχός Ιλαρίων",
