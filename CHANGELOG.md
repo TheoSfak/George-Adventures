@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.13-beta (unreleased) — story part 3: the Frontier beyond the mountains
+## 0.13-beta (2026-10-13) — story part 3: the Frontier beyond the mountains
 **New in this version**
 - **The Frontier** (`scripts/frontier.gd`): a new outdoor region reached through a stone arch in the northern mountains (east of the old crypt, sealed until Παπά-Σταύρος offers "Η Πύλη του Περάσματος"). Built once on the first visit at a far-away origin; the sky, sun and clock keep running. Three zones: the **Βουνίσιο Πέρασμα** (snow, dead trees, boulders, lantern posts, skull posts), the **Καταφύγιο των Προσφύγων** (tents around a big fire, safe zone) and the **Φρούριο της Σκιάς** (walls with battlements, towers, the dark keep, purple braziers, a sealed gate). The layout is data at the top of the file (`SPAWNS`, `CHESTS`, `SYMBOLS`, zone constants). 60 fps by day and by night.
 - **Story part 3 (6 quests, 2 new NPCs Μοναχός Ιλαρίων and Ελπίδα η Κυνηγός):** "Η Πύλη του Περάσματος" → "Οι Φρουροί του Περάσματος" + "Τα Σύμβολα της Σκιάς" (3 golden symbols open the fortress gate) → "Το Τείχος" → "Ο Άρχοντας του Βουνού" → "Η Επιστροφή" (hand-in at Παπά-Σταύρος, "Συνεχίζεται…"). Part 2 no longer ends with "Συνεχίζεται…"; it leads into part 3 (an existing save that finished part 2 simply gets the new quest from Παπά-Σταύρος).
