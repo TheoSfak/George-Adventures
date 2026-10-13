@@ -202,7 +202,7 @@ const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame",
 const SPAWNS := [
 	# --- around the stolen wine barrels (quest "Τα Κλεμμένα Βαρέλια")
 	["minion", -38.0, -138.0], ["minion", -22.0, -146.0],
-	["minion", 120.0, -18.0], ["warrior", 130.0, -34.0],
+	["minion", 112.0, -22.0], ["warrior", 110.0, -38.0],
 	["minion", 18.0, 148.0], ["warrior", 34.0, 156.0],
 	["warrior", -128.0, 104.0], ["minion", -116.0, 118.0],
 	# --- wandering around the village outskirts

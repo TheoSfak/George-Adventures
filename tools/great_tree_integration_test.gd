@@ -21,7 +21,7 @@ func _run() -> void:
 	var village_src := FileAccess.get_file_as_string("res://scripts/village.gd")
 	check("the quest barrel moved to (124, -26)", village_src.contains('["keg", 124.0, -26.0]') and not village_src.contains('["keg", 143.0, -29.0]'))
 	var enemies_src := FileAccess.get_file_as_string("res://scripts/enemies.gd")
-	check("its two skeleton spawns moved with it", enemies_src.contains('["minion", 120.0, -18.0]') and enemies_src.contains('["warrior", 130.0, -34.0]') and not enemies_src.contains('["minion", 138.0, -22.0]'))
+	check("its two skeleton spawns moved with it", enemies_src.contains('["minion", 112.0, -22.0]') and enemies_src.contains('["warrior", 110.0, -38.0]') and not enemies_src.contains('["minion", 138.0, -22.0]'))
 	check("the signpost is in the village data", village_src.contains("Το Μεγάλο Δέντρο  →"))
 	var mini_src := FileAccess.get_file_as_string("res://scripts/minimap.gd")
 	check("the big map names the place", mini_src.contains('["bigtree", 172.0, -40.0]') and Strings.MAP_PLACES.has("bigtree") and Strings.MAP_PLACES["bigtree"] == "Η Λίμνη του Αιωνόβιου")
