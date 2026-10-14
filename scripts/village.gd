@@ -139,6 +139,7 @@ func _ready() -> void:
 	_build_chests_items_signs()
 	_build_totems()
 	_build_stable()
+	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_terrain_details()
 	_build_scatter()
