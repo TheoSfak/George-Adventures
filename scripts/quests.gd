@@ -8,7 +8,7 @@ signal message(text: String)         # short notices for the HUD feed
 signal quest_done(id: String)
 signal game_finished                 # the final quest was handed in
 
-enum S { LOCKED, AVAILABLE, ACTIVE, READY, DONE }
+enum S { LOCKED, AVAILABLE, ACTIVE, READY, DONE, FAILED }   # FAILED: an event quest that was lost
 
 var intro_seen := false              # tests set this to true to skip the prologue
 var state := {}                      # quest id -> S
@@ -34,7 +34,7 @@ func reset() -> void:
 
 func _refresh_availability() -> void:
 	for id in QuestData.QUESTS:
-		if state[id] != S.LOCKED:
+		if state[id] != S.LOCKED or QuestData.QUESTS[id].get("event", false):
 			continue
 		var ok := true
 		for req in QuestData.QUESTS[id]["requires"]:
@@ -148,6 +148,37 @@ func report_reach(place: String) -> void:
 			if o["type"] == "reach" and o["place"] == place and progress[id][i] < o["count"]:
 				progress[id][i] += 1
 		_check_ready(id)
+	changed.emit()
+
+
+## The rescue of Andreas succeeded (all besiegers dead while he lives).
+func report_rescue() -> void:
+	for id in QuestData.QUESTS:
+		if state[id] != S.ACTIVE:
+			continue
+		var objectives: Array = QuestData.QUESTS[id]["objectives"]
+		for i in objectives.size():
+			var o: Dictionary = objectives[i]
+			if o["type"] == "rescue" and progress[id][i] < o["count"]:
+				progress[id][i] += 1
+		_check_ready(id)
+	changed.emit()
+
+
+## Quests that nobody hands out: an event (rescue.gd) starts them.
+func start_event_quest(id: String) -> void:
+	if state[id] != S.LOCKED and state[id] != S.AVAILABLE:
+		return
+	state[id] = S.ACTIVE
+	message.emit(Strings.QUEST_NEW % QuestData.QUESTS[id]["title"])
+	Sfx.ui("quest_new")
+	changed.emit()
+
+
+func fail_event_quest(id: String) -> void:
+	if state[id] != S.ACTIVE and state[id] != S.READY:
+		return
+	state[id] = S.FAILED
 	changed.emit()
 
 

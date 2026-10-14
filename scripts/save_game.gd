@@ -3,7 +3,7 @@ class_name SaveGame
 ## it or edit your level and gold). One slot; the previous save is kept as savegame.bak.
 ##
 ## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, fish journal, position),
-## the quests, the time of day, defeated bosses, opened chests and collected quest items.
+## the quests, the rescue event of Andreas, the time of day, defeated bosses, opened chests and collected quest items.
 ## Not saved: where ordinary skeletons stand (they respawn), a night invasion in progress,
 ## chests inside buildings. In the Frontier the real position is saved ("in_frontier": true)
 ## and loading rebuilds the region.
@@ -91,6 +91,7 @@ static func save() -> bool:
 	elif interiors != null and interiors.in_region():
 		in_frontier = true                          # in the Frontier: save the real position, load rebuilds the region
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight
+	var rescue := tree.get_first_node_in_group("rescue")
 	var data := {
 		"version": VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
@@ -105,6 +106,7 @@ static func save() -> bool:
 			"fish_seen": player.fish_seen,
 			"horse_owned": player.horse_owned,
 		},
+		"rescue": rescue.save_data() if rescue != null else {},
 		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
@@ -213,6 +215,9 @@ static func apply(d: Dictionary) -> void:
 	Quests._refresh_availability()    # quests added after the save was made (story part 2) unlock
 	Quests.intro_seen = bool(qd.get("intro_seen", true))
 	Quests.changed.emit()
+	var rescue := tree.get_first_node_in_group("rescue")
+	if rescue != null:
+		rescue.load_data(d.get("rescue", {}))
 
 	var wd: Dictionary = d["world"]
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight

@@ -305,6 +305,22 @@ func spawn_summon(kind: String, pos: Vector3, summoner: Enemy = null) -> Enemy:
 	return enemy
 
 
+## The ring of skeletons around a victim (rescue event). They never respawn; XP, loot and
+## quest kills work as for any skeleton.
+func spawn_besiegers(kinds: Array, center: Vector3, target: Node3D) -> Array[Enemy]:
+	var out: Array[Enemy] = []
+	for i in kinds.size():
+		var angle := TAU * float(i) / float(kinds.size())
+		var enemy := _make(kinds[i], center + Vector3(cos(angle), 0.0, sin(angle)) * 4.0)
+		enemy.besiege_target = target
+		enemy.patrol_radius = 0.5
+		enemy.died.connect(_on_enemy_died.bind(-1))
+		add_child(enemy)
+		enemy.add_to_group("besiegers")
+		out.append(enemy)
+	return out
+
+
 func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:

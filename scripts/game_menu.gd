@@ -638,6 +638,7 @@ func _continue_game() -> void:
 func _new_game() -> void:
 	SaveGame.delete()
 	Quests.reset()
+	get_tree().call_group("rescue", "reset")
 	_title = false
 	_close_menu_silent()
 	if _hud:

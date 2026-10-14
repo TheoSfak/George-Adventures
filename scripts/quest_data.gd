@@ -7,6 +7,7 @@ class_name QuestData
 ##   {"type": "collect", "item": "<item id>",                       "count": N, "text": "..."}
 ##   {"type": "defend",  "count": 1, "text": "..."}                  (survive a night invasion)
 ##   {"type": "reach",   "place": "catacombs" | "frontier" | "village", "count": 1, "text": "..."}   (Quests.report_reach)
+##   {"type": "rescue",  "count": 1, "text": "..."}                  (Quests.report_rescue; with "event": true on the quest nobody hands out: rescue.gd starts it)
 ## Kill targets also include the catacomb creatures "cguard", "acolyte", "warden_bone",
 ## "warden_flame", "warden_shadow" and "necromancer" (enemies.gd KINDS).
 ## Where the quest items stand in the world is set in village.gd (QUEST_ITEMS).
@@ -108,6 +109,17 @@ const NPCS := {
 		"show": ["Mug"],
 		"shop": "kitchen",
 		"idle": ["Ένα καλό φαγητό αξίζει όσο ένα καλό σπαθί.", "Φέρε μου ψάρια και θα δεις τι μπορώ να κάνω."],
+	},
+	# The friend of George: appears at the rescue event (see rescue.gd), later stands in the square.
+	"andreas": {
+		"name": "Αντρέας",
+		"model": "res://assets/characters/Rogue_Hooded.glb",
+		"show": [],
+		"idle": [
+			"Χρωστάω τη ζωή μου σε σένα, Γιώργο. Όποτε με χρειαστείς, εδώ θα είμαι.",
+			"Δεν ξαναπάω μόνος μου στο δάσος, στο υπόσχομαι!",
+			"Οι σκελετοί αυτοί δεν σταματούν ποτέ. Πρόσεχε, φίλε.",
+		],
 	},
 	# Part 3: the refugee camp in the Frontier (see frontier.gd).
 	"ilarion": {
@@ -648,5 +660,30 @@ const QUESTS := {
 		],
 		"reward": {"xp": 1000, "gold": 300, "potions": 2},
 		"ends_game": true,
+	},
+
+	# ------------------------------------------------ Event: the friend in danger ----
+	# Nobody hands this quest out: rescue.gd starts it a few minutes into the game ("event": true).
+	"andreas": {
+		"title": "Σώσε τον Αντρέα",
+		"event": true,
+		"giver": "andreas",
+		"turn_in": "andreas",
+		"requires": [],
+		"objectives": [
+			{"type": "rescue", "count": 1, "text": "Σώσε τον Αντρέα από τους σκελετούς"},
+		],
+		"offer": [
+			"Γιώργο, βοήθεια! Οι σκελετοί με περικύκλωσαν!",
+		],
+		"progress": [
+			"Μη στέκεσαι, Γιώργο! Σκότωσέ τους πριν με φτάσουν!",
+		],
+		"complete": [
+			"Γιώργο! Ήρθες την τελευταία στιγμή… νόμιζα ότι ήταν το τέλος μου.",
+			"Βγήκα να μαζέψω βότανα και ξαφνικά ήταν παντού. Σου χρωστάω τη ζωή μου.",
+			"Πάρε αυτά, είναι το λιγότερο που μπορώ να κάνω. Θα σε περιμένω στην πλατεία!",
+		],
+		"reward": {"xp": 250, "gold": 120, "potions": 2},
 	},
 }
