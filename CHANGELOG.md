@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.1 (2026-10-14) — bosses come back
 **Fixed**
 - **Bosses and big mobs come back.** Every quest boss (the captain, the Bone King, the three wardens, the necromancer, the giant skeleton, Malakar) and the big mobs (brutes, shadow knights) now respawn 60 s after they die (once George is more than 40 m away for the bosses). Before, a boss killed before its quest could never be killed again, so the quest could not be finished. Loaded games have the bosses again; the save no longer remembers defeated bosses. The invasion bosses (Warlord, Night Lord) are unchanged.
 - New test: `boss_respawn_test` (headless).
