@@ -17,8 +17,8 @@ const REBINDABLE := [
 	["slot_5", "Δεξιότητα 5"], ["slot_6", "Δεξιότητα 6"], ["slot_7", "Δεξιότητα 7"], ["slot_8", "Δεξιότητα 8"],
 	["skillbook", "Ικανότητες"], ["talents", "Ταλέντα"], ["equipment", "Εξοπλισμός"], ["map", "Χάρτης"], ["mount", "Άλογο"],
 ]
-const BUS_NAMES := {"master": "Master", "music": "Music", "sfx": "SFX", "ambient": "Ambient"}
-const DEFAULT_VOLUMES := {"master": 1.0, "music": 0.8, "sfx": 0.9, "ambient": 0.8}
+const BUS_NAMES := {"master": "Master", "music": "Music", "sfx": "SFX", "ambient": "Ambient", "voice": "Voice"}
+const DEFAULT_VOLUMES := {"master": 1.0, "music": 0.8, "sfx": 0.9, "ambient": 0.8, "voice": 1.0}
 
 static var volumes := DEFAULT_VOLUMES.duplicate()
 static var device := ""
@@ -82,7 +82,7 @@ static func apply_audio() -> void:
 
 ## Slider position 0..1 -> bus volume. Each bus has a base level (set when mixing the game)
 ## that the slider scales, so 1.0 means "as mixed".
-const BASE_DB := {"master": 0.0, "music": -9.0, "sfx": -2.0, "ambient": -8.0}
+const BASE_DB := {"master": 0.0, "music": -9.0, "sfx": -2.0, "ambient": -8.0, "voice": 0.0}
 
 
 static func _db(id: String) -> float:

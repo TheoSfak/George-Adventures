@@ -111,8 +111,8 @@ free allowance (500,000 characters). The existing `voice_blip` sound effect (vil
 - `dialogue_voice_test` (headless, `HUD`): a voiced line gives a typewriter time equal to the voice length plus 0.15 s and
   no blips; a line without a file keeps the old time and the blips; the voice is stopped after the last line and after a
   shop greeting hands over to the shop window.
-- `settings_voice_test` (headless): default 1.0, set and reload round trip, an old `settings.json` without `voice`, the
-  `Voice` bus volume follows the slider.
+- The settings checks (default 1.0, an old `settings.json` without `voice`, the `Voice` bus follows the slider, 0 is
+  silent) are part of `voice_player_test`, which backs up and restores the real `settings.json`.
 - `menutest` and `graphicsmenutest` keep passing; a screenshot of the settings page confirms five sliders fit.
 - Manual, by ear (Theodore): the prologue and one quest of each voice; level of the `Voice` bus against music and effects.
 

@@ -407,7 +407,7 @@ func _build_settings() -> void:
 	_panel.offset_top = 30.0 if _title else 0.0
 	_heading(Strings.MENU_SETTINGS)
 	_box.add_child(UiKit.label(Strings.SET_VOLUMES, 19, UiKit.GOLD_TEXT))
-	for entry in [["master", Strings.SET_MASTER], ["music", Strings.SET_MUSIC], ["sfx", Strings.SET_SFX], ["ambient", Strings.SET_AMBIENT]]:
+	for entry in [["master", Strings.SET_MASTER], ["music", Strings.SET_MUSIC], ["sfx", Strings.SET_SFX], ["ambient", Strings.SET_AMBIENT], ["voice", Strings.SET_VOICE]]:
 		_box.add_child(_volume_row(entry[0], entry[1]))
 	_box.add_child(UiKit.label(Strings.SET_DEVICE, 19, UiKit.GOLD_TEXT))
 	_box.add_child(_device_picker())

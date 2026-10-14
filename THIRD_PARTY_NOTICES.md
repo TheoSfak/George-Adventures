@@ -16,6 +16,13 @@ The horse model (`assets/animals/Horse.fbx`) comes from the free pack "LowPoly A
 by Quaternius (https://quaternius.itch.io/lowpoly-animated-animals). License:
 https://creativecommons.org/publicdomain/zero/1.0/
 
+## Microsoft Azure AI Speech — spoken dialogue
+
+The recordings in `assets/audio/voice` were made with the neural voices `el-GR-AthinaNeural` and
+`el-GR-NestorasNeural` of Microsoft Azure AI Speech (https://azure.microsoft.com/products/ai-services/ai-speech)
+from the game's own dialogue text, by `tools/gen_voice.py`. The game plays the finished mp3 files; it does not
+contact any speech service and contains no key.
+
 ## Godot Engine — MIT License
 
 The exported game contains the Godot Engine (https://godotengine.org). Godot's own

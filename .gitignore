@@ -4,3 +4,4 @@ _to_delete/
 .claude/
 tools/_shots/
 build/
+tools/_voice/
