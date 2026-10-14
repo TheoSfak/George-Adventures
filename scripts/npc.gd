@@ -7,13 +7,6 @@ extends StaticBody3D
 @export var npc_id := "stavros"
 var rest_yaw := 0.0            # which way the NPC faces when George is not around
 
-const WEAPON_NODES: Array[String] = [
-	"1H_Axe", "1H_Axe_Offhand", "2H_Axe", "Barbarian_Round_Shield", "Mug", "Barbarian_Hat",
-	"Spellbook", "Spellbook_open", "1H_Wand", "2H_Staff",
-	"Knife", "Knife_Offhand", "1H_Crossbow", "2H_Crossbow", "Throwable",
-	"1H_Sword", "1H_Sword_Offhand", "2H_Sword", "Badge_Shield", "Rectangle_Shield", "Spike_Shield",
-]
-
 var _model_root: Node3D
 var _anim: AnimationPlayer
 var _marker: Label3D
@@ -40,9 +33,7 @@ func _ready() -> void:
 	add_child(_model_root)
 	var model := (load(data["model"]) as PackedScene).instantiate() as Node3D
 	_model_root.add_child(model)
-	for n in model.find_children("*", "Node3D", true, false):
-		if n.name in WEAPON_NODES:
-			n.visible = n.name in data["show"]
+	CharacterProps.apply(model, data["show"])
 	_anim = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim and _anim.has_animation("Idle"):
 		_anim.get_animation("Idle").loop_mode = Animation.LOOP_LINEAR

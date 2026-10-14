@@ -14,6 +14,9 @@ signal died(enemy: Enemy)
 @export var display_name := ""        # bosses show a name above their head
 @export var model_scale := 1.0        # bosses are bigger
 @export var tint_color := Color(0, 0, 0, 0)   # alpha 0 = no tint; otherwise a colour wash over the model
+@export var human := false            # a person (bandit) instead of a skeleton: other sounds, only `show_nodes` props visible
+@export var show_nodes: Array = []                               # props of an Adventurers model that stay visible (CharacterProps)
+@export var walk_anim := "Walking_D_Skeletons"                    # humans walk with "Walking_A"
 @export_group("Stats")
 @export var max_health := 45.0
 @export var attack_damage := 12.0
@@ -113,6 +116,8 @@ func _load_model() -> void:
 		_attach(skeleton, "handslot.r", weapon_path)
 		_attach(skeleton, "handslot.l", offhand_path)
 
+	if human:
+		CharacterProps.apply(model, show_nodes)
 	if tint_color.a > 0.0:
 		_apply_tint(model, tint_color)
 
@@ -120,7 +125,9 @@ func _load_model() -> void:
 	if _anim == null:
 		push_warning("Enemy: no AnimationPlayer in %s" % model_path)
 		return
-	for anim_name in LOOPED:
+	var looped: Array = LOOPED.duplicate()
+	looped.append(walk_anim)
+	for anim_name in looped:
 		if _anim.has_animation(anim_name):
 			_anim.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 	_anim.animation_finished.connect(_on_animation_finished)
@@ -262,7 +269,7 @@ func _patrol(delta: float) -> Vector3:
 		return Vector3.ZERO
 	var dir := _detour(to_target.normalized())
 	_face(dir, delta)
-	_play("Walking_D_Skeletons", 0.2)
+	_play(walk_anim, 0.2)
 	return dir * patrol_speed
 
 
@@ -276,7 +283,7 @@ func _besiege(delta: float) -> Vector3:
 	var to_target := _flat(besiege_target.global_position - global_position)
 	_face(to_target, delta)
 	if to_target.length() > 5.5:                    # pulled away by a chase: walk back to the ring
-		_play("Walking_D_Skeletons", 0.2)
+		_play(walk_anim, 0.2)
 		return _detour(to_target.normalized()) * patrol_speed
 	_besiege_swing -= delta
 	if _cooldown <= 0.0:
@@ -284,7 +291,7 @@ func _besiege(delta: float) -> Vector3:
 		_besiege_swing = 0.9
 		_play(shoot_anim if ranged else (attack_anim if attack_anim != "" else ATTACKS.pick_random()), 0.08, true)
 		if not ranged:
-			Sfx.play("skel_attack", global_position)
+			Sfx.play(_voice("skel_attack"), global_position)
 	elif _besiege_swing <= 0.0:
 		_play("Idle", 0.2)
 	return Vector3.ZERO
@@ -311,12 +318,13 @@ func _aggro_sound() -> void:
 	match kind_id:
 		"brute":
 			Sfx.play("brute_roar", global_position)
-		"captain", "king", "giant_skeleton", "malakar", "night_lord":
+		"captain", "king", "giant_skeleton", "malakar", "night_lord", "bandit_chief":
 			Sfx.play("boss_roar", global_position)
 		"warlord":
 			Sfx.play("warlord_roar", global_position)
 		_:
-			Sfx.play("skel_aggro", global_position, -4.0)
+			if not human:
+				Sfx.play("skel_aggro", global_position, -4.0)
 
 
 func _chase() -> Vector3:
@@ -374,7 +382,7 @@ func _chase_ranged(to_player: Vector3, dist: float, _delta: float) -> Vector3:
 func _start_attack() -> void:
 	_set_state(State.ATTACK)
 	if not ranged:
-		Sfx.play("skel_attack", global_position)
+		Sfx.play(_voice("skel_attack"), global_position)
 	_attack_timer = 0.0
 	_attack_landed = false
 	if ranged:
@@ -432,7 +440,7 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 		return
 	if enrage_below > 0.0 and not _enraged and health / max_health <= enrage_below:
 		_enrage()
-	Sfx.play("skel_hurt", global_position)
+	Sfx.play(_voice("skel_hurt"), global_position)
 	_set_state(State.HURT)
 	_hurt_timer = 0.45
 	_cooldown = maxf(_cooldown, 0.5)
@@ -459,7 +467,7 @@ func _die(_away: Vector3) -> void:
 	collision_mask = 0
 	velocity = Vector3.ZERO
 	_bar.visible = false
-	Sfx.play("skel_death", global_position)
+	Sfx.play(_voice("skel_death"), global_position)
 	_play("Death_B", 0.05, true)
 	died.emit(self)
 	var tween := create_tween()
@@ -521,7 +529,13 @@ func _enrage() -> void:
 	Sfx.play("boss_roar", global_position)
 	var player := get_tree().get_first_node_in_group("player")
 	if player:
-		player.message.emit(Strings.NIGHT_LORD_ENRAGE if kind_id == "night_lord" else Strings.MALAKAR_ENRAGE)
+		match kind_id:
+			"night_lord":
+				player.message.emit(Strings.NIGHT_LORD_ENRAGE)
+			"bandit_chief":
+				player.message.emit(Strings.BANDIT_CHIEF_ENRAGE)
+			_:
+				player.message.emit(Strings.MALAKAR_ENRAGE)
 
 
 ## Calls two helpers from the parent spawner (the necromancer's minions).
@@ -538,6 +552,13 @@ func _summon() -> void:
 		var helper = spawner.spawn_summon(summon_kind, global_position + Vector3(cos(angle), 0.0, sin(angle)) * 3.0, self)
 		if helper:
 			_summons.append(helper)
+
+
+## A human is hurt and dies with a human voice, swings a sword instead of rattling bones.
+func _voice(skeleton_sound: String) -> String:
+	if not human:
+		return skeleton_sound
+	return "sword_swing" if skeleton_sound == "skel_attack" else "player_hurt"
 
 
 func _player_alive() -> bool:

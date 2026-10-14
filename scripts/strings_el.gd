@@ -145,6 +145,7 @@ const INVASION_WON := "Το χωριό σώθηκε!"
 const INVASION_BOSS_COMING := "Ο Άρχοντας της Νύχτας έρχεται!"
 const INVASION_BOSS_WON := "Ο Άρχοντας της Νύχτας έπεσε! Το χωριό σώθηκε!"
 const NIGHT_LORD_ENRAGE := "Ο Άρχοντας της Νύχτας καλεί τους νεκρούς!"
+const BANDIT_CHIEF_ENRAGE := "Ο Αρχηγός των Ληστών φωνάζει τους άντρες του!"
 const INVASION_LOST := "Το πηγάδι έπεσε! Οι νεκροί λεηλάτησαν το χωριό…"
 const INVASION_LOST_GOLD := "Έχασες %d χρυσά"
 const INVASION_DAWN := "Χάραξε… οι νεκροί γύρισαν στα χώματα."
@@ -171,7 +172,7 @@ const MAP_PLACES := {
 	"church": "Εκκλησία", "tavern": "Ταβέρνα", "market": "Παζάρι", "smith": "Σιδηρουργείο",
 	"mill": "Πριονιστήριο", "windmill": "Μύλος", "tower": "Πύργος Φρουράς", "well": "Πηγάδι",
 	"camp": "Δυτικό Στρατόπεδο", "quarry": "Λατομείο", "crypt": "Παλιά Κρύπτη", "bigtree": "Η Λίμνη του Αιωνόβιου",
-	"stable": "Στάβλος",
+	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών",
 }
 
 const MUSIC_ON := "Μουσική: ενεργή  [F7]"

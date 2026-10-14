@@ -102,6 +102,39 @@ const KINDS := {
 		"patrol_radius": 3.0,
 		"xp_reward": 400, "gold_min": 100, "gold_max": 140, "potion_chance": 1.0,
 	},
+	# --- the bandits (people, not skeletons): Adventurers models with one weapon each, tinted and named
+	# (see docs/superpowers/specs/2026-10-14-bandits-design.md; the hideout is bandit_camp.gd)
+	"bandit_thug": {
+		"kind_id": "bandit_thug", "human": true, "walk_anim": "Walking_A", "tint_color": Color(0.55, 0.28, 0.12, 0.40),
+		"model_path": CHAR + "Barbarian.glb", "show_nodes": ["1H_Axe", "Barbarian_Round_Shield"],
+		"max_health": 60.0, "attack_damage": 14.0, "chase_speed": 4.0, "attack_range": 2.2,
+		"attack_hit_time": 0.55, "attack_cooldown": 1.5, "aggro_range": 15.0, "patrol_radius": 4.0,
+		"xp_reward": 35, "gold_min": 8, "gold_max": 18, "potion_chance": 0.35,
+	},
+	"bandit_archer": {
+		"kind_id": "bandit_archer", "human": true, "walk_anim": "Walking_A", "tint_color": Color(0.20, 0.45, 0.16, 0.38),
+		"model_path": CHAR + "Rogue.glb", "show_nodes": ["1H_Crossbow"],
+		"ranged": true, "projectile_kind": "arrow", "shoot_anim": "1H_Ranged_Shoot", "projectile_speed": 17.0,
+		"ranged_min": 6.0, "ranged_max": 13.0, "aggro_range": 17.0,
+		"max_health": 40.0, "attack_damage": 11.0, "chase_speed": 4.0, "attack_cooldown": 2.1,
+		"xp_reward": 38, "gold_min": 8, "gold_max": 18, "potion_chance": 0.35,
+	},
+	"bandit_thief": {
+		"kind_id": "bandit_thief", "human": true, "walk_anim": "Walking_A", "tint_color": Color(0.20, 0.14, 0.34, 0.45),
+		"model_path": CHAR + "Rogue_Hooded.glb", "show_nodes": ["Knife", "Knife_Offhand"],
+		"max_health": 35.0, "attack_damage": 7.0, "chase_speed": 5.4, "attack_range": 1.9,
+		"attack_hit_time": 0.3, "attack_cooldown": 0.8, "aggro_range": 16.0, "patrol_radius": 5.0,
+		"xp_reward": 30, "gold_min": 10, "gold_max": 22, "potion_chance": 0.3,
+	},
+	"bandit_chief": {
+		"kind_id": "bandit_chief", "respawn_after": 60.0, "human": true, "walk_anim": "Walking_A",
+		"tint_color": Color(0.45, 0.10, 0.10, 0.30), "display_name": "Αρχηγός των Ληστών", "model_scale": 1.7,
+		"model_path": CHAR + "Barbarian.glb", "show_nodes": ["2H_Axe"],
+		"max_health": 450.0, "attack_damage": 24.0, "chase_speed": 4.2, "attack_range": 3.2, "attack_anim": "2H_Melee_Attack_Chop",
+		"attack_hit_time": 0.7, "attack_cooldown": 1.9, "aggro_range": 24.0, "leash_range": 45.0, "patrol_radius": 3.0,
+		"enrage_below": 0.5, "enrage_summon": "bandit_thug", "summon_interval": 12.0, "summon_max": 4,
+		"xp_reward": 350, "gold_min": 100, "gold_max": 150, "potion_chance": 1.0,
+	},
 	# --- the catacombs below the old crypt (placed by catacombs.gd; "quest" = the quest that needs the boss)
 	"cguard": {
 		"kind_id": "cguard", "tint_color": Color(0.30, 0.70, 0.85, 0.26), "model_scale": 1.15,
@@ -211,7 +244,7 @@ const KINDS := {
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
+const BOSSES: Array[String] = ["bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -241,6 +274,13 @@ const SPAWNS := [
 	["king", 0.0, -190.0],
 	["warrior", -16.0, -170.0], ["warrior", 16.0, -170.0],
 	["minion", -26.0, -186.0], ["minion", 26.0, -186.0], ["minion", 0.0, -166.0],
+	# --- the bandits' hideout in the north-west forest (bandit_camp.gd, centre (-140, -90)) and patrols on the roads
+	["bandit_chief", -140.0, -98.0],
+	["bandit_thug", -148.0, -88.0], ["bandit_thug", -132.0, -87.0], ["bandit_thug", -140.0, -81.0],
+	["bandit_archer", -149.0, -95.0], ["bandit_archer", -131.0, -96.0], ["bandit_thief", -136.0, -84.0],
+	["bandit_thug", 140.0, 10.0], ["bandit_archer", 143.0, 12.0],
+	["bandit_thug", -20.0, 170.0], ["bandit_archer", -17.0, 172.0],
+	["bandit_thug", 60.0, -160.0], ["bandit_archer", 63.0, -158.0],
 ]
 
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns
