@@ -96,6 +96,29 @@ func _process(delta: float) -> void:
 	_model_root.rotation.y = lerp_angle(_model_root.rotation.y, target, 1.0 - exp(-5.0 * delta))
 
 
+## A short hurt reaction, then back to idle (Andreas while the skeletons hit him).
+func flinch() -> void:
+	if _anim and _anim.has_animation("Hit_A"):
+		_anim.play("Hit_A", 0.1)
+		_anim.animation_finished.connect(func(_n): if is_inside_tree(): _anim.play("Idle", 0.2), CONNECT_ONE_SHOT)
+
+
+## The NPC dies: no more talking, falls, sinks into the ground and disappears.
+func fall() -> void:
+	remove_from_group("interactables")
+	remove_from_group("npcs")
+	set_process(false)
+	_marker.visible = false
+	if Quests.changed.is_connected(_update_marker):
+		Quests.changed.disconnect(_update_marker)
+	if _anim and _anim.has_animation("Death_A"):
+		_anim.play("Death_A", 0.1)
+	var tween := create_tween()
+	tween.tween_interval(5.0)
+	tween.tween_property(self, "position:y", position.y - 2.0, 1.5)
+	tween.tween_callback(queue_free)
+
+
 func interact_prompt() -> String:
 	if QuestData.NPCS[npc_id].has("shop"):
 		return Strings.PROMPT_TRADE % QuestData.NPCS[npc_id]["name"]

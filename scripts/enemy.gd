@@ -82,6 +82,8 @@ var _lost_time := 0.0                 # chasing without a line of sight (dungeon
 var _summon_timer := 5.0
 var _summons: Array[Enemy] = []
 var _enraged := false
+var besiege_target: Node3D = null     # rescue event: hits the air in front of this victim until George shows up
+var _besiege_swing := 0.0
 
 
 func _ready() -> void:
@@ -245,6 +247,8 @@ func _patrol(delta: float) -> Vector3:
 		_set_state(State.CHASE)
 		_aggro_sound()
 		return Vector3.ZERO
+	if besiege_target != null and is_instance_valid(besiege_target):
+		return _besiege(delta)
 	if _patrol_wait > 0.0:
 		_patrol_wait -= delta
 		_play("Idle", 0.2)
@@ -260,6 +264,30 @@ func _patrol(delta: float) -> Vector3:
 	_face(dir, delta)
 	_play("Walking_D_Skeletons", 0.2)
 	return dir * patrol_speed
+
+
+## A skeleton of the ring around a victim (the rescue event): it hits the air in front of the
+## target until George comes into view. rescue.gd drains the victim's health.
+func is_besieging() -> bool:
+	return _state == State.PATROL and besiege_target != null and is_instance_valid(besiege_target)
+
+
+func _besiege(delta: float) -> Vector3:
+	var to_target := _flat(besiege_target.global_position - global_position)
+	_face(to_target, delta)
+	if to_target.length() > 5.5:                    # pulled away by a chase: walk back to the ring
+		_play("Walking_D_Skeletons", 0.2)
+		return _detour(to_target.normalized()) * patrol_speed
+	_besiege_swing -= delta
+	if _cooldown <= 0.0:
+		_cooldown = attack_cooldown * randf_range(0.9, 1.4)
+		_besiege_swing = 0.9
+		_play(shoot_anim if ranged else (attack_anim if attack_anim != "" else ATTACKS.pick_random()), 0.08, true)
+		if not ranged:
+			Sfx.play("skel_attack", global_position)
+	elif _besiege_swing <= 0.0:
+		_play("Idle", 0.2)
+	return Vector3.ZERO
 
 
 ## Night invaders run for the well in the middle of the village.
@@ -426,6 +454,7 @@ func _die(_away: Vector3) -> void:
 	_set_state(State.DEAD)
 	remove_from_group("enemies")
 	remove_from_group("invaders")
+	remove_from_group("besiegers")
 	collision_layer = 0
 	collision_mask = 0
 	velocity = Vector3.ZERO
@@ -446,6 +475,7 @@ func dissolve() -> void:
 	_set_state(State.DEAD)
 	remove_from_group("enemies")
 	remove_from_group("invaders")
+	remove_from_group("besiegers")
 	collision_layer = 0
 	collision_mask = 0
 	velocity = Vector3.ZERO
