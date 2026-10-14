@@ -51,6 +51,7 @@ func _register_defaults() -> void:
 	_key("attack", KEY_F)
 	_key("attack", KEY_J)
 	_button("attack", JOY_BUTTON_X)
+	_key("mount", KEY_G)              # ride the horse (once it is bought at the stable)
 	_key("potion", KEY_H)
 	_button("potion", JOY_BUTTON_Y)
 	# Action bar: keys 1-8 (physical keys, so they work on the Greek layout too)

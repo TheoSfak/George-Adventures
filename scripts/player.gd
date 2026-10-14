@@ -18,6 +18,7 @@ signal prompt_changed(text: String)
 signal bar_changed
 signal talents_changed
 signal gear_changed
+signal mount_changed(mounted: bool)
 
 @export_group("Movement")
 @export var walk_speed := 5.0
@@ -63,7 +64,7 @@ const HIDDEN_NODES: Array[String] = [
 
 const LOOPED: Array[String] = [
 	"Idle", "Walking_A", "Walking_B", "Walking_C", "Running_A", "Running_B",
-	"Jump_Idle", "Blocking", "Walking_Backwards",
+	"Jump_Idle", "Blocking", "Walking_Backwards", "Sit_Chair_Idle",
 ]
 
 const COMBO: Array[String] = [
@@ -139,6 +140,11 @@ var _game_lmb := false           # mouse buttons that went down over the game, n
 var _game_rmb := false
 var _guard_visual: MeshInstance3D
 var busy := false              # in a dialogue or a door transition: George stands still
+var horse_owned := false       # bought at the stable (saved)
+var mounted := false           # riding (not saved: after loading George is on foot)
+var _horse: Horse
+var _mount_swallow := 0.0      # after an attack or skill press threw him off the horse, that press is spent
+const MOUNT_CAMERA_LIFT := 0.7
 var _interactable: Node
 var _last_prompt := ""
 var _stun := 0.0
@@ -160,6 +166,9 @@ func _ready() -> void:
 	_arm.add_excluded_object(get_rid())
 	bar.assign(SkillData.DEFAULT_BAR)
 	_load_model()
+	_horse = Horse.new()
+	_horse.visible = false
+	_model_root.add_child(_horse)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	# Let the HUD (which is built after the player) show the starting values.
 	_announce.call_deferred()
@@ -234,8 +243,9 @@ func _update_mouse_look(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	_update_mouse_look(delta)
 	_update_interaction()
+	_update_mount(delta)
 	_tick_timers(delta)
-	if not busy:
+	if not busy and _mount_swallow <= 0.0:
 		if Input.is_action_just_pressed("potion"):
 			use_consumable("health")
 		for i in bar.size():
@@ -257,7 +267,8 @@ func _physics_process(delta: float) -> void:
 		velocity.y = jump_velocity
 		Sfx.play("jump", global_position, -4.0)
 		_landing = false
-		_play("Jump_Start", 0.05)
+		if not mounted:
+			_play("Jump_Start", 0.05)
 
 	# --- Combat state ---
 	_stun = maxf(_stun - delta, 0.0)
@@ -268,6 +279,8 @@ func _physics_process(delta: float) -> void:
 	_attack_queued = maxf(_attack_queued - delta, 0.0)
 	if Input.is_action_just_pressed("attack"):
 		_attack_queued = 0.25
+	if _mount_swallow > 0.0:
+		_attack_queued = 0.0
 	if can_act and on_floor and not _blocking and _attack_queued > 0.0 and not _attacking:
 		_attack_queued = 0.0
 		_start_attack()
@@ -321,6 +334,8 @@ func _physics_process(delta: float) -> void:
 	if _slow_time > 0.0:
 		speed *= 0.6
 	speed *= 1.0 + stats.total("speed_mult") + (0.15 if _frenzy_time > 0.0 else 0.0)
+	if mounted:
+		speed *= MountRules.SPEED_FACTOR
 	if forward_axis < 0.0 and strafe_axis == 0.0:
 		speed *= 0.6  # backing up is slower
 	var target := dir * speed
@@ -352,7 +367,7 @@ func _physics_process(delta: float) -> void:
 			_leap_slam()
 
 	# --- Landing ---
-	if is_on_floor() and not _was_on_floor and not _attacking:
+	if is_on_floor() and not _was_on_floor and not _attacking and not mounted:
 		_landing = true
 		_play("Jump_Land", 0.05)
 		if fall_speed < -6.0:
@@ -377,9 +392,12 @@ func _footsteps() -> void:
 	if not is_on_floor() or is_dead or speed < 1.2:
 		return
 	_step_dist += speed * get_physics_process_delta_time()
-	if _step_dist < (2.4 if speed > 6.5 else 1.7):
+	if _step_dist < (3.4 if mounted else (2.4 if speed > 6.5 else 1.7)):
 		return
 	_step_dist = 0.0
+	if mounted:
+		Sfx.play("footstep_hoof")
+		return
 	var interiors := get_tree().get_first_node_in_group("interiors")
 	var id := "footstep_grass"
 	if interiors != null and interiors.is_inside():
@@ -394,7 +412,7 @@ func _footsteps() -> void:
 func _update_camera(delta: float) -> void:
 	_rig.rotation.y = _yaw
 	_arm.rotation.x = _pitch
-	var goal := global_position + Vector3.UP * camera_height
+	var goal := global_position + Vector3.UP * (camera_height + (MOUNT_CAMERA_LIFT if mounted else 0.0))
 	_rig.global_position = _rig.global_position.lerp(goal, 1.0 - exp(-camera_follow * delta))
 
 
@@ -498,6 +516,84 @@ func _restore(amount: float) -> void:
 	health_changed.emit(health, max_health)
 
 
+# ------------------------------------------------------------------- riding ----
+
+## Why George cannot mount right now ("" = he can); see MountRules.block_reason.
+func mount_block_reason() -> String:
+	var interiors := get_tree().get_first_node_in_group("interiors")
+	var indoors: bool = interiors != null and interiors.is_inside()
+	return MountRules.block_reason(horse_owned, indoors, busy, is_dead, _stun > 0.0, _chased())
+
+
+func _chased() -> bool:
+	var states := []
+	var distances := []
+	for e in get_tree().get_nodes_in_group("enemies"):
+		states.append(e.get("_state"))
+		distances.append(e.global_position.distance_to(global_position))
+	return MountRules.chased(states, distances)
+
+
+func toggle_mount() -> void:
+	if mounted:
+		dismount()
+	else:
+		mount()
+
+
+func mount() -> bool:
+	if mounted:
+		return true
+	var why := mount_block_reason()
+	if why != "":
+		var text: String = Strings.MOUNT_BLOCKED[why]
+		if text != "":
+			message.emit(text)
+		return false
+	mounted = true
+	_horse.visible = true
+	_model.position.y = Horse.SEAT_HEIGHT
+	_play("Sit_Chair_Idle", 0.2)
+	message.emit(Strings.MOUNT_ON)
+	Sfx.play("horse_whinny", global_position, -2.0)
+	mount_changed.emit(true)
+	return true
+
+
+func dismount(announce: bool = true) -> void:
+	if not mounted:
+		return
+	mounted = false
+	_horse.visible = false
+	_model.position.y = 0.0
+	if announce:
+		message.emit(Strings.MOUNT_OFF)
+	mount_changed.emit(false)
+
+
+## The mount key, and everything that throws George off the horse: a dialogue, a door, a
+## death; and an attack or skill press, which only dismounts him (that press is spent).
+func _update_mount(delta: float) -> void:
+	_mount_swallow = maxf(_mount_swallow - delta, 0.0)
+	if Input.is_action_just_pressed("mount") and not is_dead and not busy:
+		toggle_mount()
+	if not mounted:
+		return
+	if is_dead or busy:
+		dismount(false)
+		return
+	var fight := Input.is_action_just_pressed("attack") or _attack_queued > 0.0
+	for i in bar.size():
+		if Input.is_action_just_pressed("slot_%d" % (i + 1)) and bar[i] != "" and not SkillData.is_item(bar[i]):
+			fight = true
+	if fight:
+		_attack_queued = 0.0
+		_mount_swallow = 0.2
+		dismount()
+	elif Input.is_action_pressed("block"):
+		dismount()
+
+
 func _facing() -> Vector3:
 	# KayKit models face +Z, so forward = (sin yaw, 0, cos yaw).
 	return Vector3(sin(_model_root.rotation.y), 0.0, cos(_model_root.rotation.y))
@@ -507,6 +603,7 @@ func _facing() -> Vector3:
 func take_damage(amount: float, from: Vector3) -> void:
 	if is_dead or _invulnerable > 0.0:
 		return
+	dismount()                       # any hit throws him off the horse
 	if _guard_time > 0.0:
 		amount *= 0.25
 	if _shout_time > 0.0:
@@ -1287,6 +1384,10 @@ func _respawn() -> void:
 
 func _update_animation() -> void:
 	if _anim == null or _attacking or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
+		return
+	if mounted:
+		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
+		_play("Sit_Chair_Idle", 0.2)
 		return
 	if not is_on_floor():
 		# Jump_Start plays on the way up; switch to the looping air pose when it ends or we start falling.

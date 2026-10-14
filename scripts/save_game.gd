@@ -103,6 +103,7 @@ static func save() -> bool:
 			"position": [position.x, position.y, position.z], "heading": player._heading,
 			"in_frontier": in_frontier,
 			"fish_seen": player.fish_seen,
+			"horse_owned": player.horse_owned,
 		},
 		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
 		"world": {
@@ -179,6 +180,8 @@ static func apply(d: Dictionary) -> void:
 		player.talents[id] = int(pd["talents"][id])
 	player.bar.assign(pd.get("bar", []))
 	player.fish_seen.assign(pd.get("fish_seen", []))
+	player.dismount(false)
+	player.horse_owned = bool(pd.get("horse_owned", false))
 	player.is_dead = false
 	player._recalc()
 	player.health = minf(float(pd.get("health", player.max_health)), player.max_health)
