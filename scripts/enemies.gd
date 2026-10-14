@@ -458,7 +458,7 @@ func spawn_besiegers(kinds: Array, center: Vector3, target: Node3D) -> Array[Ene
 func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
-		player.gain_xp(enemy.xp_reward)
+		player.gain_xp(int(round(enemy.xp_reward * LevelScaling.xp_mult(player.level))))
 	Quests.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
 	if KINDS[kind].get("respawn", true):
@@ -486,7 +486,7 @@ func spawn_invader(kind: String, pos: Vector3, target: Vector3 = Vector3.ZERO, o
 func _on_enemy_died(enemy: Enemy, index: int) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
-		player.gain_xp(enemy.xp_reward)
+		player.gain_xp(int(round(enemy.xp_reward * LevelScaling.xp_mult(player.level))))
 	Quests.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
 	if index >= 0 and KINDS[SPAWNS[index][0]].get("respawn", true):
@@ -497,6 +497,9 @@ func _drop_loot(enemy: Enemy) -> void:
 	if enemy.gold_max <= 0 and enemy.xp_reward <= 0:      # a creature that leaves nothing behind (the heap of bones that burst)
 		return
 	var gold := randi_range(enemy.gold_min, enemy.gold_max)
+	var looter := get_tree().get_first_node_in_group("player") as Player
+	if looter != null:
+		gold = int(round(gold * LevelScaling.gold_mult(looter.level)))
 	if gold > 0:
 		var pieces := clampi(gold / 4 + 1, 1, 4)
 		for i in pieces:

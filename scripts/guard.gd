@@ -242,7 +242,9 @@ func _land_blow() -> void:
 	if _target == null or not is_instance_valid(_target) or _target.is_dead():
 		return
 	if global_position.distance_to(_target.global_position) <= REACH + 0.8:
-		_target.take_damage(damage, global_position, 4.0)
+		var george := get_tree().get_first_node_in_group("player") as Player
+		var weight := LevelScaling.health_mult(george.level) if george != null else 1.0   # guards stay as useful as before
+		_target.take_damage(damage * weight, global_position, 4.0)
 		Sfx.play("sword_hit", _target.global_position, -4.0)
 
 
