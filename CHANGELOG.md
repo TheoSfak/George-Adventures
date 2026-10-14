@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.0 (2026-10-14) — levels up to 40 and a faster fight
 **New in this version**
 - **Levels up to 40.** George can level past 20, now up to 40 (about 29,000 XP more). Above level 20 the whole world grows with him: enemies get more health (about x5.4 at level 40), hit harder (about x3.4) and give more XP and gold, bosses and the night invasions too. Five new tiers of weapon, armor and shield at levels 20, 25, 30, 35 and 40 at the blacksmith (from 3,500 gold), more ranks in the stat talents, and health potions that heal a share of your health so they stay useful.
 - **Faster, richer combat.** Swings are about 1.7 times faster: the blade lands early and you can move or attack again after a third of a second. **You no longer stop when you attack**: you keep moving at 85% speed, and while running only the upper body swings while the legs keep running. The combo has five hits now: two slices, a **stab that steps forward**, a chop and a **spinning finisher that hits all around you**. New stat **Ταχύτητα επίθεσης** (attack speed) from weapons and warrior talents.
