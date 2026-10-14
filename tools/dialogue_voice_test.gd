@@ -59,6 +59,35 @@ func _run() -> void:
 	await create_timer(0.4).timeout
 	check("it closes", not hud.is_dialogue_open())
 
+	# --- a villager: the gossip is spoken in the voice of the villager's gender
+	var gossip: String = VillagerData.GOSSIP[0]
+	hud.show_dialogue(VillagerData.NAMES_FEMALE[0], [gossip])
+	await process_frame
+	check("a villager's gossip is voiced", hud._dlg_voice_seconds > 1.5 and VoiceOver.is_speaking())
+	var woman_seconds: float = hud._dlg_voice_seconds
+	hud._advance_dialogue()
+	hud._advance_dialogue()
+	await create_timer(0.4).timeout
+	hud.show_dialogue(VillagerData.NAMES_MALE[0], [gossip])
+	await process_frame
+	check("the same line has another recording for a man", hud._dlg_voice_seconds > 1.5 and absf(hud._dlg_voice_seconds - woman_seconds) > 0.01)
+	hud._advance_dialogue()
+	hud._advance_dialogue()
+	await create_timer(0.4).timeout
+	hud.show_dialogue("Κυρά-Βούλα", VillagerData.vendor_talk("Κυρά-Βούλα"))
+	await process_frame
+	check("a stall vendor is voiced", hud._dlg_voice_seconds > 1.0)
+	hud._advance_dialogue()
+	hud._advance_dialogue()
+	await create_timer(0.2).timeout
+	hud._advance_dialogue()
+	hud._advance_dialogue()
+	await create_timer(0.2).timeout
+	hud._advance_dialogue()
+	hud._advance_dialogue()
+	await create_timer(0.4).timeout
+	check("and the talk closes", not hud.is_dialogue_open() and not VoiceOver.is_speaking())
+
 	# --- a shop greeting hands over to the shop window and the voice is gone
 	var greeting: Array = ShopData.SHOPS["market"]["greeting"]
 	hud.show_dialogue("Κυρά-Ελένη", greeting, func(): hud.open_shop("market", p))

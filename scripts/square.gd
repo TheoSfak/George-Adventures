@@ -324,7 +324,7 @@ func _build_stall(def: Array) -> void:
 	v.display_name = def[5]
 	v.rest_yaw = yaw
 	v.bubble_lines = def[7]
-	v.talk_lines = [def[7][0], "Έλα να δεις, Γιώργο! Ό,τι χρειάζεσαι, το έχουμε.", "Τα πράγματα δεν είναι εύκολα, αλλά το παζάρι μας δεν κλείνει ποτέ."]
+	v.talk_lines = VillagerData.vendor_talk(def[5])
 	v.add_to_group("villagers")                  # they go home at dusk like everyone else
 	v.position = pos + Vector3(sin(yaw), 0, cos(yaw)) * -1.0 + Vector3(0, 0.05, 0)
 	add_child(v)
@@ -459,7 +459,7 @@ func _build_stage(angle: float, radius: float) -> void:
 		v.display_name = def[2]
 		v.rest_yaw = yaw
 		v.bubble_lines = bard_lines
-		v.talk_lines = ["Το βράδυ φοβόμαστε, μα η μουσική μας δίνει κουράγιο, Γιώργο.", "Όταν τελειώσεις με τους σκελετούς, θα τραγουδήσουμε για σένα!"]
+		v.talk_lines = VillagerData.MUSICIAN_TALK.duplicate()
 		v.add_to_group("villagers")
 		v.position = pos + Vector3(cos(yaw), 0, -sin(yaw)) * def[0] + Vector3(0, 0.2, 0)
 		add_child(v)

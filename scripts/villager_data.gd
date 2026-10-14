@@ -38,6 +38,36 @@ static func name_for(model_path: String, index: int) -> String:
 		pool = NAMES_MALE + NAMES_FEMALE
 	return pool[index % pool.size()]
 
+## The people of the village square, by name: "f" or "m" (the voice follows the gender; their models agree, see gender_test).
+const SQUARE_SPEAKERS := {
+	"Κυρά-Βούλα": "f", "Μπάρμπα-Θόδωρος": "m", "Αδελφή Αρετή": "f", "Σήφης ο Κρασάς": "m",
+	"Αρετούσα η Τραγουδίστρια": "f", "Μπάρμπα-Σπύρος ο Βιολιτζής": "m",
+}
+
+## What each stall vendor calls out first when George talks to them (the first bubble line of the stall in square.gd).
+const VENDOR_CALLOUT := {
+	"Κυρά-Βούλα": "Φρέσκα λαχανικά από τον κήπο μου!",
+	"Μπάρμπα-Θόδωρος": "Ζεστό ψωμί, ζεστό ψωμί!",
+	"Αδελφή Αρετή": "Βότανα και φίλτρα από το βουνό!",
+	"Σήφης ο Κρασάς": "Κρασί από τον κάμπο, όσο θέλετε!",
+}
+## ...and what every vendor may answer besides.
+const VENDOR_TALK: Array[String] = [
+	"Έλα να δεις, Γιώργο! Ό,τι χρειάζεσαι, το έχουμε.",
+	"Τα πράγματα δεν είναι εύκολα, αλλά το παζάρι μας δεν κλείνει ποτέ.",
+]
+## What the two musicians on the stage answer.
+const MUSICIAN_TALK: Array[String] = [
+	"Το βράδυ φοβόμαστε, μα η μουσική μας δίνει κουράγιο, Γιώργο.",
+	"Όταν τελειώσεις με τους σκελετούς, θα τραγουδήσουμε για σένα!",
+]
+
+
+## Everything a stall vendor says to George.
+static func vendor_talk(vendor_name: String) -> Array:
+	return [VENDOR_CALLOUT[vendor_name]] + VENDOR_TALK
+
+
 ## What a villager answers when George talks to them (each picks a few).
 const GOSSIP: Array[String] = [
 	"Καλημέρα, Γιώργο! Άκουσα πως ο Παπά-Σταύρος σε ψάχνει.",

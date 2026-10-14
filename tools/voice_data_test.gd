@@ -90,6 +90,42 @@ func _run() -> void:
 	check("offer, progress and complete lines of every quest are there", quests_ok)
 	check("a quest with another turn-in NPC has its progress lines for both", split_progress > 0)
 
+	# --- the villagers
+	var names_ok := true
+	for n in VillagerData.NAMES_FEMALE:
+		names_ok = names_ok and VoiceData.profile_for(n) == "woman"
+	for n in VillagerData.NAMES_MALE:
+		names_ok = names_ok and VoiceData.profile_for(n) == "man"
+	check("ambient villager names are voiced by gender", names_ok)
+	var square_ok := true
+	for n in VillagerData.SQUARE_SPEAKERS:
+		square_ok = square_ok and VoiceData.profile_for(n) == ("woman" if VillagerData.SQUARE_SPEAKERS[n] == "f" else "man")
+	check("vendors and musicians are voiced by gender", square_ok)
+	var shared := true
+	for t in VillagerData.GOSSIP + VillagerData.DRINK_LINES:
+		shared = shared and has.call(VillagerData.NAMES_MALE[0], t) and has.call(VillagerData.NAMES_FEMALE[0], t)
+	check("every gossip and drink line exists in both voices", shared)
+	# a line two people of the same gender share is listed once, so look for the voice, not the name
+	var has_voice := func(speaker: String, text: String) -> bool:
+		var profile := VoiceData.profile_for(speaker)
+		for l in lines:
+			if l["profile"] == profile and l["text"] == text:
+				return true
+		return false
+	var vendors_ok := true
+	for v in VillagerData.VENDOR_CALLOUT:
+		for t in VillagerData.vendor_talk(v):
+			vendors_ok = vendors_ok and has_voice.call(v, t)
+	for m in ["Αρετούσα η Τραγουδίστρια", "Μπάρμπα-Σπύρος ο Βιολιτζής"]:
+		for t in VillagerData.MUSICIAN_TALK:
+			vendors_ok = vendors_ok and has_voice.call(m, t)
+	check("vendor and musician lines are there", vendors_ok)
+	var square_script := load("res://scripts/square.gd") as GDScript
+	var callouts_ok := true
+	for stall in square_script.STALLS:
+		callouts_ok = callouts_ok and VillagerData.VENDOR_CALLOUT.get(stall[5], "") == stall[7][0]
+	check("the first bubble line of every stall is the vendor's call-out", callouts_ok and square_script.STALLS.size() == VillagerData.VENDOR_CALLOUT.size())
+
 	# --- the file key
 	var text := "Ο Άγιος να σε φυλάει, παιδί μου."
 	check("the key matches the one computed with Python", VoiceData.key("man", text) == "490d9023e57e1ab1")
