@@ -3,7 +3,7 @@ class_name SaveGame
 ## it or edit your level and gold). One slot; the previous save is kept as savegame.bak.
 ##
 ## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, fish journal, position),
-## the quests, the rescue event of Andreas, the time of day, defeated bosses, opened chests and collected quest items.
+## the quests, the rescue event of Andreas, the time of day, opened chests and collected quest items.
 ## Not saved: where ordinary skeletons stand (they respawn), a night invasion in progress,
 ## chests inside buildings. In the Frontier the real position is saved ("in_frontier": true)
 ## and loading rebuilds the region.
@@ -17,7 +17,7 @@ const VERSION := 1
 
 static var start_action := ""
 static var menu_in_tests := false              # tools/menutest.gd turns the menu on in test drivers
-static var defeated_bosses: Array = []        # kind ids of bosses that do not respawn
+static var defeated_bosses: Array = []        # unused since bosses respawn after a minute (kept so old saves load)
 static var opened_chests: Array = []          # "x,z" of chests opened
 static var collected_items: Array = []        # "item@x,z" of quest items picked up
 static var destroyed_totems: Array = []       # "x,z" of bone totems broken

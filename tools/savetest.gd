@@ -34,7 +34,6 @@ func _run() -> void:
 	dn.time_of_day = 21.5
 	dn.day_number = 3
 	dn.night_number = 2
-	save.note_boss("captain")
 	for chest in get_nodes_in_group("chests"):
 		save.note_chest(chest.global_position)
 		break
@@ -53,12 +52,10 @@ func _run() -> void:
 	dn = get_first_node_in_group("daynight") as DayNight
 	print("fresh:  level ", p.level, " gold ", p.gold, " bell ", quests.state["bell"], " bosses alive: ", get_nodes_in_group("enemies").filter(func(e): return e.kind_id == "captain").size())
 	save.apply(save.read())
-	for e in get_nodes_in_group("enemies"):
-		if save.boss_defeated(e.kind_id): e.queue_free()
 	await create_timer(0.5).timeout
 	print("loaded: level ", p.level, " xp ", p.xp, " gold ", p.gold, " potions ", p.potions, " pos ", p.global_position, " day ", dn.day_number, " time ", dn.time_of_day)
 	print("quests: bell=", quests.state["bell"], " kegs=", quests.state["kegs"], " progress ", quests.progress["kegs"], " (2=active 4=done)")
-	print("captain alive after load: ", get_nodes_in_group("enemies").filter(func(e): return e.kind_id == "captain" and not e.is_queued_for_deletion()).size(), " (0 expected)")
+	print("captain alive after load: ", get_nodes_in_group("enemies").filter(func(e): return e.kind_id == "captain" and not e.is_queued_for_deletion()).size(), " (1 expected: bosses respawn, so a loaded game has them again)")
 	var opened := 0
 	for chest in get_nodes_in_group("chests"):
 		if chest.opened: opened += 1
