@@ -44,8 +44,9 @@ func _run() -> void:
 	check("seven bandits in the camp (chief, 3 thugs, 2 archers, a thief)", inside.size() == 7)
 	check("one of them is the chief", inside.any(func(e): return e.kind_id == "bandit_chief"))
 	check("twelve patrol pairs and camp: 13 bandits in all", _bandits().size() == 13)
-	var skeletons_near := get_nodes_in_group("enemies").filter(func(e): return not String(e.kind_id).begins_with("bandit") and e.global_position.distance_to(centre) < 40.0)
-	check("no skeleton lives near the hideout", skeletons_near.is_empty())
+	# dormant prop creatures (the bone heap of 1.5.0 lies 31 m away) do not wander, so they do not count
+	var skeletons_near := get_nodes_in_group("enemies").filter(func(e): return not String(e.kind_id).begins_with("bandit") and not e.get("dormant") and e.global_position.distance_to(centre) < 40.0)
+	check("no wandering skeleton lives near the hideout", skeletons_near.is_empty())
 
 	# a fight: a lone thug on the east road goes for George
 	p.max_health = 1000.0

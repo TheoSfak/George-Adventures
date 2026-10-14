@@ -81,7 +81,7 @@ the place (`MAP_PLACES`) and points the quest diamond at it (`BOSS_AREAS`); cult
 - `mimic_test` (headless): the chest looks and prompts like any chest, opening it spawns the mimic and removes the chest,
   the save remembers it as opened, loading a save with that chest opened shows no mimic.
 - `cult_camp_test` / `cult_quest_test` (headless): the site is on free ground, the creatures stand inside it, none of them is
-  closer than 40 m to the village spawn points, the quest unlocks after `king`, counts cultists and the priest, rewards.
+  closer than 30 m to the circle, the quest unlocks after `king`, counts cultists and the priest, rewards.
 - `voice_files_test` stays green after the generator is run for the new lines.
 - `mobshot` (windowed): screenshots of every creature by day and a night shot of the pumpkin patch; fps with all of them
   awake.

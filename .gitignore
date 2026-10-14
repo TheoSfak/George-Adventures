@@ -5,3 +5,6 @@ _to_delete/
 tools/_shots/
 build/
 tools/_voice/
+__pycache__/
+/nav_*.png
+/nav_*.png.import

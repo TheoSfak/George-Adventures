@@ -47,6 +47,7 @@ const VARIANTS := {
 	"jump": 1,
 	"land": 2,
 	"level_up": 1,
+	"mimic_snap": 3,
 	"mug_clink": 2,
 	"orb_cast": 1,
 	"orb_hit": 2,
@@ -77,6 +78,10 @@ const VARIANTS := {
 	"skill_shout": 1,
 	"skill_wall": 1,
 	"skill_whirl": 1,
+	"squish_death": 2,
+	"squish_hit": 3,
+	"stone_death": 2,
+	"stone_hit": 3,
 	"sword_crit": 1,
 	"sword_hit": 3,
 	"sword_swing": 3,
@@ -94,6 +99,8 @@ const VARIANTS := {
 	"window_close": 1,
 	"window_open": 1,
 	"wolf_howl": 1,
+	"wood_death": 2,
+	"wood_hit": 3,
 }
 
 const LOOPS := [

@@ -3,7 +3,7 @@ class_name QuestData
 ## All text is Greek. Edit freely - the quest manager (quests.gd) reads this data.
 ##
 ## Quest objective types:
-##   {"type": "kill",    "target": "skeleton" | "rogue" | "mage" | "brute" | "captain" | "king" | "totem" | "bandit" | "bandit_chief", "count": N, "text": "..."}
+##   {"type": "kill",    "target": "skeleton" | "rogue" | "mage" | "brute" | "captain" | "king" | "totem" | "bandit" | "bandit_chief" | "cultist" | "cult_priest", "count": N, "text": "..."}
 ##   {"type": "collect", "item": "<item id>",                       "count": N, "text": "..."}
 ##   {"type": "defend",  "count": 1, "text": "..."}                  (survive a night invasion)
 ##   {"type": "reach",   "place": "catacombs" | "frontier" | "village", "count": 1, "text": "..."}   (Quests.report_reach)
@@ -12,10 +12,13 @@ class_name QuestData
 ## "warden_flame", "warden_shadow" and "necromancer" (enemies.gd KINDS).
 ## Where the quest items stand in the world is set in village.gd (QUEST_ITEMS).
 
-## False for the creatures that are not skeletons: the totems and the human bandits. The quests that ask for
-## "skeletons" (target "skeleton") count every other kill.
+## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
+## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest"]
+
+
 static func is_skeleton(kind: String) -> bool:
-	return kind != "totem" and not kind.begins_with("bandit")
+	return not (kind in NOT_SKELETONS) and not kind.begins_with("bandit")
 
 
 ## A bandit of the forest hideout (the chief has his own target "bandit_chief").
@@ -343,6 +346,29 @@ const QUESTS := {
 			"Πάρε αυτά, παλικάρι μου. Έτσι αμείβεται όποιος προστατεύει το χωριό.",
 		],
 		"reward": {"xp": 450, "gold": 220, "potions": 2, "damage": 3},
+	},
+	"cult": {
+		"title": "Η Σέκτα του Σκότους",
+		"giver": "stavros",
+		"turn_in": "stavros",
+		"requires": ["king"],
+		"objectives": [
+			{"type": "kill", "target": "cultist", "count": 5, "text": "Νίκησε οπαδούς της Σέκτας"},
+			{"type": "kill", "target": "cult_priest", "count": 1, "text": "Νίκησε τον Αρχιερέα της Σέκτας"},
+		],
+		"offer": [
+			"Γιώργο, παιδί μου, ο Βασιλιάς των Οστών έπεσε, μα το σκοτάδι δεν έφυγε ακόμη. Κάποιοι ζωντανοί το τρέφουν με προσευχές ανάποδες.",
+			"Μια σέκτα έχει στήσει βωμό σε ένα ξέφωτο του δάσους, βορειοδυτικά του χωριού, ανάμεσα στην Παλιά Κρύπτη και στο κρησφύγετο των ληστών. Ανάβουν κεριά, φωνάζουν τα κόκαλα και μιλούν με τους νεκρούς.",
+			"Νίκησε πέντε οπαδούς τους και τον Αρχιερέα τους. Πρόσεχε: οι οπαδοί ρίχνουν μαύρη μαγεία από μακριά και ο Αρχιερέας φωνάζει βοήθεια από τον κάτω κόσμο.",
+		],
+		"progress": [
+			"Το ξέφωτο με τα κεριά, βορειοδυτικά, Γιώργο. Πέντε οπαδοί και ο Αρχιερέας τους. Ο Άγιος να σε φυλάει.",
+		],
+		"complete": [
+			"Ο Αρχιερέας έπεσε και τα κεριά του βωμού έσβησαν. Ο Άγιος να σε ανταμείψει, παλικάρι μου.",
+			"Πάρε αυτά. Όσο υπάρχουν άνθρωποι σαν εσένα, το φως θα νικά το σκοτάδι.",
+		],
+		"reward": {"xp": 500, "gold": 250, "potions": 2, "damage": 3},
 	},
 	"logs": {
 		"title": "Ξύλα για τη Φωτιά",

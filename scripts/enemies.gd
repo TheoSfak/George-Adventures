@@ -6,6 +6,9 @@ extends Node3D
 const ENEMY_SCENE := preload("res://scenes/enemy.tscn")
 const CHAR := "res://assets/characters/"
 const WEAPONS := CHAR + "skeleton_weapons/"
+const GRAVE := "res://assets/graveyard/"
+const ROCK := "res://assets/world/decoration/nature/"
+const ITEMS := "res://assets/items/"
 
 const KINDS := {
 	"warrior": {
@@ -135,6 +138,87 @@ const KINDS := {
 		"enrage_below": 0.5, "enrage_summon": "bandit_thug", "summon_interval": 12.0, "summon_max": 4,
 		"xp_reward": 350, "gold_min": 100, "gold_max": 150, "potion_chance": 1.0,
 	},
+	# --- creatures made from props (no skeleton: static_rig.gd gives them hopping, lunging, rising and dying by code;
+	# see docs/superpowers/specs/2026-10-14-more-mobs-design.md). The mimic is made by chest.gd where a "mimic" chest is opened.
+	"pumpkin": {
+		"kind_id": "pumpkin", "static_mob": true, "sound_set": "squish", "display_name": "Κολοκυθένιο Τέρας",
+		"model_path": GRAVE + "pumpkin_orange_jackolantern.gltf", "model_scale": 1.0,
+		"hop_height": 0.45, "hop_rate": 2.6, "glow_color": Color(1.0, 0.55, 0.15, 0.6),
+		"max_health": 42.0, "attack_damage": 10.0, "chase_speed": 5.2, "patrol_speed": 1.8,
+		"attack_range": 1.9, "attack_hit_time": 0.45, "static_attack_time": 0.9, "attack_cooldown": 1.3,
+		"aggro_range": 12.0, "patrol_radius": 4.0,
+		"xp_reward": 24, "gold_min": 3, "gold_max": 8, "potion_chance": 0.3,
+	},
+	"haunted_tree": {
+		"kind_id": "haunted_tree", "static_mob": true, "sound_set": "wood", "display_name": "Στοιχειωμένο Δέντρο",
+		"model_path": GRAVE + "tree_dead_medium.gltf", "model_scale": 1.0, "sway": 0.05,
+		"max_health": 170.0, "attack_damage": 15.0, "chase_speed": 0.0, "patrol_speed": 0.0,
+		"attack_range": 4.6, "attack_hit_time": 0.7, "static_attack_time": 1.3, "attack_cooldown": 2.0,
+		"aggro_range": 9.0, "leash_range": 15.0, "patrol_radius": 0.5,
+		"xp_reward": 40, "gold_min": 6, "gold_max": 14, "potion_chance": 0.4,
+	},
+	# A boulder that stands up when George comes within 6 m (or when it is hit): slow, hits like a hammer and slows him
+	"golem": {
+		"kind_id": "golem", "static_mob": true, "dormant": true, "wake_range": 6.0, "sound_set": "stone",
+		"respawn_after": 60.0, "display_name": "Πέτρινος Γίγαντας", "wake_text": "Ο βράχος σηκώνεται!",
+		"model_path": "", "model_scale": 1.8, "sway": 0.03,
+		"parts": [
+			{"path": ROCK + "rock_single_C.gltf", "pos": Vector3(0.0, 0.0, 0.0), "scale": Vector3(4.6, 8.5, 4.6)},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(0.0, 1.55, 0.1), "scale": Vector3(3.0, 4.2, 3.0), "yaw": 30.0},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(-0.95, 0.15, 0.1), "scale": Vector3(2.6, 6.0, 2.6), "yaw": 70.0},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(0.95, 0.15, 0.1), "scale": Vector3(2.6, 6.0, 2.6), "yaw": -70.0},
+			{"eye": 0.07, "pos": Vector3(-0.2, 1.72, 0.42), "color": Color(1.0, 0.45, 0.1)},
+			{"eye": 0.07, "pos": Vector3(0.2, 1.72, 0.42), "color": Color(1.0, 0.45, 0.1)},
+		],
+		"max_health": 260.0, "attack_damage": 24.0, "chase_speed": 2.6, "patrol_speed": 0.0,
+		"attack_range": 3.2, "attack_hit_time": 0.8, "static_attack_time": 1.5, "attack_cooldown": 2.4, "stomp_slow": 2.0,
+		"aggro_range": 12.0, "leash_range": 30.0,
+		"xp_reward": 70, "gold_min": 12, "gold_max": 26, "potion_chance": 0.6,
+	},
+	# A pile of bones: wakes at 6.5 m or when hit and bursts into three skeletons, gone itself (no reward)
+	"bone_heap": {
+		"kind_id": "bone_heap", "static_mob": true, "dormant": true, "wake_range": 6.5, "sound_set": "bone",
+		"wake_spawn": "minion", "wake_count": 3, "wake_text": "Τα κόκαλα ζωντανεύουν!",
+		"model_path": "", "model_scale": 1.0,
+		"parts": [
+			{"path": GRAVE + "ribcage.gltf", "pos": Vector3(0.0, 0.4, 0.0), "scale": 1.8},
+			{"path": GRAVE + "skull.gltf", "pos": Vector3(0.7, 0.0, 0.5), "scale": 1.1, "yaw": 150.0},
+			{"path": GRAVE + "bone_C.gltf", "pos": Vector3(-0.7, 0.15, 0.3), "scale": 1.6, "yaw": 40.0},
+			{"path": GRAVE + "bone_A.gltf", "pos": Vector3(0.1, 0.12, -0.8), "scale": 1.7, "yaw": 110.0},
+			{"path": GRAVE + "bone_B.gltf", "pos": Vector3(-0.3, 0.55, 0.6), "scale": 1.6, "yaw": 75.0},
+		],
+		"max_health": 30.0, "attack_damage": 0.0, "chase_speed": 0.0, "patrol_speed": 0.0,
+		"xp_reward": 0, "gold_min": 0, "gold_max": 0, "potion_chance": 0.0,
+	},
+	# The chest that was a creature (chest.gd spawns it where a "mimic" chest was opened; it never comes back)
+	"mimic": {
+		"kind_id": "mimic", "respawn": false, "static_mob": true, "sound_set": "mimic", "display_name": "Μίμικ",
+		"model_path": ITEMS + "chest.glb", "model_scale": 1.25, "hop_height": 0.3, "hop_rate": 2.8,
+		"max_health": 90.0, "attack_damage": 14.0, "chase_speed": 4.6, "patrol_speed": 0.0,
+		"attack_range": 2.3, "attack_hit_time": 0.35, "static_attack_time": 0.8, "attack_cooldown": 1.1,
+		"aggro_range": 30.0, "leash_range": 60.0,
+		"xp_reward": 60, "gold_min": 40, "gold_max": 90, "potion_chance": 0.5,
+	},
+	# --- the cult in the ritual circle of the north-west forest (cult_site.gd; quest "cult")
+	"cultist": {
+		"kind_id": "cultist", "human": true, "walk_anim": "Walking_A", "tint_color": Color(0.55, 0.04, 0.12, 0.62),
+		"display_name": "Οπαδός της Σέκτας",
+		"model_path": CHAR + "Rogue_Hooded.glb", "show_nodes": [],
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 12.0,
+		"ranged_min": 6.0, "ranged_max": 14.0, "aggro_range": 17.0, "leash_range": 30.0,
+		"max_health": 55.0, "attack_damage": 11.0, "chase_speed": 4.0, "attack_cooldown": 2.2, "projectile_slows": true,
+		"xp_reward": 34, "gold_min": 8, "gold_max": 18, "potion_chance": 0.4,
+	},
+	"cult_priest": {
+		"kind_id": "cult_priest", "respawn_after": 60.0, "human": true, "walk_anim": "Walking_A",
+		"tint_color": Color(0.30, 0.02, 0.07, 0.70), "display_name": "Αρχιερέας της Σέκτας", "model_scale": 1.6,
+		"model_path": CHAR + "Mage.glb", "show_nodes": ["2H_Staff"],
+		"max_health": 520.0, "attack_damage": 20.0, "chase_speed": 4.4, "attack_range": 3.0, "attack_anim": "2H_Melee_Attack_Chop",
+		"attack_hit_time": 0.7, "attack_cooldown": 1.8, "aggro_range": 24.0, "leash_range": 45.0, "patrol_radius": 3.0,
+		"summon_kind": "cultist", "summon_interval": 13.0, "summon_max": 3,
+		"enrage_below": 0.5, "enrage_summon": "minion",
+		"xp_reward": 360, "gold_min": 120, "gold_max": 200, "potion_chance": 1.0,
+	},
 	# --- the catacombs below the old crypt (placed by catacombs.gd; "quest" = the quest that needs the boss)
 	"cguard": {
 		"kind_id": "cguard", "tint_color": Color(0.30, 0.70, 0.85, 0.26), "model_scale": 1.15,
@@ -244,7 +328,7 @@ const KINDS := {
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
+const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -281,6 +365,15 @@ const SPAWNS := [
 	["bandit_thug", 140.0, 10.0], ["bandit_archer", 143.0, 12.0],
 	["bandit_thug", -20.0, 170.0], ["bandit_archer", -17.0, 172.0],
 	["bandit_thug", 60.0, -160.0], ["bandit_archer", 63.0, -158.0],
+	# --- creatures made from props: a pumpkin patch beside the crypt road, haunted trees at the graveyard, boulders that
+	# stand up in the quarry, heaps of bones in the west and on the way to the bandits
+	["pumpkin", 66.0, -172.0], ["pumpkin", 74.0, -168.0], ["pumpkin", 70.0, -177.0], ["pumpkin", 64.0, -166.0], ["pumpkin", 76.0, -175.0],
+	["haunted_tree", -62.0, -186.0], ["haunted_tree", -58.0, -198.0], ["haunted_tree", 60.0, -190.0],
+	["golem", 120.0, 130.0], ["golem", 148.0, 152.0], ["golem", 166.0, 116.0],
+	["bone_heap", -166.0, 32.0], ["bone_heap", -192.0, 2.0], ["bone_heap", -112.0, -104.0], ["bone_heap", -30.0, -100.0],
+	# --- the cult's ritual circle (cult_site.gd, centre (-80, -140)): five followers and the high priest
+	["cult_priest", -80.0, -147.0],
+	["cultist", -87.0, -135.0], ["cultist", -73.0, -135.0], ["cultist", -90.0, -143.0], ["cultist", -70.0, -144.0], ["cultist", -80.0, -130.0],
 ]
 
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns
@@ -401,6 +494,8 @@ func _on_enemy_died(enemy: Enemy, index: int) -> void:
 
 
 func _drop_loot(enemy: Enemy) -> void:
+	if enemy.gold_max <= 0 and enemy.xp_reward <= 0:      # a creature that leaves nothing behind (the heap of bones that burst)
+		return
 	var gold := randi_range(enemy.gold_min, enemy.gold_max)
 	if gold > 0:
 		var pieces := clampi(gold / 4 + 1, 1, 4)

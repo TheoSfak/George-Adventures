@@ -17,6 +17,21 @@ signal died(enemy: Enemy)
 @export var human := false            # a person (bandit) instead of a skeleton: other sounds, only `show_nodes` props visible
 @export var show_nodes: Array = []                               # props of an Adventurers model that stay visible (CharacterProps)
 @export var walk_anim := "Walking_D_Skeletons"                    # humans walk with "Walking_A"
+@export_group("Props")                # creatures made from props (no skeleton, no AnimationPlayer): body language in static_rig.gd
+@export var static_mob := false
+@export var parts: Array = []         # [{"path", "pos", "scale", "yaw"}] built under the model root when model_path is ""
+@export var hop_height := 0.0         # a hopping gait (metres), 0 = none
+@export var hop_rate := 2.4
+@export var sway := 0.0               # radians of rocking (rooted creatures, a sleeping pile)
+@export var static_attack_time := 1.0 # seconds from the start of a swing until it is over (no animation to end it)
+@export var dormant := false          # stands as a prop until George comes close or hurts it
+@export var wake_range := 6.0
+@export var wake_spawn := ""          # a dormant creature that bursts into helpers of this kind instead of standing up
+@export var wake_count := 3
+@export var wake_text := ""
+@export var sound_set := "bone"       # bone / stone / wood / squish / mimic: which sounds it makes (see SOUND_SETS)
+@export var glow_color := Color(0, 0, 0, 0)   # alpha 0 = no light; otherwise a small light on the creature (pumpkins)
+@export var stomp_slow := 0.0         # seconds a landed blow slows George down (the golem's stomp)
 @export_group("Stats")
 @export var max_health := 45.0
 @export var attack_damage := 12.0
@@ -55,12 +70,19 @@ signal died(enemy: Enemy)
 @export var invader := false          # marches on the village well until it meets George
 @export var march_target := Vector3.ZERO
 
-enum State { PATROL, MARCH, CHASE, ATTACK, HURT, DEAD }
+enum State { PATROL, MARCH, CHASE, ATTACK, HURT, DEAD, DORMANT }
 
 const LOOPED: Array[String] = ["Idle", "Walking_D_Skeletons", "Running_A", "Running_B", "Walking_Backwards"]
 const ATTACKS: Array[String] = ["1H_Melee_Attack_Chop", "1H_Melee_Attack_Slice_Horizontal"]
 const HITS: Array[String] = ["Hit_A", "Hit_B"]
 const HEALTH_BAR_SIZE := Vector2i(96, 12)       # drawn at double resolution (pixel_size is halved)
+## The sound a creature makes for each of the skeleton's sounds (attack, hurt, death, aggro cry).
+const SOUND_SETS := {
+	"stone": {"skel_attack": "stone_hit", "skel_hurt": "stone_hit", "skel_death": "stone_death", "skel_aggro": "brute_roar"},
+	"wood": {"skel_attack": "wood_hit", "skel_hurt": "wood_hit", "skel_death": "wood_death", "skel_aggro": "brute_roar"},
+	"squish": {"skel_attack": "squish_hit", "skel_hurt": "squish_hit", "skel_death": "squish_death", "skel_aggro": "skel_aggro"},
+	"mimic": {"skel_attack": "mimic_snap", "skel_hurt": "wood_hit", "skel_death": "wood_death", "skel_aggro": "mimic_snap"},
+}
 
 @onready var _model_root: Node3D = $Model
 
@@ -88,6 +110,8 @@ var _summons: Array[Enemy] = []
 var _enraged := false
 var besiege_target: Node3D = null     # rescue event: hits the air in front of this victim until George shows up
 var _besiege_swing := 0.0
+var _rig: StaticRig                   # the body language of a static creature
+var _tag: Label3D                     # the name above its head (hidden while it sleeps)
 
 
 func _ready() -> void:
@@ -103,14 +127,37 @@ func _ready() -> void:
 	if invader:
 		add_to_group("invaders")
 		_state = State.MARCH
+	if dormant:
+		_state = State.DORMANT
 	_load_model()
 	_build_health_bar()
 
 
 func _load_model() -> void:
-	var model := (load(model_path) as PackedScene).instantiate() as Node3D
+	var model: Node3D
+	if static_mob and model_path == "":
+		model = Node3D.new()                     # a creature put together from several props
+		for part in parts:
+			if part.has("eye"):                      # a glowing eye: {"eye": radius, "pos", "color"}
+				model.add_child(_make_eye(part))
+				continue
+			var piece := (load(part["path"]) as PackedScene).instantiate() as Node3D
+			piece.position = part.get("pos", Vector3.ZERO)
+			var piece_scale = part.get("scale", 1.0)             # a number, or a Vector3 to stretch a rock
+			piece.scale = piece_scale if piece_scale is Vector3 else Vector3.ONE * float(piece_scale)
+			piece.rotation.y = deg_to_rad(float(part.get("yaw", 0.0)))
+			model.add_child(piece)
+	else:
+		model = (load(model_path) as PackedScene).instantiate() as Node3D
 	_model_root.add_child(model)
 	_model_root.rotation.y = randf() * TAU
+	if glow_color.a > 0.0:
+		var light := OmniLight3D.new()
+		light.light_color = Color(glow_color.r, glow_color.g, glow_color.b)
+		light.light_energy = glow_color.a * 2.0
+		light.omni_range = 6.0
+		light.position = Vector3(0.0, 0.8, 0.0)
+		_model_root.add_child(light)
 
 	var skeleton := model.find_child("Skeleton3D", true, false) as Skeleton3D
 	if skeleton:
@@ -122,6 +169,13 @@ func _load_model() -> void:
 	if tint_color.a > 0.0:
 		_apply_tint(model, tint_color)
 
+	if static_mob:
+		_rig = StaticRig.new()
+		add_child(_rig)
+		_rig.setup(_model_root, model_scale, hop_height, hop_rate, sway)
+		if dormant:
+			_rig.rise = 0.55
+		return
 	_anim = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim == null:
 		push_warning("Enemy: no AnimationPlayer in %s" % model_path)
@@ -133,6 +187,24 @@ func _load_model() -> void:
 			_anim.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 	_anim.animation_finished.connect(_on_animation_finished)
 	_play("Idle")
+
+
+func _make_eye(part: Dictionary) -> MeshInstance3D:
+	var eye := MeshInstance3D.new()
+	var sphere := SphereMesh.new()
+	sphere.radius = float(part["eye"])
+	sphere.height = sphere.radius * 2.0
+	eye.mesh = sphere
+	var mat := StandardMaterial3D.new()
+	var color: Color = part.get("color", Color(1.0, 0.5, 0.1))
+	mat.albedo_color = color
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 3.0
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	eye.material_override = mat
+	eye.position = part.get("pos", Vector3.ZERO)
+	return eye
 
 
 func _attach(skeleton: Skeleton3D, bone: String, path: String) -> void:
@@ -161,11 +233,13 @@ func _build_health_bar() -> void:
 	_bar.shaded = false
 	_bar.position = Vector3(0.0, 2.35 * model_scale, 0.0)
 	_bar.pixel_size = 0.014 * maxf(1.0, model_scale * 0.8)
-	_bar.visible = display_name != ""
+	_bar.visible = display_name != "" and not dormant      # a sleeping boulder must not give itself away
 	add_child(_bar)
 	_update_health_bar()
 	if display_name != "":
 		var tag := Label3D.new()
+		_tag = tag
+		tag.visible = not dormant
 		tag.text = display_name
 		tag.font_size = 48
 		tag.pixel_size = 0.0085 * maxf(1.0, model_scale * 0.8)
@@ -202,6 +276,8 @@ func _physics_process(delta: float) -> void:
 			target_velocity = _chase()
 		State.ATTACK:
 			_attack(delta)
+		State.DORMANT:
+			_dormant()
 		State.HURT:
 			_hurt_timer -= delta
 			if _hurt_timer <= 0.0:
@@ -219,6 +295,9 @@ func _physics_process(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, target_velocity.z, accel * delta)
 	move_and_slide()
 	_check_blocked(target_velocity, delta)
+	if _rig != null:
+		var real := get_real_velocity()
+		_rig.tick(delta, 0.0 if chase_speed <= 0.01 else clampf(Vector2(real.x, real.z).length() / chase_speed, 0.0, 1.0), _state == State.DORMANT)
 
 
 ## Skeletons have no navigation mesh: if one pushes against a wall or tree without
@@ -249,11 +328,50 @@ func _detour(dir: Vector3) -> Vector3:
 ## The flat direction toward `target`: straight while the way is free, otherwise along a path around the obstacles
 ## (NavFollower). `_nav.active` says that the path is being followed.
 func _path_dir(target: Vector3) -> Vector3:
+	if chase_speed <= 0.01 and patrol_speed <= 0.01:       # a rooted creature (the haunted tree) never walks: no path to find
+		return _flat(target - global_position).normalized()
 	return _nav.direction(global_position, target, NavGrid.clearance_for(0.4 * model_scale), get_physics_process_delta_time())
 
 
 func _idle_state() -> State:
 	return State.MARCH if invader else State.PATROL
+
+
+## A sleeping creature (boulder, pile of bones) waits until George is near.
+func _dormant() -> void:
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Player
+	if _player_alive() and global_position.distance_to(_player.global_position) <= wake_range:
+		_wake()
+
+
+## It stands up and fights, or (with `wake_spawn`) bursts into helpers and is gone.
+func _wake() -> void:
+	if _state != State.DORMANT:
+		return
+	if wake_text != "":
+		var player := get_tree().get_first_node_in_group("player")
+		if player:
+			player.message.emit(wake_text)
+	if wake_spawn != "":
+		Sfx.play("skel_aggro", global_position)
+		var spawner := get_parent()
+		if spawner != null and spawner.has_method("spawn_summon"):
+			var first := randf() * TAU
+			for i in wake_count:
+				var a := first + TAU * float(i) / float(wake_count)
+				spawner.spawn_summon(wake_spawn, global_position + Vector3(cos(a), 0.0, sin(a)) * 1.8, null)
+		_set_state(State.CHASE)
+		_die(Vector3.ZERO)
+		return
+	Sfx.play(_voice("skel_aggro"), global_position)
+	if _rig != null:
+		_rig.wake()
+	if _tag != null:
+		_tag.visible = true
+		_bar.visible = true
+	_set_state(State.CHASE)
+	_cooldown = 0.9
 
 
 func _patrol(delta: float) -> Vector3:
@@ -334,7 +452,7 @@ func _aggro_sound() -> void:
 			Sfx.play("warlord_roar", global_position)
 		_:
 			if not human:
-				Sfx.play("skel_aggro", global_position, -4.0)
+				Sfx.play(_voice("skel_aggro"), global_position, -4.0)
 
 
 func _chase() -> Vector3:
@@ -410,6 +528,8 @@ func _start_attack() -> void:
 		_current_attack = attack_anim if attack_anim != "" else ATTACKS.pick_random()
 		_hit_time = attack_hit_time
 	_play(_current_attack, 0.08, true)
+	if _rig != null:
+		_rig.start_attack(_hit_time)
 
 
 func _attack(delta: float) -> void:
@@ -425,6 +545,12 @@ func _attack(delta: float) -> void:
 			var forward := Vector3(sin(_model_root.rotation.y), 0.0, cos(_model_root.rotation.y))
 			if to_player.length() <= attack_range + 0.6 and forward.dot(to_player.normalized()) > 0.3:
 				_player.take_damage(attack_damage, global_position)
+				if stomp_slow > 0.0:
+					_player.slow(stomp_slow)
+	if _rig != null and _attack_timer >= static_attack_time:      # nothing animated ends the swing of a prop: a timer does
+		_rig.end_attack()
+		_cooldown = attack_cooldown
+		_set_state(State.CHASE if _player_alive() else _idle_state())
 
 
 func _fire() -> void:
@@ -444,6 +570,10 @@ func _fire() -> void:
 func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 	if _state == State.DEAD:
 		return
+	if _state == State.DORMANT:               # a blow wakes a sleeper (a heap of bones then bursts and is gone)
+		_wake()
+		if _state == State.DEAD:
+			return
 	health -= amount
 	_bar.visible = true
 	_update_health_bar()
@@ -463,6 +593,8 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 	velocity.x = away.x * knock
 	velocity.z = away.z * knock
 	_play(HITS.pick_random(), 0.05, true)
+	if _rig != null:
+		_rig.hurt()
 
 
 ## Stuns the skeleton for a while (the Charge skill).
@@ -484,7 +616,10 @@ func _die(_away: Vector3) -> void:
 	velocity = Vector3.ZERO
 	_bar.visible = false
 	Sfx.play(_voice("skel_death"), global_position)
-	_play("Death_B", 0.05, true)
+	if _rig != null:
+		_rig.die()
+	else:
+		_play("Death_B", 0.05, true)
 	died.emit(self)
 	var tween := create_tween()
 	tween.tween_interval(3.5)
@@ -504,7 +639,10 @@ func dissolve() -> void:
 	collision_mask = 0
 	velocity = Vector3.ZERO
 	_bar.visible = false
-	_play("Death_A", 0.05, true)
+	if _rig != null:
+		_rig.die()
+	else:
+		_play("Death_A", 0.05, true)
 	var tween := create_tween()
 	tween.tween_interval(1.2)
 	tween.tween_property(self, "position:y", position.y - 2.5, 1.2)
@@ -517,6 +655,11 @@ func _set_state(s: State) -> void:
 
 func is_dead() -> bool:
 	return _state == State.DEAD
+
+
+## Asleep as a boulder or a heap of bones: the minimap must not give it away.
+func is_dormant() -> bool:
+	return _state == State.DORMANT
 
 
 func _can_see_player() -> bool:
@@ -572,6 +715,8 @@ func _summon() -> void:
 
 ## A human is hurt and dies with a human voice, swings a sword instead of rattling bones.
 func _voice(skeleton_sound: String) -> String:
+	if SOUND_SETS.has(sound_set):
+		return SOUND_SETS[sound_set].get(skeleton_sound, skeleton_sound)
 	if not human:
 		return skeleton_sound
 	return "sword_swing" if skeleton_sound == "skel_attack" else "player_hurt"
