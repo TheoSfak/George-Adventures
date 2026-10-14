@@ -54,7 +54,7 @@ func _ready() -> void:
 	var model := (load(MODEL) as PackedScene).instantiate() as Node3D
 	_model_root.add_child(model)
 	for n in model.find_children("*", "Node3D", true, false):
-		if n.name in Npc.WEAPON_NODES:
+		if n.name in CharacterProps.NODES:
 			n.visible = n.name == "1H_Sword" or n.name == "Rectangle_Shield"
 	_anim = model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _anim:

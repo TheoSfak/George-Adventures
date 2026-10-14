@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+**New in this version**
+- **Bandits.** Not every enemy is a skeleton any more. A gang of bandits (people, built from the Adventurers models) lives in a hideout in the north-west forest, behind the windmill: thugs with axe and shield, crossbow archers, fast knife thieves and their boss, the **Αρχηγός των Ληστών** (calls his men when hurt, comes back after a minute like every boss). Three more pairs patrol the roads. New quest **«Οι Ληστές του Δάσους»** from the miller Στέλιος (after the sacks quest): beat six bandits and the chief for 450 XP, 220 gold, 2 potions and +3 damage. Bandits are not counted as skeletons by the skeleton quests. The hideout has a golden chest, a signpost and a name on the big map.
+- Internals: the list of weapon props of the Adventurers models moved to `CharacterProps` (shared by NPCs, villagers, guards and enemies).
+- New tests: `bandit_data_test`, `bandit_quest_test`, `bandit_camp_test` (headless), `banditshot` (screenshots), `mob_asset_probe`, `bandit_site_probe`.
+
 ## 1.2.3 (2026-10-14) — totems, shield and arrows
 **Fixed**
 - **The bone totems stand on the ground.** They floated 2 m in the air (the model was lifted by a wrong offset) and the one in the quarry stood inside a boulder (moved to open ground at (153, 133)).

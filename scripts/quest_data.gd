@@ -3,7 +3,7 @@ class_name QuestData
 ## All text is Greek. Edit freely - the quest manager (quests.gd) reads this data.
 ##
 ## Quest objective types:
-##   {"type": "kill",    "target": "skeleton" | "rogue" | "mage" | "brute" | "captain" | "king" | "totem", "count": N, "text": "..."}
+##   {"type": "kill",    "target": "skeleton" | "rogue" | "mage" | "brute" | "captain" | "king" | "totem" | "bandit" | "bandit_chief", "count": N, "text": "..."}
 ##   {"type": "collect", "item": "<item id>",                       "count": N, "text": "..."}
 ##   {"type": "defend",  "count": 1, "text": "..."}                  (survive a night invasion)
 ##   {"type": "reach",   "place": "catacombs" | "frontier" | "village", "count": 1, "text": "..."}   (Quests.report_reach)
@@ -11,6 +11,17 @@ class_name QuestData
 ## Kill targets also include the catacomb creatures "cguard", "acolyte", "warden_bone",
 ## "warden_flame", "warden_shadow" and "necromancer" (enemies.gd KINDS).
 ## Where the quest items stand in the world is set in village.gd (QUEST_ITEMS).
+
+## False for the creatures that are not skeletons: the totems and the human bandits. The quests that ask for
+## "skeletons" (target "skeleton") count every other kill.
+static func is_skeleton(kind: String) -> bool:
+	return kind != "totem" and not kind.begins_with("bandit")
+
+
+## A bandit of the forest hideout (the chief has his own target "bandit_chief").
+static func is_bandit(kind: String) -> bool:
+	return kind.begins_with("bandit_") and kind != "bandit_chief"
+
 
 const PROLOGUE: Array[String] = [
 	"Άγιος Βλάσης. Ένα μικρό χωριό ανάμεσα σε βουνά και πεύκα, που για αιώνες κοιμόταν ήσυχο.",
@@ -309,6 +320,29 @@ const QUESTS := {
 			"Πάρε και αυτά για τον κόπο σου.",
 		],
 		"reward": {"xp": 70, "gold": 30, "potions": 1},
+	},
+	"bandits": {
+		"title": "Οι Ληστές του Δάσους",
+		"giver": "stelios",
+		"turn_in": "stelios",
+		"requires": ["sacks"],
+		"objectives": [
+			{"type": "kill", "target": "bandit", "count": 6, "text": "Νίκησε ληστές του δάσους"},
+			{"type": "kill", "target": "bandit_chief", "count": 1, "text": "Νίκησε τον Αρχηγό των Ληστών"},
+		],
+		"offer": [
+			"Γιώργο, τα σακιά γύρισαν, αλλά τώρα έχω νέο μπελά. Δεν φταίνε μόνο οι νεκροί· και οι ζωντανοί έγιναν θηρία.",
+			"Μια συμμορία ληστών έχει κρησφύγετο στο δάσος, βορειοδυτικά του μύλου μου. Μου πήραν τα κάρα και τρομάζουν τους χωρικούς που περνούν από τον δρόμο.",
+			"Νίκησε έξι από αυτούς και τον Αρχηγό τους. Πρόσεχε τους τοξότες· και ο Αρχηγός φωνάζει τους άντρες του όταν χάνει.",
+		],
+		"progress": [
+			"Το κρησφύγετό τους είναι στο δάσος, βορειοδυτικά του μύλου. Έξι ληστές και ο Αρχηγός, Γιώργο.",
+		],
+		"complete": [
+			"Ο Αρχηγός έπεσε! Οι χωρικοί θα περνούν ξανά ήσυχοι από τον δρόμο.",
+			"Πάρε αυτά, παλικάρι μου. Έτσι αμείβεται όποιος προστατεύει το χωριό.",
+		],
+		"reward": {"xp": 450, "gold": 220, "potions": 2, "damage": 3},
 	},
 	"logs": {
 		"title": "Ξύλα για τη Φωτιά",

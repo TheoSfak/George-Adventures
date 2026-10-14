@@ -82,6 +82,7 @@ const CHESTS := [
 	[134.0, -78.0, 150, false, 12, 28, 1],     # beside the watchtower
 	[92.0, 120.0, 250, false, 8, 20, 0],       # south-east farm track
 	[-100.0, 130.0, 0, false, 10, 24, 1],      # south-west pines
+	[-135.0, -95.0, 30, true, 150, 250, 2],    # the bandits' hideout (BanditCamp.CHEST)
 ]
 
 # [text, x, z, rotation in degrees (the board faces +Z when 0)]
@@ -90,6 +91,7 @@ const SIGNPOSTS := [
 	["Λατομείο  ↘", 104.0, 84.0, 20],
 	["Το Μεγάλο Δέντρο  →", 112.0, -44.0, 270],
 	["Παλιά Κρύπτη  ↑\nΚίνδυνος!", 14.0, -118.0, 0],
+	["Κρησφύγετο Ληστών  ↖\nΚίνδυνος!", -118.0, -74.0, 42],
 ]
 
 const CAMP := Vector2(-175.0, 20.0)
@@ -139,6 +141,7 @@ func _ready() -> void:
 	_build_chests_items_signs()
 	_build_totems()
 	_build_stable()
+	_build_bandit_camp()
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_terrain_details()
@@ -354,6 +357,39 @@ func _build_camp() -> void:
 		var node := _place(e[0], Vector3(CAMP.x + e[1], 0, CAMP.y + e[2]), float(e[3]), PS * e[4], holder)
 		_add_box_collider(node, 0.8)
 	_occupy(CAMP.x, CAMP.y, 36)
+## The bandits' hideout in the north-west forest: tents around a fire, crates, barrels, a flag and a weapon rack.
+## The creatures are in Enemies.SPAWNS, the golden chest in CHESTS.
+func _build_bandit_camp() -> void:
+	var holder := Node3D.new()
+	holder.name = "BanditCamp"
+	add_child(holder)
+	var c := BanditCamp.CENTER
+	for i in 5:
+		var a := TAU * float(i) / 5.0 + 0.5
+		var p := c + Vector2(cos(a), sin(a)) * 14.0
+		var node := _place("decoration/props/tent.gltf", Vector3(p.x, 0, p.y), rad_to_deg(-a) - 90.0, PS * 1.8, holder)
+		_add_box_collider(node, 0.8)
+	for i in 4:
+		var a := TAU * float(i) / 4.0 + 0.4
+		var p := c + Vector2(cos(a), sin(a)) * 3.5
+		_place_abs(ITEMS + "torch_lit.gltf.glb", Vector3(p.x, 0, p.y), 0.0, 2.2, holder)
+	var light := OmniLight3D.new()
+	light.position = Vector3(c.x, 3.0, c.y)
+	light.light_color = Color(1.0, 0.6, 0.28)
+	light.light_energy = 2.0
+	light.omni_range = 22.0
+	light.add_to_group("night_lights")
+	holder.add_child(light)
+	for e in [
+			["decoration/props/weaponrack.gltf", -8.0, -4.0, 40, 1.6], ["decoration/props/crate_A_big.gltf", 8.0, -8.0, 20, 1.2],
+			["decoration/props/crate_B_big.gltf", 10.0, -6.5, 70, 1.2], ["decoration/props/barrel.gltf", -7.0, 8.0, 0, 1.2],
+			["decoration/props/barrel.gltf", -5.5, 8.5, 40, 1.2], ["decoration/props/sack.gltf", 6.0, 8.0, 80, 1.2],
+			["decoration/props/flag_red.gltf", 0.0, -12.0, 0, 1.3], ["decoration/props/wheelbarrow.gltf", 11.0, 4.0, 130, 1.2]]:
+		var node := _place(e[0], Vector3(c.x + e[1], 0, c.y + e[2]), float(e[3]), PS * e[4], holder)
+		_add_box_collider(node, 0.8)
+	_occupy(c.x, c.y, BanditCamp.RADIUS)
+
+
 func _build_quarry() -> void:
 	# The quarry in the south-east, home of the skeleton captain.
 	var holder := Node3D.new()

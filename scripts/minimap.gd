@@ -21,11 +21,11 @@ const PLACES := [
 	["church", 0.0, -59.0], ["tavern", -59.0, -9.8], ["market", 59.0, -11.5], ["smith", -93.5, 29.5],
 	["mill", 95.1, 39.4], ["windmill", -100.0, -54.1], ["tower", 95.1, -78.7], ["well", 0.0, 0.0],
 	["camp", -175.0, 20.0, -24.0], ["quarry", 140.0, 125.0], ["crypt", 0.0, -178.0], ["bigtree", 172.0, -40.0],
-	["stable", 63.0, 53.0],
+	["stable", 63.0, 53.0], ["bandits", -140.0, -90.0],
 ]
 const SHOPS := [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)]
 # where a boss quest points when the boss itself cannot be found (x, z)
-const BOSS_AREAS := {"captain": Vector2(142.0, 128.0), "king": Vector2(0.0, -190.0)}
+const BOSS_AREAS := {"captain": Vector2(142.0, 128.0), "king": Vector2(0.0, -190.0), "bandit_chief": Vector2(-140.0, -98.0), "bandit": Vector2(-140.0, -90.0)}
 
 static var world_texture: Texture2D
 static var zoom_index := 3          # kept while the game runs
@@ -164,7 +164,7 @@ func _draw() -> void:
 func _draw_enemies() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		var kind: String = e.get("kind_id")
-		var boss := kind == "captain" or kind == "king" or kind == "warlord" or kind == "night_lord"
+		var boss := kind == "captain" or kind == "king" or kind == "warlord" or kind == "night_lord" or kind == "bandit_chief"
 		var invader: bool = e.is_in_group("invaders")
 		if big and not (boss or invader):
 			continue
