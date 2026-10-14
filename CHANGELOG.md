@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.3 (2026-10-14) — totems, shield and arrows
 **Fixed**
 - **The bone totems stand on the ground.** They floated 2 m in the air (the model was lifted by a wrong offset) and the one in the quarry stood inside a boulder (moved to open ground at (153, 133)).
 - **The Saint's shield (skill 2) really protects.** For its 5 seconds no damage gets through at all (before, 25% did) and George is not staggered or pushed back.
