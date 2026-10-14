@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 (2026-10-14) — voices
+**New in this version**
+- **The story is spoken.** The narrator of the prologue and every character of the village read their lines aloud in Greek: all idle lines, the shopkeepers' greetings and the offer / progress / hand-in dialogue of every quest (174 lines, about 20 minutes of speech). The men and the narrator use the neural voice Nestoras, the women Athina (Microsoft Azure AI Speech); each character has a slightly different speed. The text types in step with the voice: the first press shows the whole line and the voice goes on, the next press moves to the next line and cuts it. While someone speaks the music and the ambience sink a little. The villagers' gossip is not voiced.
+- **A "Φωνές" slider** in the settings (default 100%), and the Credits page names the voices.
+- How it works: the recordings were made once, with `tools/gen_voice.py`, and are part of the game (`assets/audio/voice`, about 8 MB); the game never contacts a speech service and holds no key. Editing a line or a character's voice only needs the generator to be run again (it makes just the changed files). `VoiceData` has the voices and the list of lines, `VoiceOver.play(speaker, text)` plays one.
+- Internals: new bus `Voice`; `SoundManager.play_voice`; `HUD._show_line` asks `VoiceOver` first; `GameSettings` has a `voice` volume (old settings files load with the default).
+- New tests: `voice_data_test`, `voice_files_test`, `voice_player_test`, `dialogue_voice_test` (all headless; `voice_files_test` fails when a line was edited and the recordings were not regenerated).
+
 ## 1.3.0 (2026-10-14) — the bandits
 **New in this version**
 - **Bandits.** Not every enemy is a skeleton any more. A gang of bandits (people, built from the Adventurers models) lives in a hideout in the north-west forest, behind the windmill: thugs with axe and shield, crossbow archers, fast knife thieves and their boss, the **Αρχηγός των Ληστών** (calls his men when hurt, comes back after a minute like every boss). Three more pairs patrol the roads. New quest **«Οι Ληστές του Δάσους»** from the miller Στέλιος (after the sacks quest): beat six bandits and the chief for 450 XP, 220 gold, 2 potions and +3 damage. Bandits are not counted as skeletons by the skeleton quests. The hideout has a golden chest, a signpost and a name on the big map.

@@ -6,6 +6,7 @@ const BAR_SIZE := Vector2(280, 26)
 const COMPACT_SLOT := 46.0        # the action bar slots (the skill book keeps the full size)
 const GOLD_TEXT := Color(1, 0.84, 0.35)
 const CREAM := Color(1, 0.96, 0.85)
+const VOICE_TEXT_TAIL := 0.15     # a voiced line finishes typing this long after the voice ends
 
 var _hp_bar: FancyBar
 var _xp_bar: FancyBar
@@ -35,6 +36,7 @@ var _dlg_index := 0
 var _dlg_open_time := 0.0
 var _dlg_done: Callable
 var _dlg_tween: Tween
+var _dlg_voice_seconds := 0.0          # length of the recording of the line on screen, 0 = no voice
 var _player: Player
 
 # action bar, buffs, skill book
@@ -462,20 +464,27 @@ func show_dialogue(speaker: String, lines: Array, on_done: Callable = Callable()
 	_show_line()
 
 
+## The text types in step with the voice when the line has a recording (VoiceOver), otherwise fast with blips.
 func _show_line() -> void:
-	_dlg_text.text = _dlg_lines[_dlg_index]
+	var line: String = _dlg_lines[_dlg_index]
+	_dlg_text.text = line
 	_dlg_text.visible_ratio = 0.0
 	if _dlg_tween:
 		_dlg_tween.kill()
+	_dlg_voice_seconds = VoiceOver.play(_dlg_name.text, line)
+	var voiced := _dlg_voice_seconds > 0.0
+	var duration := _dlg_voice_seconds + VOICE_TEXT_TAIL if voiced else maxf(0.4, line.length() * 0.018)
 	_dlg_tween = create_tween()
-	var chars := _dlg_text.text.length()
+	var chars := line.length()
 	var last_blip := [0]
 	_dlg_tween.tween_method(func(r: float):
 		_dlg_text.visible_ratio = r
+		if voiced:
+			return
 		var k := int(r * float(chars) / 3.0)
 		if k != last_blip[0]:
 			last_blip[0] = k
-			Sfx.ui("dialogue_blip"), 0.0, 1.0, maxf(0.4, chars * 0.018))
+			Sfx.ui("dialogue_blip"), 0.0, 1.0, duration)
 
 
 func _advance_dialogue() -> void:
@@ -488,6 +497,8 @@ func _advance_dialogue() -> void:
 		_show_line()
 		return
 	_dlg_panel.visible = false
+	VoiceOver.stop()
+	_dlg_voice_seconds = 0.0
 	var done := _dlg_done
 	_dlg_done = Callable()
 	if done.is_valid():

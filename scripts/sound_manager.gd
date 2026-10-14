@@ -15,6 +15,9 @@ const POOL_3D := 22
 const MUSIC_FADE := 2.5
 const MUSIC_MIN_DWELL := 4.0           # seconds a track plays before another may replace it
 const COMBAT_HOLD := 6.0              # seconds the fight music lingers after the last attacker
+const VOICE_DUCK_DB := -6.0           # music and ambience sink by this much while someone speaks
+const VOICE_DUCK_DOWN := 0.25         # seconds to sink
+const VOICE_DUCK_UP := 0.5            # seconds to come back
 const CRYPT := Vector2(0.0, -178.0)
 const CAMP := Vector2(-175.0, 20.0)
 const POND := Vector2(-70.0, 108.0)
@@ -54,6 +57,9 @@ var _invasion
 var _interiors
 var _weather
 var _critter_timer := 20.0
+var _voice: AudioStreamPlayer          # the spoken dialogue (VoiceOver), on the Voice bus
+var _duck_effects: Array[AudioEffectAmplify] = []   # on Music and Ambient: lowered while _voice speaks
+var _duck_db := 0.0
 
 
 func _ready() -> void:
@@ -73,6 +79,9 @@ func _ready() -> void:
 		p3.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
 		add_child(p3)
 		_pool_3d.append(p3)
+	_voice = AudioStreamPlayer.new()
+	_voice.bus = "Voice"
+	add_child(_voice)
 	for i in 2:
 		var m := AudioStreamPlayer.new()
 		m.bus = "Music"
@@ -100,12 +109,20 @@ func _ready() -> void:
 
 
 func _setup_buses() -> void:
-	for bus in ["Music", "SFX", "Ambient"]:
+	for bus in ["Music", "SFX", "Ambient", "Voice"]:
 		if AudioServer.get_bus_index(bus) == -1:
 			AudioServer.add_bus()
 			var idx := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(idx, bus)
 			AudioServer.set_bus_send(idx, "Master")
+	# the "duck": an amplifier on Music and Ambient that sinks while a voice speaks (it does not
+	# touch the bus volumes, which belong to the player's sliders in GameSettings)
+	_duck_effects.clear()
+	for bus in ["Music", "Ambient"]:
+		var bus_idx := AudioServer.get_bus_index(bus)
+		if AudioServer.get_bus_effect_count(bus_idx) == 0:
+			AudioServer.add_bus_effect(bus_idx, AudioEffectAmplify.new())
+		_duck_effects.append(AudioServer.get_bus_effect(bus_idx, 0) as AudioEffectAmplify)
 	GameSettings.apply_audio()          # volumes and output device from user://settings.json
 
 
@@ -148,6 +165,34 @@ func _loop_stream(path: String) -> AudioStream:
 
 
 # --------------------------------------------------------------- sound effects ----
+
+## Speaks a recording (see VoiceOver). Replaces whatever was being said; returns its length in seconds.
+func play_voice(stream: AudioStream) -> float:
+	_voice.stop()
+	if stream == null:
+		return 0.0
+	_voice.stream = stream
+	_voice.play()
+	return stream.get_length()
+
+
+func stop_voice() -> void:
+	_voice.stop()
+
+
+func is_voice_playing() -> bool:
+	return _voice.playing
+
+
+## Music and ambience sink while somebody speaks; the voice waits while the game is paused.
+func _update_voice(delta: float) -> void:
+	_voice.stream_paused = get_tree().paused
+	var target := VOICE_DUCK_DB if _voice.playing else 0.0
+	var seconds := VOICE_DUCK_DOWN if target < _duck_db else VOICE_DUCK_UP
+	_duck_db = move_toward(_duck_db, target, absf(VOICE_DUCK_DB) / seconds * delta)
+	for fx in _duck_effects:
+		fx.volume_db = _duck_db
+
 
 ## Plays a sound effect. `at` = Vector3.INF for a flat (interface) sound, otherwise a
 ## position in the world. pitch < 0 means "exactly as recorded" (no random variation).
@@ -329,6 +374,7 @@ func on_dawn() -> void:
 # ------------------------------------------------------------------------ loop ----
 
 func _process(delta: float) -> void:
+	_update_voice(delta)
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player") as Node3D
 		_daynight = get_tree().get_first_node_in_group("daynight") as DayNight

@@ -231,6 +231,7 @@ const CREDITS_LINES := [
 	["Άλογο", "Quaternius, Farm Animals Animated (CC0)"],
 	["Μηχανή παιχνιδιού", "Godot Engine (άδεια MIT)"],
 	["Ήχοι και μουσική", "Δημιουργήθηκαν από τα δικά μας scripts (Python και numpy)"],
+	["Φωνές", "Microsoft Azure AI Speech (el-GR Athina και Nestoras)"],
 ]
 const UPDATE_AVAILABLE := "Νέα έκδοση %s διαθέσιμη"
 const UPDATE_CURRENT := "Τρέχουσα έκδοση: %s"
@@ -253,6 +254,7 @@ const SET_MASTER := "Γενική"
 const SET_MUSIC := "Μουσική"
 const SET_SFX := "Εφέ"
 const SET_AMBIENT := "Περιβάλλον"
+const SET_VOICE := "Φωνές"
 const SET_DEVICE := "Συσκευή ήχου"
 const SET_KEYS := "Πλήκτρα  (κλικ σε ένα πλήκτρο και μετά πάτα το νέο)"
 const SET_PRESS := "Πάτα πλήκτρο…"
