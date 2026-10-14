@@ -56,6 +56,7 @@ signal mount_changed(mounted: bool)
 @export var camera_recenter := 7.0      # how fast the camera swings back behind George
 
 const MODEL_PATH := "res://assets/characters/Knight.glb"
+const CLICK_MAX := 0.3          # a left click shorter than this (seconds) is a sword swing; longer with the right button held runs forward
 
 # Characters that come close to the camera fade out instead of being clipped (see _fade_near_characters).
 const FADE_NEAR := 0.8                 # invisible this close (metres, times the character's scale) ...
@@ -228,8 +229,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				_game_lmb = true
 				_lmb_travel = 0.0
 				_lmb_time = 0.0
-			elif _game_lmb and _lmb_travel < 8.0 and _lmb_time < 0.3 and not _game_rmb:
-				_attack_queued = 0.25  # a quick click with no dragging is a sword swing
+			elif _game_lmb and _lmb_time < CLICK_MAX and (_lmb_travel < 8.0 or _game_rmb):
+				# a quick click is a sword swing; with the right button held the mouse steers, so it may move meanwhile
+				_attack_queued = 0.25
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_game_rmb = true
 
@@ -316,7 +318,7 @@ func _physics_process(delta: float) -> void:
 	if rmb:
 		strafe_axis = clampf(strafe_axis + turn_axis, -1.0, 1.0)
 		turn_axis = 0.0
-	if lmb and rmb:
+	if lmb and rmb and _lmb_time >= CLICK_MAX:      # both buttons held run forward; a quick left click is a swing instead
 		forward_axis = 1.0
 	if not can_act:
 		forward_axis = 0.0

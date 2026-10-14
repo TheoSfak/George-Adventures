@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+**Improved**
+- **You can swing the sword with the right mouse button held.** A quick left click (less than 0.3 s) is now a sword swing also while you hold the right button to steer, and while you run, with or without moving the mouse. Holding both buttons for longer than a third of a second still runs forward. The controls help says so.
+- New test: `click_attack_test` (headless).
+
 ## 1.6.0 (2026-10-14) — levels up to 40 and a faster fight
 **New in this version**
 - **Levels up to 40.** George can level past 20, now up to 40 (about 29,000 XP more). Above level 20 the whole world grows with him: enemies get more health (about x5.4 at level 40), hit harder (about x3.4) and give more XP and gold, bosses and the night invasions too. Five new tiers of weapon, armor and shield at levels 20, 25, 30, 35 and 40 at the blacksmith (from 3,500 gold), more ranks in the stat talents, and health potions that heal a share of your health so they stay useful.
