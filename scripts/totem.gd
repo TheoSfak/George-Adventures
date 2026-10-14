@@ -26,20 +26,20 @@ func _ready() -> void:
 	collision_mask = 0
 	_visual = (load(MODEL) as PackedScene).instantiate() as Node3D
 	_visual.scale = Vector3.ONE * SCALE
-	_visual.position.y = 1.29 * SCALE         # the model's origin is not at its foot
+	_visual.position.y = 0.0                  # the model's origin is at its foot (the lowest point is y = 0, tools/totem_probe.gd)
 	add_child(_visual)
 	_collider = CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
 	cyl.radius = 0.9
-	cyl.height = 8.0
+	cyl.height = 5.6
 	_collider.shape = cyl
-	_collider.position.y = 4.0
+	_collider.position.y = 2.8
 	add_child(_collider)
 	_light = OmniLight3D.new()
 	_light.light_color = Color(0.45, 1.0, 0.4)
 	_light.light_energy = 2.4
 	_light.omni_range = 12.0
-	_light.position.y = 5.5
+	_light.position.y = 4.2
 	add_child(_light)
 	var tag := Label3D.new()
 	tag.text = Strings.TOTEM_NAME
@@ -48,7 +48,7 @@ func _ready() -> void:
 	tag.outline_size = 14
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.modulate = Color(0.7, 1.0, 0.6)
-	tag.position.y = 9.4
+	tag.position.y = 7.3
 	tag.no_depth_test = true
 	add_child(tag)
 	_bar = Sprite3D.new()
@@ -56,7 +56,7 @@ func _ready() -> void:
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.shaded = false
 	_bar.pixel_size = 0.0175
-	_bar.position.y = 8.7
+	_bar.position.y = 6.6
 	add_child(_bar)
 	_update_bar()
 	Quests.changed.connect(_refresh)

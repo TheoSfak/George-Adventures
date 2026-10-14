@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+**Fixed**
+- **The bone totems stand on the ground.** They floated 2 m in the air (the model was lifted by a wrong offset) and the one in the quarry stood inside a boulder (moved to open ground at (153, 133)).
+- **The Saint's shield (skill 2) really protects.** For its 5 seconds no damage gets through at all (before, 25% did) and George is not staggered or pushed back.
+- **Arrows and magic orbs no longer push George back when he blocks them with the shield (K / Ctrl).** A blocked sword blow still moves him a little.
+- New tests: `shield_test`, `totem_test` (headless), `totemshot` (screenshots), `totem_probe`.
+
 ## 1.2.2 (2026-10-14) — find Andreas on the map
 **Improved**
 - **The rescue of Andreas is easy to find on the map.** The marker is now a red pulsing "!" instead of a plain gold diamond. On the corner minimap, when Andreas is farther away than the minimap reaches, an arrow points the way and shows the distance in metres ("85 μ"); on the big map a bobbing arrow and the label "Ο Αντρέας κινδυνεύει!" stand over him.

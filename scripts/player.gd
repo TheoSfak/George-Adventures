@@ -130,6 +130,7 @@ var bar: Array[String] = []      # the 8 action-bar slots, see skill_data.gd
 var _cooldowns := {}             # skill id -> seconds left
 var _potion_cooldown := 0.0
 var _guard_time := 0.0
+var _guard_hit_cd := 0.0         # keeps the shield's hit sound and ring from repeating every frame
 var _power_time := 0.0
 var _speed_time := 0.0
 var _dash_time := 0.0
@@ -599,13 +600,15 @@ func _facing() -> Vector3:
 	return Vector3(sin(_model_root.rotation.y), 0.0, cos(_model_root.rotation.y))
 
 
-## Called by enemies. `from` is the attacker's position (for blocking and knockback).
-func take_damage(amount: float, from: Vector3) -> void:
+## Called by enemies. `from` is the attacker's position (for blocking and knockback). `ranged` is
+## true for arrows and magic orbs: a blocked shot does not push George back.
+func take_damage(amount: float, from: Vector3, ranged: bool = false) -> void:
 	if is_dead or _invulnerable > 0.0:
 		return
-	dismount()                       # any hit throws him off the horse
 	if _guard_time > 0.0:
-		amount *= 0.25
+		_guard_absorb()              # the Saint's shield: no damage, no stagger, no push
+		return
+	dismount()                       # any hit throws him off the horse
 	if _shout_time > 0.0:
 		amount *= 0.75
 	if _sanct_time > 0.0 and global_position.distance_to(_sanct_pos) < 5.0:
@@ -619,8 +622,9 @@ func take_damage(amount: float, from: Vector3) -> void:
 	var blocked := _blocking and _facing().dot(-away) > 0.2
 	if blocked:
 		amount *= 1.0 - minf(block_reduction + stats.total("block_add"), 0.95)
-		velocity.x = away.x * 2.5
-		velocity.z = away.z * 2.5
+		if not ranged:
+			velocity.x = away.x * 2.5
+			velocity.z = away.z * 2.5
 		_play("Block_Hit", 0.05, true)
 		Sfx.play("block_hit", global_position)
 		_invulnerable = 0.3
@@ -647,6 +651,15 @@ func take_damage(amount: float, from: Vector3) -> void:
 			_ring_effect(Color(1.0, 0.92, 0.45), 5.0, 1.0, 0.2)
 			return
 		_die()
+
+
+## A hit on the Saint's shield (skill "guard"): nothing gets through and George is not moved.
+func _guard_absorb() -> void:
+	if _guard_hit_cd > 0.0:
+		return
+	_guard_hit_cd = 0.35
+	Sfx.play("block_hit", global_position)
+	_ring_effect(Color(0.45, 0.7, 1.0), 1.8, 0.25, 0.6)
 
 
 # ------------------------------------------------------------ progression ----
@@ -956,6 +969,7 @@ func _tick_timers(delta: float) -> void:
 	for id in _cooldowns.keys():
 		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)
 	_guard_time = maxf(_guard_time - delta, 0.0)
+	_guard_hit_cd = maxf(_guard_hit_cd - delta, 0.0)
 	_power_time = maxf(_power_time - delta, 0.0)
 	_speed_time = maxf(_speed_time - delta, 0.0)
 	_special_time = maxf(_special_time - delta, 0.0)
