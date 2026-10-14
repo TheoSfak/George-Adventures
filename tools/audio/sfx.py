@@ -192,6 +192,36 @@ sfx("footstep_heavy", 2, 0.5)(_step("h", 200, 1000, 0.3, 1.6, 0.09))
 sfx("footstep_snow", 4, 0.3)(_step("n", 300, 2200, 0.2, 0.15, 0.07))
 
 
+@sfx("footstep_hoof", 3, 0.42)
+def _(rng, i):
+    # two quick hoof knocks (a trot): a hard click on top of a short wooden thump
+    out = np.zeros(int(0.32 * S.SR))
+    for k, t0 in enumerate([0.0, 0.11]):
+        knock = S.bandpass(nz(0.12, rng), 1800 + 220 * i + 150 * k, 1500) * S.expdecay(int(0.12 * S.SR), 0.02)
+        S.place(out, knock * 0.9 + thump(130 + 12 * i, 0.12) * 0.6, t0 + 0.012 * k * i)
+    return out
+
+
+@sfx("horse_whinny", 1, 0.7)
+def _(rng, i):
+    # a rising neigh: a harmonic stack with a wavering pitch through two vowel-like bands, then a short breath
+    dur = 0.9
+    n = int(dur * S.SR)
+    t = np.linspace(0, 1, n)
+    f = 520 + 520 * np.sin(np.pi * np.clip(t * 1.25, 0, 1)) ** 0.6 + 40 * np.sin(2 * np.pi * 14 * t)
+    voice = np.zeros(n)
+    phase = 2 * np.pi * np.cumsum(f) / S.SR
+    for h in range(1, 12):
+        voice += np.sin(h * phase) / h
+    voice = S.formants(voice, [(900, 300, 1.0), (2300, 500, 0.6)])
+    voice *= swell(n, 0.35)
+    breath = S.bandpass(nz(0.3, rng), 1500, 900) * swell(int(0.3 * S.SR), 0.2) * 0.25
+    out = np.zeros(int(1.3 * S.SR))
+    S.place(out, voice * 0.7, 0.0)
+    S.place(out, breath, 0.8)
+    return out
+
+
 @sfx("potion_drink", 1, 0.7)
 def _(rng, i):
     out = np.zeros(int(1.1 * S.SR))

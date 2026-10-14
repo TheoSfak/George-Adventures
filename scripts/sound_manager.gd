@@ -21,12 +21,12 @@ const POND := Vector2(-70.0, 108.0)
 
 # minimum seconds between two plays of the same sound (keeps rapid events from stacking)
 const MIN_GAP := {
-	"footstep_grass": 0.12, "footstep_stone": 0.12, "footstep_wood": 0.12, "footstep_heavy": 0.15,
+	"footstep_grass": 0.12, "footstep_stone": 0.12, "footstep_wood": 0.12, "footstep_heavy": 0.15, "footstep_hoof": 0.12,
 	"gold_pickup": 0.06, "sword_hit": 0.05, "skel_hurt": 0.06, "skel_attack": 0.1, "dialogue_blip": 0.0,
 	"voice_blip": 0.2, "ui_hover": 0.05, "arrow_hit": 0.05, "orb_hit": 0.05, "block_hit": 0.1,
 }
 # loudness trims (dB) for sounds that are too loud/quiet for their role
-const TRIM := {"footstep_grass": -3.0, "footstep_stone": -2.0, "footstep_wood": -2.0, "ui_click": -4.0, "dialogue_blip": -4.0}
+const TRIM := {"footstep_grass": -3.0, "footstep_stone": -2.0, "footstep_wood": -2.0, "footstep_hoof": -3.0, "ui_click": -4.0, "dialogue_blip": -4.0}
 
 var music_on := true
 var sfx_on := true
