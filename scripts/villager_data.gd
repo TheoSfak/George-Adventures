@@ -13,7 +13,7 @@ const MODELS: Array[String] = [
 ## Names of the ambient villagers by gender. Names of story NPCs and stall owners (Ελένη, Στέλιος,
 ## Θανάσης, Σήφης...) are left out so nobody is a namesake of someone with a quest or a shop.
 const NAMES_MALE: Array[String] = [
-	"Δημήτρης", "Κώστας", "Βαγγέλης", "Μανώλης", "Αντώνης", "Παναγιώτης", "Λευτέρης", "Γρηγόρης",
+	"Δημήτρης", "Κώστας", "Βαγγέλης", "Μιχάλης", "Αντώνης", "Παναγιώτης", "Λευτέρης", "Γρηγόρης",
 ]
 const NAMES_FEMALE: Array[String] = [
 	"Αγγελική", "Σοφία", "Κατερίνα", "Μαρίνα", "Δέσποινα", "Ζωή", "Ειρήνη", "Χρυσούλα", "Νίκη",
