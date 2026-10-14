@@ -93,11 +93,20 @@ func build() -> void:
 	_build_fortress()
 	_build_gate()
 	_build_pickups()
+	_build_nav()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_spawn_creatures()
 	Quests.changed.connect(_on_quests_changed)
 	_on_quests_changed()
+
+
+## The walkable-ground grid the creatures use to get round rocks, trees and walls (see nav_grid.gd).
+func _build_nav() -> void:
+	var area := BOUNDS.grow(12.0)
+	var grid := NavGrid.build([_root], Rect2(Vector2(ORIGIN.x + area.position.x, ORIGIN.z + area.position.y), area.size))
+	grid.prepare(true)
+	NavGrid.set_region("frontier", grid)
 
 
 ## Snow instead of meadow: the village ground shader with cold colours, a trampled camp,
@@ -461,6 +470,7 @@ func _build_gate() -> void:
 	box.size = Vector3(GATE_WIDTH, WALL_HEIGHT, 0.8)
 	shape.shape = box
 	body.add_child(shape)
+	body.set_meta("nav_ignore", true)       # the gate dissolves later: the navigation grid must not remember it
 	body.position = wp(0.0, GATE_Z, WALL_HEIGHT / 2.0)
 	_gate.add_child(body)
 	var barrier := MeshInstance3D.new()

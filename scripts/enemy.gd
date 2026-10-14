@@ -81,6 +81,7 @@ var _bar: Sprite3D
 var _blocked_time := 0.0              # trying to move but not getting anywhere
 var _detour_time := 0.0               # walking around an obstacle
 var _detour_sign := 1.0
+var _nav := NavFollower.new()          # walks around houses and trees on the region's NavGrid (nav_grid.gd)
 var _lost_time := 0.0                 # chasing without a line of sight (dungeon enemies)
 var _summon_timer := 5.0
 var _summons: Array[Enemy] = []
@@ -245,6 +246,12 @@ func _detour(dir: Vector3) -> Vector3:
 	return dir
 
 
+## The flat direction toward `target`: straight while the way is free, otherwise along a path around the obstacles
+## (NavFollower). `_nav.active` says that the path is being followed.
+func _path_dir(target: Vector3) -> Vector3:
+	return _nav.direction(global_position, target, NavGrid.clearance_for(0.4 * model_scale), get_physics_process_delta_time())
+
+
 func _idle_state() -> State:
 	return State.MARCH if invader else State.PATROL
 
@@ -267,7 +274,7 @@ func _patrol(delta: float) -> Vector3:
 	if to_target.length() < 0.6:
 		_patrol_wait = randf_range(1.5, 4.0)
 		return Vector3.ZERO
-	var dir := _detour(to_target.normalized())
+	var dir := _detour(_path_dir(_patrol_target))
 	_face(dir, delta)
 	_play(walk_anim, 0.2)
 	return dir * patrol_speed
@@ -284,7 +291,10 @@ func _besiege(delta: float) -> Vector3:
 	_face(to_target, delta)
 	if to_target.length() > 5.5:                    # pulled away by a chase: walk back to the ring
 		_play(walk_anim, 0.2)
-		return _detour(to_target.normalized()) * patrol_speed
+		var back := _detour(_path_dir(besiege_target.global_position))
+		if _nav.active:
+			_face(back, delta)
+		return back * patrol_speed
 	_besiege_swing -= delta
 	if _cooldown <= 0.0:
 		_cooldown = attack_cooldown * randf_range(0.9, 1.4)
@@ -307,7 +317,7 @@ func _march(delta: float) -> Vector3:
 	if to_target.length() < 6.0:
 		_play("Idle", 0.2)   # they have arrived and are tearing at the village
 		return Vector3.ZERO
-	var dir := _detour(to_target.normalized())
+	var dir := _detour(_path_dir(march_target))
 	_face(dir, delta)
 	_play("Running_A", 0.15)
 	return dir * chase_speed * 0.85
@@ -358,7 +368,10 @@ func _chase() -> Vector3:
 		_play("Idle", 0.15)  # close enough, wait for the cooldown
 		return Vector3.ZERO
 	_play("Running_A", 0.15)
-	return _detour(to_player.normalized()) * chase_speed
+	var dir := _detour(_path_dir(_player.global_position))
+	if _nav.active:
+		_face(dir, delta)       # running around an obstacle: look where he runs
+	return dir * chase_speed
 
 
 ## Archers and mages: back away when George is close, close in when he is far,
@@ -372,7 +385,10 @@ func _chase_ranged(to_player: Vector3, dist: float, _delta: float) -> Vector3:
 		return _detour(-to_player.normalized()) * chase_speed * 0.8
 	if dist > ranged_max:
 		_play("Running_A", 0.15)
-		return _detour(to_player.normalized()) * chase_speed
+		var dir := _detour(_path_dir(_player.global_position))
+		if _nav.active:
+			_face(dir, _delta)
+		return dir * chase_speed
 	_play("Idle", 0.15)
 	if _cooldown <= 0.0:
 		_start_attack()

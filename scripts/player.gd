@@ -57,6 +57,14 @@ signal mount_changed(mounted: bool)
 
 const MODEL_PATH := "res://assets/characters/Knight.glb"
 
+# Characters that come close to the camera fade out instead of being clipped (see _fade_near_characters).
+const FADE_NEAR := 0.8                 # invisible this close (metres, times the character's scale) ...
+const FADE_FAR := 2.0                  # ... and fully visible from this far
+const FADE_GROUPS: Array[String] = ["enemies", "npcs", "villagers", "guards"]
+const CAMERA_LAYER := 1 << 31          # collision layer 32: full-size shells of the houses that only the camera sees
+const CAMERA_PULL_MARGIN := 0.45       # the camera stays this far in front of a shell
+const CAMERA_MIN_DISTANCE := 0.7       # ... but never closer to George than this
+
 # The KayKit model ships with every weapon/shield visible. Hide the ones we don't use.
 const HIDDEN_NODES: Array[String] = [
 	"1H_Sword_Offhand", "2H_Sword", "Badge_Shield", "Rectangle_Shield", "Spike_Shield",
@@ -76,9 +84,11 @@ const COMBO: Array[String] = [
 @onready var _model_root: Node3D = $Model
 @onready var _rig: Node3D = $CameraRig
 @onready var _arm: SpringArm3D = $CameraRig/SpringArm3D
+@onready var _cam: Camera3D = $CameraRig/SpringArm3D/Camera3D
 
 var _model: Node3D
 var _anim: AnimationPlayer
+var _fading := {}             # character -> the geometry it is faded on (restored when the camera leaves)
 var _yaw := 0.0               # camera yaw
 var _heading := PI            # which way George faces (KayKit yaw: forward = (sin, 0, cos))
 var _mouse_look := false      # a mouse button is held, so the cursor is hidden and moves the camera
@@ -410,11 +420,62 @@ func _footsteps() -> void:
 	Sfx.play(id)
 
 
+## The village houses are a little smaller to walk against than they look (see Village._add_box_collider), so the
+## spring arm alone can leave the camera inside a wall. Every house also has a full-size shell on CAMERA_LAYER; a ray
+## from George to the camera that meets a shell pulls the camera back in front of it. Runs after the arm has moved the camera.
+func _process(_delta: float) -> void:
+	_cam.global_position = Player.camera_pull_in(get_world_3d().direct_space_state, _arm.global_position, _cam.global_position)
+
+
+static func camera_pull_in(space: PhysicsDirectSpaceState3D, from: Vector3, to: Vector3) -> Vector3:
+	var length := from.distance_to(to)
+	if length <= CAMERA_MIN_DISTANCE:
+		return to
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, to, CAMERA_LAYER))
+	if hit.is_empty():
+		return to
+	var dist := maxf(from.distance_to(hit["position"]) - CAMERA_PULL_MARGIN, CAMERA_MIN_DISTANCE)
+	return from + (to - from).normalized() * minf(dist, length)
+
+
 func _update_camera(delta: float) -> void:
 	_rig.rotation.y = _yaw
 	_arm.rotation.x = _pitch
 	var goal := global_position + Vector3.UP * (camera_height + (MOUNT_CAMERA_LIFT if mounted else 0.0))
 	_rig.global_position = _rig.global_position.lerp(goal, 1.0 - exp(-camera_follow * delta))
+	_fade_near_characters()
+
+
+## Enemies, townspeople and guards between George and the camera (an enemy right behind him) or around it
+## fade out: the geometry transparency rises from 0 at FADE_FAR to 1 at FADE_NEAR (both times the character's
+## size) and drops back when the camera leaves. Only the characters near the camera are looked at.
+func _fade_near_characters() -> void:
+	var cam_pos := _cam.global_position
+	var seen := {}
+	for group in FADE_GROUPS:
+		for n in get_tree().get_nodes_in_group(group):
+			var c := n as Node3D
+			if c == null or seen.has(c):
+				continue
+			seen[c] = true
+			var size := 1.0
+			if "model_scale" in c:
+				size = maxf(float(c.get("model_scale")), 0.5)
+			var d := cam_pos.distance_to(c.global_position + Vector3.UP * 0.9 * size)
+			var t := clampf((FADE_FAR * size - d) / ((FADE_FAR - FADE_NEAR) * size), 0.0, 1.0)
+			if t <= 0.0 and not _fading.has(c):
+				continue
+			if not _fading.has(c):
+				_fading[c] = c.find_children("*", "GeometryInstance3D", true, false)
+			for g in _fading[c]:
+				var gi := g as GeometryInstance3D
+				if is_instance_valid(gi) and absf(gi.transparency - t) > 0.02:
+					gi.transparency = t
+			if t <= 0.0:
+				_fading.erase(c)
+	for c in _fading.keys():                  # characters that left their group or were freed while faded
+		if not is_instance_valid(c):
+			_fading.erase(c)
 
 
 func _start_attack(skill: String = "") -> void:

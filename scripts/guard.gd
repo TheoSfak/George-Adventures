@@ -12,6 +12,7 @@ const SIGHT := 22.0                  # how far from its post a guard notices a s
 const COOLDOWN := 1.35
 const HIT_TIME := 0.45
 const GRAVITY := 22.0
+const CLEARANCE := 0.6               # NavGrid clearance class of a guard (capsule radius 0.45 + 0.2)
 const ATTACKS: Array[String] = ["1H_Melee_Attack_Slice_Diagonal", "1H_Melee_Attack_Slice_Horizontal", "1H_Melee_Attack_Chop"]
 
 var home := Vector3.ZERO
@@ -36,6 +37,7 @@ var _wall_normal := Vector3.ZERO     # horizontal normal of the last obstacle th
 var _goal_dir := Vector3.ZERO        # the direction the guard wants to go (before sidestepping)
 var _last_steer := Vector3.ZERO      # the direction of the current sidestep
 var _detour_extra := 0.0             # seconds the sidestep was prolonged because the way to the goal stayed blocked
+var _nav := NavFollower.new()        # the way around houses and trees (nav_grid.gd); the sidestep above stays the last resort
 
 
 func _ready() -> void:
@@ -109,9 +111,9 @@ func _physics_process(delta: float) -> void:
 		var to := _target.global_position - global_position
 		to.y = 0.0
 		if to.length() > REACH:
-			wanted = _steer(to.normalized()) * SPEED
+			wanted = _steer(_nav.direction(global_position, _target.global_position, CLEARANCE, delta)) * SPEED
 			anim = "Running_A"
-			_face(wanted if _detour_time > 0.0 else to, delta)
+			_face(wanted if (_detour_time > 0.0 or _nav.active) else to, delta)
 		else:
 			_face(to, delta)
 			if _cooldown <= 0.0:
@@ -120,9 +122,9 @@ func _physics_process(delta: float) -> void:
 		var back := home - global_position
 		back.y = 0.0
 		if back.length() > 1.2:
-			wanted = _steer(back.normalized()) * SPEED * 0.7
+			wanted = _steer(_nav.direction(global_position, home, CLEARANCE, delta)) * SPEED * 0.7
 			anim = "Running_A"
-			_face(wanted if _detour_time > 0.0 else back, delta)
+			_face(wanted if (_detour_time > 0.0 or _nav.active) else back, delta)
 	velocity.x = move_toward(velocity.x, wanted.x, 40.0 * delta)
 	velocity.z = move_toward(velocity.z, wanted.z, 40.0 * delta)
 	move_and_slide()

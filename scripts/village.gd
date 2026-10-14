@@ -149,6 +149,16 @@ func _ready() -> void:
 	_finish_terrain()
 	_build_clouds()
 	_build_night_lights()
+	_build_nav()
+
+
+## The walkable-ground grid enemies and guards use to get around houses and trees (see nav_grid.gd). It is
+## prepared on worker threads; until it is ready they walk straight as before.
+func _build_nav() -> void:
+	var half := Vector2(HEX_W * (radius + 1.0), ROW_H * (radius + 1.0))
+	var grid := NavGrid.build([self], Rect2(-half, half * 2.0))
+	grid.prepare(true)
+	NavGrid.set_region("village", grid)
 
 
 func _process(delta: float) -> void:
@@ -959,6 +969,20 @@ func _add_box_collider(root: Node3D, shrink: float = 0.9) -> void:
 	shape.position = a.get_center()
 	body.add_child(shape)
 	root.add_child(body)
+	# The collider is smaller than the model so that George can squeeze between houses; the camera must not follow
+	# him into the walls, so a full-size shell that only the spring arm sees keeps it outside the visible house.
+	if shrink < 0.99:
+		var shell := StaticBody3D.new()
+		shell.name = "CameraShell"
+		shell.collision_layer = Player.CAMERA_LAYER
+		shell.collision_mask = 0
+		var shell_shape := CollisionShape3D.new()
+		var shell_box := BoxShape3D.new()
+		shell_box.size = Vector3(a.size.x, maxf(a.size.y, 0.5), a.size.z)
+		shell_shape.shape = shell_box
+		shell_shape.position = a.get_center()
+		shell.add_child(shell_shape)
+		root.add_child(shell)
 
 
 func _add_cylinder_collider(root: Node3D, r: float, h: float, offset: Vector3) -> void:

@@ -36,7 +36,8 @@ Date: 2026-10-14. Step 2 of the 1.5.0 batch (backlog item G of `HANDOVER.md`). S
   the common 0.6 class costs about 15 MB for the village).
 - API: `NavGrid.build(roots, rect) -> NavGrid`, `blocked(pos, clearance)`, `line_clear(a, b, clearance)` (walks the fine
   raster every 0.25 m), `find_path(a, b, clearance) -> PackedVector3Array` (smoothed by line-of-sight shortcuts, ends at the
-  nearest free point when the goal itself is blocked, empty when unreachable), `debug_image(clearance) -> Image`.
+  nearest free point when the goal itself is blocked and at the closest reachable point when the goal cannot be reached,
+  empty only before the class is ready), `debug_image(clearance, path) -> Image`.
 - Registry: `NavGrid.set_region(id, grid)` and `NavGrid.at(pos) -> NavGrid` (the grid whose rectangle contains `pos`,
   `null` elsewhere). Regions: `village` (built when the village is done, its hex extent), `catacombs` (at the end of
   `Catacombs.build`) and `frontier` (end of `Frontier.build`), each from its own root, so `Interiors` rooms (no enemies) and
@@ -62,9 +63,14 @@ George). A global budget of 6 path searches per physics frame spreads out a crow
 - `Player._update_camera` fades every character (groups `enemies`, `npcs`, `villagers`, `guards`) whose centre is closer
   than 2.0 m to the camera: `GeometryInstance3D.transparency` rises from 0 (at 2.0 m) to 1 (at 0.8 m) on all of its meshes,
   and returns to 0 when the camera leaves; the health bar and name tag fade with it. It only touches nodes that changed.
-- The spring arm margin goes from 0.2 to 0.35. The house colliders keep their 0.9 size (George must still fit between
-  houses). A camera sweep test (below) measures how often the camera ends up inside a house; only if it shows real clipping
-  do the houses get a second, full-size body on an extra layer (bit 32) that only the spring arm looks at.
+- The spring arm margin goes from 0.2 to 0.35.
+- **Houses.** The house colliders are 80 to 90% of the model (George must fit between houses), so the spring arm alone leaves
+  the camera inside the visible wall: the sweep test measured 10% of the positions around 16 houses, up to 1.1 m deep. Every
+  `Village._add_box_collider` with a shrink now also adds a full-size `CameraShell` (collision layer 32, `Player.CAMERA_LAYER`,
+  mask 0: nobody but the camera sees it, the NavGrid skips it). A shell on the spring arm's own mask would break when George
+  stands inside it (he can, the collider is smaller than the wall), so the arm keeps mask 1 and `Player._process` casts a ray
+  from the arm to the camera against the shells only (`Player.camera_pull_in`): a hit pulls the camera back to 0.45 m in
+  front of the shell, never closer than 0.7 m to George.
 
 ## Tests
 
@@ -74,16 +80,18 @@ George). A global budget of 6 path searches per physics frame spreads out a crow
   gap passes class 0.6 and not class 1.2), regions (`at`), a horizontal slab above the band does not block.
 - `nav_follower_test` (headless, `CharacterBody3D` walkers with capsules): a walker behind a wall reaches a goal on the
   other side; a walker with a free line walks straight (`active` false); a crowd of 40 respects the search budget.
-- `nav_world_test` (headless, the real village): the grid exists after the world is built, took under 1.5 s, every
-  enemy spawn can reach the well, a path from the north-west bandit hideout to the well exists, and
-  `debug_image` is saved to the output folder for a look.
-- `enemy_nav_test` (headless): a skeleton behind the real tent/house of the village chases George around it and arrives
-  (and an invader marches from a gate to the well); `guard_snag_test` still passes (it has a flaky history).
-- `camera_test` (headless): the enemy right behind George is transparent and back to opaque when it leaves; the camera sweep
-  around every house (yaw steps of 15 degrees, three pitches, three zooms) reports how many positions lie inside a collider or
-  closer than 0.3 m to one.
-- `navshot` (windowed): screenshots of skeletons walking around the stall ring and a house, and of the grid overlay.
-- `perftest` stays at 60 fps with 40 enemies chasing.
+- `nav_world_test` (headless, the real village): the grid exists after the world is built and both classes become ready,
+  every enemy spawn has a path to the square, no path is more than 3 times the straight line, the four gates reach the
+  square, `debug_image` is saved to the output folder for a look. `nav_regions_test catacombs|frontier` does the same for the
+  two other regions (the sealed gates are marked `nav_ignore`: they dissolve later).
+- `enemy_nav_test` (headless): a skeleton behind the biggest real house chases George around it and arrives (5.7 s against
+  12.9 s without the grid), an invader marches 120 m to the well; `guard_snag_test` has a fourth case, the wall with the spur,
+  walked with a grid (its older cases are random in their choice of side and fail now and then).
+- `camera_test` (headless): a skeleton at the camera is transparent, opaque again when it leaves and half faded at 1.4 m;
+  a sweep of the camera round every house (George 1.2 m outside the visible wall of each of the four sides, 18 yaws, three
+  pitches, three zooms) counts the camera positions inside the visual box of the house: more than 0 with the spring arm
+  alone (the problem), 0 with `camera_pull_in`.
+- `perftest` stays at 60 fps (the grid is built on two worker threads while the world is built).
 
 ## Not included
 
