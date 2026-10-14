@@ -70,7 +70,7 @@ func _physics_process(delta: float) -> void:
 		var chest := _player.global_position + Vector3.UP * 1.0
 		if to.distance_to(chest) < 0.95:
 			# `from` lies behind the shot so knockback and blocking use the flight direction
-			_player.take_damage(damage, _player.global_position - velocity.normalized() * 3.0)
+			_player.take_damage(damage, _player.global_position - velocity.normalized() * 3.0, true)
 			if slows:
 				_player.slow(2.5)
 			Sfx.play("arrow_hit" if kind == "arrow" else "orb_hit", global_position)

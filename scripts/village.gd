@@ -71,7 +71,7 @@ const QUEST_ITEMS := [
 ]
 
 # Bone totems (quest "Τα Οστέινα Τοτέμ"): x, z. They only stand while the quest is active.
-const TOTEMS := [Vector2(-175.0, 27.0), Vector2(147.0, 135.0), Vector2(17.0, -142.0)]
+const TOTEMS := [Vector2(-175.0, 27.0), Vector2(153.0, 133.0), Vector2(17.0, -142.0)]   # the quarry one used to stand inside a rock (147, 135)
 
 # [x, z, rotation, golden, gold_min, gold_max, potions]   (more chests are inside the houses)
 const CHESTS := [
