@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.2.2 (2026-10-14) — find Andreas on the map
 **Improved**
 - **The rescue of Andreas is easy to find on the map.** The marker is now a red pulsing "!" instead of a plain gold diamond. On the corner minimap, when Andreas is farther away than the minimap reaches, an arrow points the way and shows the distance in metres ("85 μ"); on the big map a bobbing arrow and the label "Ο Αντρέας κινδυνεύει!" stand over him.
 
