@@ -9,6 +9,7 @@ const SLOT_ICONS := {"weapon": "sword", "armor": "armor", "shield": "shield"}
 ## Icon colour per tier: steel, blue steel, holy gold, royal purple.
 const TIER_COLORS: Array[Color] = [
 	Color(0.78, 0.80, 0.84), Color(0.45, 0.68, 1.0), Color(1.0, 0.85, 0.35), Color(0.78, 0.45, 1.0),
+	Color(0.40, 0.95, 0.80), Color(0.35, 0.55, 1.0), Color(1.0, 0.62, 0.20), Color(0.95, 0.40, 0.55), Color(1.0, 1.0, 0.85),
 ]
 
 const GEAR := {
@@ -18,15 +19,15 @@ const GEAR := {
 	},
 	"weapon_2": {
 		"name": "Ατσαλένιο Σπαθί", "slot": "weapon", "tier": 2, "level": 5, "price": 220,
-		"mods": {"damage_add": 9, "crit": 0.03}, "desc": "Ατσάλι που κόβει κόκαλα σαν κλαδιά.",
+		"mods": {"damage_add": 9, "crit": 0.03, "attack_speed": 0.03}, "desc": "Ατσάλι που κόβει κόκαλα σαν κλαδιά.",
 	},
 	"weapon_3": {
 		"name": "Σπαθί του Αγίου", "slot": "weapon", "tier": 3, "level": 10, "price": 600,
-		"mods": {"damage_add": 16, "crit": 0.05}, "desc": "Ευλογημένο από τον Άγιο Βλάση· λάμπει στο σκοτάδι.",
+		"mods": {"damage_add": 16, "crit": 0.05, "attack_speed": 0.06}, "desc": "Ευλογημένο από τον Άγιο Βλάση· λάμπει στο σκοτάδι.",
 	},
 	"weapon_4": {
 		"name": "Βασιλικό Σπαθί", "slot": "weapon", "tier": 4, "level": 15, "price": 1500,
-		"mods": {"damage_add": 26, "crit": 0.08, "lifesteal": 0.03}, "desc": "Φτιαγμένο για βασιλιάδες, κρατημένο από ήρωες.",
+		"mods": {"damage_add": 26, "crit": 0.08, "lifesteal": 0.03, "attack_speed": 0.09}, "desc": "Φτιαγμένο για βασιλιάδες, κρατημένο από ήρωες.",
 	},
 	"armor_1": {
 		"name": "Δερμάτινη Πανοπλία", "slot": "armor", "tier": 1, "level": 1, "price": 60,
@@ -59,6 +60,66 @@ const GEAR := {
 	"shield_4": {
 		"name": "Βασιλική Ασπίδα", "slot": "shield", "tier": 4, "level": 15, "price": 1500,
 		"mods": {"block_add": 0.09, "defense": 0.08, "hp_add": 60}, "desc": "Δεν έχει χτυπηθεί ποτέ σε μάχη. Ακόμα.",
+	},
+	"weapon_5": {
+		"name": "Σπαθί της Αυγής", "slot": "weapon", "tier": 5, "level": 20, "price": 3500,
+		"mods": {"damage_add": 36, "crit": 0.10, "lifesteal": 0.04, "attack_speed": 0.12}, "desc": "Το πρώτο φως της μέρας χαράζει τη λεπίδα του.",
+	},
+	"weapon_6": {
+		"name": "Σπαθί της Καταιγίδας", "slot": "weapon", "tier": 6, "level": 25, "price": 7000,
+		"mods": {"damage_add": 48, "crit": 0.12, "lifesteal": 0.05, "attack_speed": 0.15}, "desc": "Κεραυνοί κουρνιάζουν στην κόψη του.",
+	},
+	"weapon_7": {
+		"name": "Σπαθί του Ήλιου", "slot": "weapon", "tier": 7, "level": 30, "price": 14000,
+		"mods": {"damage_add": 62, "crit": 0.14, "lifesteal": 0.06, "attack_speed": 0.18}, "desc": "Καίει σαν το μεσημέρι και λάμπει σαν χρυσάφι.",
+	},
+	"weapon_8": {
+		"name": "Σπαθί του Ουρανού", "slot": "weapon", "tier": 8, "level": 35, "price": 26000,
+		"mods": {"damage_add": 80, "crit": 0.16, "lifesteal": 0.07, "attack_speed": 0.21}, "desc": "Φτιαγμένο από ουράνιο ατσάλι· κόβει τον άνεμο.",
+	},
+	"weapon_9": {
+		"name": "Σπαθί των Αρχαγγέλων", "slot": "weapon", "tier": 9, "level": 40, "price": 45000,
+		"mods": {"damage_add": 100, "crit": 0.18, "lifesteal": 0.08, "attack_speed": 0.24}, "desc": "Το όπλο που κρατούσαν οι φύλακες του ουρανού.",
+	},
+	"armor_5": {
+		"name": "Πανοπλία της Αυγής", "slot": "armor", "tier": 5, "level": 20, "price": 3500,
+		"mods": {"hp_add": 240, "defense": 0.28, "regen": 1.5}, "desc": "Ελαφριά σαν πρωινή ομίχλη, σκληρή σαν βράχος.",
+	},
+	"armor_6": {
+		"name": "Πανοπλία της Καταιγίδας", "slot": "armor", "tier": 6, "level": 25, "price": 7000,
+		"mods": {"hp_add": 310, "defense": 0.32, "regen": 2.0}, "desc": "Σκουριάζει από τη βροχή, μα ποτέ από τη μάχη.",
+	},
+	"armor_7": {
+		"name": "Πανοπλία του Ήλιου", "slot": "armor", "tier": 7, "level": 30, "price": 14000,
+		"mods": {"hp_add": 390, "defense": 0.36, "regen": 2.5}, "desc": "Λάμπει τόσο που τυφλώνει τους νεκρούς.",
+	},
+	"armor_8": {
+		"name": "Πανοπλία του Ουρανού", "slot": "armor", "tier": 8, "level": 35, "price": 26000,
+		"mods": {"hp_add": 480, "defense": 0.40, "regen": 3.0}, "desc": "Τα αστέρια είναι σφυρηλατημένα στο μέταλλό της.",
+	},
+	"armor_9": {
+		"name": "Πανοπλία των Αρχαγγέλων", "slot": "armor", "tier": 9, "level": 40, "price": 45000,
+		"mods": {"hp_add": 580, "defense": 0.44, "regen": 3.5}, "desc": "Δεν τη φόρεσε ποτέ θνητός. Μέχρι τώρα.",
+	},
+	"shield_5": {
+		"name": "Ασπίδα της Αυγής", "slot": "shield", "tier": 5, "level": 20, "price": 3500,
+		"mods": {"block_add": 0.10, "defense": 0.10, "hp_add": 80}, "desc": "Στέκει ακλόνητη στο πρώτο φως.",
+	},
+	"shield_6": {
+		"name": "Ασπίδα της Καταιγίδας", "slot": "shield", "tier": 6, "level": 25, "price": 7000,
+		"mods": {"block_add": 0.11, "defense": 0.12, "hp_add": 100}, "desc": "Οι κεραυνοί αναπηδούν πάνω της.",
+	},
+	"shield_7": {
+		"name": "Ασπίδα του Ήλιου", "slot": "shield", "tier": 7, "level": 30, "price": 14000,
+		"mods": {"block_add": 0.12, "defense": 0.14, "hp_add": 130}, "desc": "Ζεστή στο άγγιγμα, παγωμένη στην άμυνα.",
+	},
+	"shield_8": {
+		"name": "Ασπίδα του Ουρανού", "slot": "shield", "tier": 8, "level": 35, "price": 26000,
+		"mods": {"block_add": 0.13, "defense": 0.16, "hp_add": 160}, "desc": "Τόσο μεγάλη όσο ο ορίζοντας.",
+	},
+	"shield_9": {
+		"name": "Ασπίδα των Αρχαγγέλων", "slot": "shield", "tier": 9, "level": 40, "price": 45000,
+		"mods": {"block_add": 0.14, "defense": 0.18, "hp_add": 200}, "desc": "Μια ασπίδα που φυλάει όλο το χωριό.",
 	},
 }
 
@@ -166,6 +227,12 @@ const SHOPS := {
 			{"type": "gear", "id": "armor_3"}, {"type": "gear", "id": "armor_4"},
 			{"type": "gear", "id": "shield_1"}, {"type": "gear", "id": "shield_2"},
 			{"type": "gear", "id": "shield_3"}, {"type": "gear", "id": "shield_4"},
+			{"type": "gear", "id": "weapon_5"}, {"type": "gear", "id": "weapon_6"}, {"type": "gear", "id": "weapon_7"},
+			{"type": "gear", "id": "weapon_8"}, {"type": "gear", "id": "weapon_9"},
+			{"type": "gear", "id": "armor_5"}, {"type": "gear", "id": "armor_6"}, {"type": "gear", "id": "armor_7"},
+			{"type": "gear", "id": "armor_8"}, {"type": "gear", "id": "armor_9"},
+			{"type": "gear", "id": "shield_5"}, {"type": "gear", "id": "shield_6"}, {"type": "gear", "id": "shield_7"},
+			{"type": "gear", "id": "shield_8"}, {"type": "gear", "id": "shield_9"},
 		],
 		"buys": "gear",
 	},

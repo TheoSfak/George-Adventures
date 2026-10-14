@@ -544,7 +544,7 @@ func _attack(delta: float) -> void:
 			var to_player := _flat(_player.global_position - global_position)
 			var forward := Vector3(sin(_model_root.rotation.y), 0.0, cos(_model_root.rotation.y))
 			if to_player.length() <= attack_range + 0.6 and forward.dot(to_player.normalized()) > 0.3:
-				_player.take_damage(attack_damage, global_position)
+				_player.take_damage(scaled_damage(), global_position)
 				if stomp_slow > 0.0:
 					_player.slow(stomp_slow)
 	if _rig != null and _attack_timer >= static_attack_time:      # nothing animated ends the swing of a prop: a timer does
@@ -562,7 +562,7 @@ func _fire() -> void:
 	if projectile_kind == "arrow":
 		aim = aim.rotated(Vector3.UP, randf_range(-0.05, 0.05))   # archers are not perfect
 	Sfx.play("arrow_shoot" if projectile_kind == "arrow" else "orb_cast", global_position)
-	var shot := Projectile.make(projectile_kind, muzzle, aim, projectile_speed, attack_damage)
+	var shot := Projectile.make(projectile_kind, muzzle, aim, projectile_speed, scaled_damage())
 	shot.slows = projectile_slows
 	get_parent().add_child(shot)
 
@@ -574,7 +574,7 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 		_wake()
 		if _state == State.DEAD:
 			return
-	health -= amount
+	health -= amount / LevelScaling.health_mult(player_level())   # above level 20 the world is tougher (level_scaling.gd)
 	_bar.visible = true
 	_update_health_bar()
 	var away := _flat(global_position - from)
@@ -720,6 +720,19 @@ func _voice(skeleton_sound: String) -> String:
 	if not human:
 		return skeleton_sound
 	return "sword_swing" if skeleton_sound == "skel_attack" else "player_hurt"
+
+
+## George's level (1 when he is not in the tree yet): the enemies scale with it above level 20.
+func player_level() -> int:
+	var p := _player
+	if p == null:
+		p = get_tree().get_first_node_in_group("player") as Player
+	return p.level if p != null else 1
+
+
+## The damage of one blow, arrow or orb, scaled by George's level.
+func scaled_damage() -> float:
+	return attack_damage * LevelScaling.damage_mult(player_level())
 
 
 func _player_alive() -> bool:

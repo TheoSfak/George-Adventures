@@ -6,7 +6,7 @@ extends RefCounted
 ##
 ## Keys:
 ##   damage_add   flat sword damage            damage_mult  +share of damage (0.1 = +10%)
-##   hp_add       flat max health              defense      share of damage ignored (capped at 60%)
+##   hp_add       flat max health              defense      share of damage ignored (capped at 80%)
 ##   block_add    extra share absorbed by a block
 ##   speed_mult   +share of move speed         crit         chance of a double-damage hit
 ##   cdr          skill cooldown reduction     lifesteal    share of damage dealt returned as health
@@ -15,18 +15,19 @@ extends RefCounted
 ##   prayer_add   extra share of max health healed by the Ευχή
 ##   ps_mult      +share of Δυνατό Χτύπημα damage    whirl_radius  extra metres of the Σίφουνας
 ##   last_stand   extra damage reduction below 30% health          rebirth  1 = Ανάσταση learned
+##   attack_speed +share of sword swing speed (0.1 = +10%)
 
 const NAMES := {
 	"damage_add": "Ζημιά", "damage_mult": "Ζημιά", "hp_add": "Ζωή", "defense": "Άμυνα",
 	"block_add": "Μπλοκ", "speed_mult": "Ταχύτητα", "crit": "Κρίσιμο χτύπημα", "cdr": "Ταχύτερη επαναφορά",
 	"lifesteal": "Ρουφά ζωή", "heal_mult": "Θεραπεία", "regen": "Ζωή/δ", "guard_time_add": "Διάρκεια Ασπίδας",
 	"prayer_add": "Ευχή του Αγίου", "ps_mult": "Δυνατό Χτύπημα", "whirl_radius": "Εύρος Σίφουνα",
-	"last_stand": "Άμυνα με χαμηλή ζωή", "rebirth": "Ανάσταση",
+	"last_stand": "Άμυνα με χαμηλή ζωή", "rebirth": "Ανάσταση", "attack_speed": "Ταχύτητα επίθεσης",
 }
 ## Keys shown as a percentage (value 0.1 -> "+10%").
 const PERCENT := ["damage_mult", "defense", "block_add", "speed_mult", "crit", "cdr", "lifesteal",
-	"heal_mult", "prayer_add", "ps_mult", "last_stand"]
-const CAPS := {"defense": 0.6, "cdr": 0.5, "crit": 0.75, "lifesteal": 0.4}
+	"heal_mult", "prayer_add", "ps_mult", "last_stand", "attack_speed"]
+const CAPS := {"defense": 0.8, "cdr": 0.5, "crit": 0.75, "lifesteal": 0.4}
 
 var _sources := {}
 

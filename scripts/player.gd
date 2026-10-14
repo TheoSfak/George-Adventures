@@ -38,7 +38,7 @@ signal mount_changed(mounted: bool)
 @export var respawn_time := 3.0
 
 @export_group("Progress")
-@export var max_level := 20
+@export var max_level := LevelScaling.MAX_LEVEL
 @export var health_per_level := 10.0
 @export var damage_per_level := 2.0
 @export var potion_heal := 40.0
@@ -726,7 +726,7 @@ func _guard_absorb() -> void:
 # ------------------------------------------------------------ progression ----
 
 func xp_needed(for_level: int = level) -> int:
-	return 40 + 35 * (for_level - 1)
+	return LevelScaling.xp_needed(for_level)
 
 
 func gain_xp(amount: int) -> void:
@@ -790,14 +790,14 @@ func use_consumable(id: String) -> void:
 		"health":
 			if health >= max_health:
 				return
-			var healed := potion_heal * (1.0 + stats.total("heal_mult"))
+			var healed := maxf(potion_heal, max_health * 0.25) * (1.0 + stats.total("heal_mult"))   # a share of max health, so it stays useful at level 40
 			health = minf(health + healed, max_health)
 			health_changed.emit(health, max_health)
 			message.emit(Strings.MSG_POTION_USED % int(healed))
 		"health_big":
 			if health >= max_health:
 				return
-			var healed_big := 100.0 * (1.0 + stats.total("heal_mult"))
+			var healed_big := maxf(100.0, max_health * 0.5) * (1.0 + stats.total("heal_mult"))
 			health = minf(health + healed_big, max_health)
 			health_changed.emit(health, max_health)
 			message.emit(Strings.MSG_POTION_USED % int(healed_big))
@@ -951,12 +951,12 @@ func _update_equipment_visuals() -> void:
 	var weapon_tier := _gear_tier("weapon")
 	var armor_tier := _gear_tier("armor")
 	var shield_tier := _gear_tier("shield")
-	var shield_name := SHIELD_NODES[shield_tier]
+	var shield_name := SHIELD_NODES[mini(shield_tier, SHIELD_NODES.size() - 1)]
 	for n in _model.find_children("*", "MeshInstance3D", true, false):
 		var mi := n as MeshInstance3D
 		if mi.name in ["Round_Shield", "Badge_Shield", "Rectangle_Shield", "Spike_Shield"]:
 			mi.visible = mi.name == shield_name
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[3], 0.28) if shield_tier == 4 and mi.visible else null
+			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[shield_tier - 1], 0.28) if shield_tier >= 4 and mi.visible else null
 		elif mi.name == "1H_Sword":
 			mi.visible = weapon_tier < 3
 			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier == 2 else null
