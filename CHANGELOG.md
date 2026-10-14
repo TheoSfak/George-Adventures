@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 (2026-10-14) — a horse and the Night Lord
+**New in this version**
+- **A horse.** George can buy a horse (350 gold, from level 5) from **Μανώλης ο Ιπποκόμος** at the new stable yard south-east of the well (named on the big map). **G** mounts and dismounts (rebindable in the settings, listed in the controls help); riding is 1.8 times faster on foot speed, with a higher camera, hoof beats and a whinny. It is for travelling: George hops off when he is hit, attacks, uses a skill or blocks, at doors, dialogues, shops and fishing, and he cannot mount indoors or while a skeleton is chasing him. Owning the horse is saved. The model is the free CC0 horse of Quaternius' "Farm Animals Animated" pack (credited in `THIRD_PARTY_NOTICES.md` and on the Credits page).
+- New tests: `mount_rules_test`, `horse_test`, `mount_ride_test`, `mount_stable_test` (headless) and `mountshot` (screenshots and frame rate).
+- **Boss nights.** On night 5 and every 5th night after it (10, 15, ...) the night invasion has a fourth wave: the **Άρχοντας της Νύχτας** (Night Lord). It marches in from a gate with an escort of skeletons once wave 3 is cleared, calls minions while it fights and enrages at half health (faster, and it calls warriors). Its helpers march on the well too, so the night is won only when they are dead as well.
+- **It grows with every tier:** +40% health and damage, a larger escort and more helpers each time, and a numeral in its name from night 10 ("Άρχοντας της Νύχτας II").
+- **Rewards:** a boss night gives extra XP (200 per tier), a power potion, a speed potion and a golden chest with double gold, with its own victory banner. The boss shows as a red marker on the minimap and plays the boss music.
+- Ordinary nights are unchanged.
+- New tests: `invasion_boss_test`, `invasion_boss_world_test`, `invasion_boss_flow_test` (headless) and `bossnighttest` (screenshots and frame rate).
+
 ## 1.0.3 (2026-10-13) — instructions and licence in the zip
 **New in this version**
 - The release zip now also contains `README.txt` (Greek instructions: what to do when Windows blocks the unsigned exe, the graphics setting, updates), `LICENSE` (all rights reserved) and `THIRD_PARTY_NOTICES.md` (KayKit CC0 and the Godot Engine MIT notice, which must travel with the exe). The game itself did not change. The updater copies the new files next to the exe as it does with the launchers.
