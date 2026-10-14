@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+**New in this version**
+- **Σώσε τον Αντρέα (rescue event).** A few minutes into a game (180 to 300 s of play, only while George is free, outdoors and no night invasion runs) a window warns that his friend Andreas is surrounded by skeletons. A new event quest starts: six skeletons (the mix grows with George's level) hit Andreas in a meadow south-west of the square, his health bar runs down (150 s with all six alive, slower as they die), and the spot is marked on the minimap and the big map. Kill them all to save him (250 XP, 120 gold, 2 potions; he then stands in the square). If his health reaches zero he dies and the quest fails, without any penalty. Once per game; saved with the game.
+- Fixed: the villager name pool no longer contains "Μανώλης" (the stable keeper's name); `gender_test` knows Μανώλης and Αντρέας.
+- New tests: `rescue_rules_test`, `rescue_quest_test`, `rescue_flow_test` (headless) and `rescueshot` (screenshots).
+
 ## 1.1.0 (2026-10-14) — a horse and the Night Lord
 **New in this version**
 - **A horse.** George can buy a horse (350 gold, from level 5) from **Μανώλης ο Ιπποκόμος** at the new stable yard south-east of the well (named on the big map). **G** mounts and dismounts (rebindable in the settings, listed in the controls help); riding is 1.8 times faster on foot speed, with a higher camera, hoof beats and a whinny. It is for travelling: George hops off when he is hit, attacks, uses a skill or blocks, at doors, dialogues, shops and fishing, and he cannot mount indoors or while a skeleton is chasing him. Owning the horse is saved. The model is the free CC0 horse of Quaternius' "Farm Animals Animated" pack (credited in `THIRD_PARTY_NOTICES.md` and on the Credits page).

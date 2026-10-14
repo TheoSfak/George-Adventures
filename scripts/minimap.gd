@@ -247,7 +247,7 @@ func _draw_quest_markers() -> void:
 					if rescue != null and rescue.andreas_position() != Vector3.ZERO:
 						_diamond(rescue.andreas_position())
 						if big:
-							_label(_to_map(rescue.andreas_position()) + Vector2(0, -16), QuestData.NPCS["andreas"]["name"])
+							_label(_to_map(rescue.andreas_position()) + Vector2(0, 26), QuestData.NPCS["andreas"]["name"])
 				"kill":
 					if o["target"] == "totem":
 						for t in get_tree().get_nodes_in_group("breakables"):
