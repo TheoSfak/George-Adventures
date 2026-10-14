@@ -157,6 +157,7 @@ func _draw() -> void:
 	_draw_shops_and_places()
 	_draw_invasion_well()
 	_draw_quest_markers()
+	_draw_rescue_marker()
 	_draw_player()
 
 
@@ -243,11 +244,7 @@ func _draw_quest_markers() -> void:
 						if it.visible and it.get("item_id") == o["item"] and _inside_world(it.global_position):
 							_diamond(it.global_position)
 				"rescue":
-					var rescue := get_tree().get_first_node_in_group("rescue")
-					if rescue != null and rescue.andreas_position() != Vector3.ZERO:
-						_diamond(rescue.andreas_position())
-						if big:
-							_label(_to_map(rescue.andreas_position()) + Vector2(0, 26), QuestData.NPCS["andreas"]["name"])
+					pass                       # drawn by _draw_rescue_marker (red, with an arrow)
 				"kill":
 					if o["target"] == "totem":
 						for t in get_tree().get_nodes_in_group("breakables"):
@@ -262,6 +259,62 @@ func _draw_quest_markers() -> void:
 					if not found and BOSS_AREAS.has(o["target"]):
 						var a: Vector2 = BOSS_AREAS[o["target"]]
 						_diamond(Vector3(a.x, 0.0, a.y))
+
+
+## The friend in danger (rescue event): a pulsing red "!" with a ring. On the corner minimap, when he is
+## farther away than the picture reaches, the marker sits inside the border with an arrow that points
+## the way and the distance in metres; on the big map a bobbing arrow and a label stand over him.
+func _draw_rescue_marker() -> void:
+	var rescue := get_tree().get_first_node_in_group("rescue")
+	if rescue == null:
+		return
+	var world: Vector3 = rescue.andreas_position()
+	if world == Vector3.ZERO:
+		return
+	var urgent := Color(1.0, 0.35, 0.2)
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * 5.0)
+	var raw := _to_map(world)
+	var centre := size / 2.0
+	var pos := raw
+	var off := false
+	if not big:
+		var lim := size.x / 2.0 - 27.0
+		var d := raw - centre
+		if absf(d.x) > lim or absf(d.y) > lim:
+			off = true
+			pos = centre + d * (lim / maxf(absf(d.x), absf(d.y)))
+	draw_arc(pos, 13.0 + pulse * 4.0, 0.0, TAU, 32, Color(urgent, 0.9), 2.5)
+	draw_circle(pos, 9.5, INK)
+	draw_circle(pos, 8.0, urgent)
+	var font := ThemeDB.fallback_font
+	draw_string(font, pos + Vector2(-3.0, 5.5), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color.WHITE)
+	if off:
+		var dir := (raw - centre).normalized()
+		var side := Vector2(-dir.y, dir.x)
+		var base := pos + dir * (13.0 + pulse * 2.0)
+		var tip := pos + dir * (23.0 + pulse * 3.0)
+		var arrow := PackedVector2Array([tip, base + side * 7.0, base - side * 7.0])
+		draw_colored_polygon(arrow, urgent)
+		arrow.append(arrow[0])
+		draw_polyline(arrow, INK, 2.0)
+		var metres := int(round(Vector2(world.x - _player.global_position.x, world.z - _player.global_position.z).length()))
+		var text := "%d μ" % metres
+		var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		var at := pos - dir * 24.0 + Vector2(-w / 2.0, 5.0)
+		draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 5, INK)
+		draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, urgent)
+	elif big:
+		var bob := 4.0 * sin(Time.get_ticks_msec() / 1000.0 * 4.0)
+		var tip2 := pos + Vector2(0.0, -17.0 + bob)
+		var arrow2 := PackedVector2Array([tip2, tip2 + Vector2(-9.0, -13.0), tip2 + Vector2(9.0, -13.0)])
+		draw_colored_polygon(arrow2, urgent)
+		arrow2.append(arrow2[0])
+		draw_polyline(arrow2, INK, 2.0)
+		var label := Strings.RESCUE_MAP_LABEL
+		var lw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		var lat := pos + Vector2(-lw / 2.0, 34.0)
+		draw_string_outline(font, lat, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 5, INK)
+		draw_string(font, lat, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, urgent)
 
 
 func _on_map(pos: Vector2, margin: float) -> bool:

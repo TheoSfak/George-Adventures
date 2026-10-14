@@ -51,6 +51,12 @@ func _run() -> void:
 	_alert_card()._accept()
 	await create_timer(0.8).timeout
 
+	# the minimap arrow while George is still far away (a close-up of the corner, 2x)
+	await shot("rescue_arrow_far")
+	var corner := root.get_viewport().get_texture().get_image().get_region(Rect2i(1530, 20, 390, 330))
+	corner.resize(corner.get_width() * 2, corner.get_height() * 2, Image.INTERPOLATE_LANCZOS)
+	corner.save_png("%s/rescue_arrow_corner.png" % out)
+
 	# the ring from a free camera, then with the HUD and the map
 	var site := Vector3(r.SITE.x, 0.0, r.SITE.y)
 	var cam := Camera3D.new()

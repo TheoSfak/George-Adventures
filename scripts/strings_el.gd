@@ -34,6 +34,7 @@ const RESCUE_TEXT := "Ο φίλος σου ο Αντρέας είναι σε κ�
 const RESCUE_BUTTON := "Πάω!"
 const RESCUE_LOST := "Ο Αντρέας χάθηκε…"
 const RESCUE_SAVED := "Ο Αντρέας σώθηκε!"
+const RESCUE_MAP_LABEL := "Ο Αντρέας κινδυνεύει!"
 const QUEST_READY := "Ολοκληρώθηκε: %s"
 const QUEST_DONE := "Αποστολή ολοκληρώθηκε: %s"
 const RETURN_TO := "Μίλα ξανά με: %s"

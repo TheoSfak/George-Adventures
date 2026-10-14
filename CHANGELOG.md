@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+**Improved**
+- **The rescue of Andreas is easy to find on the map.** The marker is now a red pulsing "!" instead of a plain gold diamond. On the corner minimap, when Andreas is farther away than the minimap reaches, an arrow points the way and shows the distance in metres ("85 μ"); on the big map a bobbing arrow and the label "Ο Αντρέας κινδυνεύει!" stand over him.
+
 ## 1.2.1 (2026-10-14) — bosses come back
 **Fixed**
 - **Bosses and big mobs come back.** Every quest boss (the captain, the Bone King, the three wardens, the necromancer, the giant skeleton, Malakar) and the big mobs (brutes, shadow knights) now respawn 60 s after they die (once George is more than 40 m away for the bosses). Before, a boss killed before its quest could never be killed again, so the quest could not be finished. Loaded games have the bosses again; the save no longer remembers defeated bosses. The invasion bosses (Warlord, Night Lord) are unchanged.
