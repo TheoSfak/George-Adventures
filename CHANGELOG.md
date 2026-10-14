@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 (2026-10-14) — the bandits
 **New in this version**
 - **Bandits.** Not every enemy is a skeleton any more. A gang of bandits (people, built from the Adventurers models) lives in a hideout in the north-west forest, behind the windmill: thugs with axe and shield, crossbow archers, fast knife thieves and their boss, the **Αρχηγός των Ληστών** (calls his men when hurt, comes back after a minute like every boss). Three more pairs patrol the roads. New quest **«Οι Ληστές του Δάσους»** from the miller Στέλιος (after the sacks quest): beat six bandits and the chief for 450 XP, 220 gold, 2 potions and +3 damage. Bandits are not counted as skeletons by the skeleton quests. The hideout has a golden chest, a signpost and a name on the big map.
 - Internals: the list of weapon props of the Adventurers models moved to `CharacterProps` (shared by NPCs, villagers, guards and enemies).
