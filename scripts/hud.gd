@@ -13,6 +13,10 @@ var _xp_bar: FancyBar
 var _level_badge: UiKit.LevelBadge
 var _gold_label: Label
 var _potion_label: Label
+var _mount_box: HBoxContainer          # [horseshoe] [G] Άλογο, shown once the horse is bought
+var _mount_key: Label
+var _mount_text: Label
+var _mount_shown := ""                  # what the pill shows now ("" = hidden), so it is only rebuilt when it changes
 var _flash: ColorRect
 var _death_text: Label
 var _feed: VBoxContainer
@@ -213,6 +217,20 @@ func _build_bars() -> void:
 	_potion_label = _plain_label("0", 19, Color(1.0, 0.85, 0.85))
 	stats.add_child(_potion_label)
 	stats.add_child(UiKit.key_cap("H", 13))
+	var mount_gap := Control.new()
+	mount_gap.custom_minimum_size = Vector2(10, 0)
+	stats.add_child(mount_gap)
+	_mount_box = HBoxContainer.new()
+	_mount_box.add_theme_constant_override("separation", 6)
+	_mount_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mount_box.visible = false
+	stats.add_child(_mount_box)
+	_mount_box.add_child(UiKit.glyph("horseshoe", Color(0.86, 0.78, 0.60), 22))
+	var mount_cap := UiKit.key_cap("G", 13)
+	_mount_key = mount_cap.get_child(0) as Label
+	_mount_box.add_child(mount_cap)
+	_mount_text = _plain_label(Strings.MOUNT_PILL, 17, Color(0.92, 0.88, 0.78))
+	_mount_box.add_child(_mount_text)
 
 	_feed = VBoxContainer.new()
 	_feed.position = Vector2(28, 168)
@@ -666,6 +684,7 @@ func _process(_delta: float) -> void:
 		_mini_frame.visible = not (_interiors.is_inside() or _interiors.in_region())
 	if _player == null:
 		return
+	_refresh_mount_pill()
 	var names := {"power": Strings.BUFF_POWER, "speed": Strings.BUFF_SPEED, "guard": Strings.BUFF_GUARD,
 		"frenzy": Strings.BUFF_FRENZY, "shout": Strings.BUFF_SHOUT, "wall": Strings.BUFF_WALL, "food": ""}
 	for id in _buff_labels:
@@ -677,6 +696,32 @@ func _process(_delta: float) -> void:
 				l.text = "%s %d:%02d" % [_player.food_name(), floori(t / 60.0), int(t) % 60]
 			else:
 				l.text = "%s %d δ" % [names[id], ceili(t)]
+
+
+## The horse in the corner panel once it is bought: [G] Άλογο, [G] Κατέβα while riding. The key shown is
+## the one bound to the "mount" action (it can be rebound in the settings).
+func _refresh_mount_pill() -> void:
+	if _mount_box == null:
+		return
+	var key := _mount_key_name()
+	var text := ""
+	if _player.horse_owned:
+		text = key + "|" + (Strings.MOUNT_PILL_OFF if _player.mounted else Strings.MOUNT_PILL)
+	if text == _mount_shown:
+		return
+	_mount_shown = text
+	_mount_box.visible = text != ""
+	if text != "":
+		_mount_key.text = key
+		_mount_text.text = text.get_slice("|", 1)
+
+
+func _mount_key_name() -> String:
+	for ev in InputMap.action_get_events("mount"):
+		if ev is InputEventKey:
+			var code: Key = ev.physical_keycode if ev.physical_keycode != KEY_NONE else ev.keycode
+			return OS.get_keycode_string(code)
+	return "G"
 
 
 # ------------------------------------------------- clock and invasion panel ----

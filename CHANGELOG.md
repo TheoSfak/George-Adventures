@@ -3,7 +3,8 @@
 ## Unreleased
 **Improved**
 - **You can swing the sword with the right mouse button held.** A quick left click (less than 0.3 s) is now a sword swing also while you hold the right button to steer, and while you run, with or without moving the mouse. Holding both buttons for longer than a third of a second still runs forward. The controls help says so.
-- New test: `click_attack_test` (headless).
+- **The horse shows in the corner panel.** Once you own the horse, a small pill next to the potions says `[G] Άλογο` (`[G] Κατέβα` while you ride). The key shown follows your key settings. The controls page (the "i" button, F1) lists G for the horse and its first lines (the mouse buttons) are shorter, so nothing overlaps.
+- New tests: `click_attack_test` (headless), `mountuishot` (screenshots).
 
 ## 1.6.0 (2026-10-14) — levels up to 40 and a faster fight
 **New in this version**
