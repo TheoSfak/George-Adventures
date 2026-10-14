@@ -169,6 +169,19 @@ const SHOPS := {
 		],
 		"buys": "gear",
 	},
+	# The stable: one item, the horse (see mount_rules.gd); no selling tab
+	"stable": {
+		"title": "Στάβλος",
+		"keeper": "Μανώλης ο Ιπποκόμος",
+		"kind": "stable",
+		"greeting": [
+			"Καλώς τον Γιώργο! Δες τι άλογο έχω εδώ. Με δαύτο θα διασχίζεις το νησί πριν προλάβει να κρυώσει ο καφές σου. Μόνο μην το βάλεις σε μάχη, είναι φοβιτσιάρικο!",
+		],
+		"stock": [
+			{"type": "mount", "id": "horse", "price": MountRules.PRICE, "level": MountRules.MIN_LEVEL},
+		],
+		"buys": "",
+	},
 	# The tavern kitchen: no stock or selling, the window shows MEALS in two tabs (see shop_window.gd)
 	"kitchen": {
 		"title": "Κουζίνα",

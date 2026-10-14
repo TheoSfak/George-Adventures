@@ -93,6 +93,14 @@ const NPCS := {
 			"Οι σφραγίδες του Αγίου αντέχουν ακόμα… αλλά όχι για πολύ.",
 		],
 	},
+	# The stable hand: sells the horse (see shop_data.gd, SHOPS["stable"]); he stands outdoors at the stable yard.
+	"manolis": {
+		"name": "Μανώλης ο Ιπποκόμος",
+		"model": "res://assets/characters/Barbarian.glb",
+		"show": ["Barbarian_Hat"],
+		"shop": "stable",
+		"idle": ["Το άλογο θέλει καλό χέρι και καλή ζάχαρη.", "Δεν τρέχει μόνο του: τρέχεις εσύ μαζί του."],
+	},
 	# The cook of the tavern: fish are cooked into meals (see shop_data.gd, SHOPS["kitchen"]).
 	"thanasis": {
 		"name": "Θανάσης ο Μάγειρας",

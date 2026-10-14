@@ -95,7 +95,8 @@ const SIGNPOSTS := [
 const CAMP := Vector2(-175.0, 20.0)
 const QUARRY := Vector2(140.0, 125.0)
 const CRYPT := Vector2(0.0, -178.0)
-const DOCK_ANGLE := -60.0             # where on the pond shore the fishing dock stands (degrees, 0 = east, -90 = north)
+const STABLE := Vector2(63.0, 53.0)   # the stable yard of Μανώλης (open ground; the horse is sold there)
+const DOCK_ANGLE := -60.0            # where on the pond shore the fishing dock stands (degrees, 0 = east, -90 = north)
 
 const TREES := ["decoration/nature/tree_single_A.gltf", "decoration/nature/tree_single_B.gltf"]
 const FORESTS := [
@@ -137,6 +138,7 @@ func _ready() -> void:
 	_build_crypt()
 	_build_chests_items_signs()
 	_build_totems()
+	_build_stable()
 	_build_great_tree()
 	_build_terrain_details()
 	_build_scatter()
@@ -534,6 +536,60 @@ func _build_totems() -> void:
 
 
 ## The Great Tree area in the east: a lake with rock islands, bridges and a giant tree (great_tree.gd).
+## The stable yard: a small paddock fenced with crates and pallets, hay sacks and barrels, the horse
+## standing inside and Μανώλης at the gate. It faces the well.
+func _build_stable() -> void:
+	var holder := Node3D.new()
+	holder.name = "Stable"
+	add_child(holder)
+	var heading := atan2(-STABLE.x, -STABLE.y)          # the gate looks at the well
+	var center := Vector3(STABLE.x, 0.0, STABLE.y)
+	var forward := Vector3(sin(heading), 0.0, cos(heading))
+	var right := Vector3(-cos(heading), 0.0, sin(heading))
+	var half := Vector2(5.5, 4.0)                          # half width (right) and half depth (forward)
+	var rot := rad_to_deg(heading)
+	# the fence: crates along the back and the sides, a gap of 3 m in the middle of the front
+	var pieces := []
+	for x in range(-5, 6, 2):
+		pieces.append(Vector2(float(x), -half.y))                 # back
+	for z in range(-2, 3, 2):
+		pieces.append(Vector2(-half.x, float(z) * 1.6))           # left side
+		pieces.append(Vector2(half.x, float(z) * 1.6))            # right side
+	for x in [-5.0, -3.0, 3.0, 5.0]:
+		pieces.append(Vector2(x, half.y))                          # front, with the gap
+	var models := ["decoration/props/crate_long_A.gltf", "decoration/props/crate_long_B.gltf", "decoration/props/pallet.gltf"]
+	for i in pieces.size():
+		var v: Vector2 = pieces[i]
+		var pos := center + right * v.x + forward * v.y
+		var turn := rot + (90.0 if absf(v.x) > half.x - 0.1 else 0.0)
+		var node := _place(models[i % models.size()], pos, turn, PS * 1.0, holder)
+		_add_box_collider(node, 0.8)
+	# hay sacks, barrels and a bucket near the back
+	var extras := [
+		["decoration/props/sack.gltf", Vector2(-3.5, -2.6), 20.0], ["decoration/props/sack.gltf", Vector2(-2.6, -3.0), 80.0],
+		["decoration/props/barrel.gltf", Vector2(3.6, -2.8), 0.0], ["decoration/props/bucket_water.gltf", Vector2(2.4, -3.0), 30.0],
+	]
+	for e in extras:
+		var v: Vector2 = e[1]
+		var pos := center + right * v.x + forward * v.y
+		var node := _place(e[0], pos, rot + float(e[2]), PS, holder)
+		_add_box_collider(node, 0.8)
+	# the horse that stands in the paddock
+	var horse := Horse.new()
+	horse.position = center + right * 0.8 - forward * 0.5
+	horse.rotation.y = heading + 2.2
+	holder.add_child(horse)
+	horse.stand()
+	# the keeper at the gate, a step outside the fence
+	var keeper := Npc.new()
+	keeper.npc_id = "manolis"
+	keeper.rest_yaw = heading
+	keeper.position = center + forward * (half.y + 2.2) + right * 2.4
+	var npcs := get_node_or_null("Npcs")
+	(npcs if npcs else holder).add_child(keeper)
+	_occupy(center.x, center.z, 11.0)
+
+
 func _build_great_tree() -> void:
 	var area := GreatTree.new()
 	area.terrain = _terrain

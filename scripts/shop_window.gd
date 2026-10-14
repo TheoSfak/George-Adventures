@@ -101,12 +101,14 @@ func _refresh() -> void:
 		c.queue_free()
 	var kitchen: bool = shop.get("kind", "") == "kitchen"
 	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
-	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab != "buy", _set_tab.bind("cook" if kitchen else "sell")))
+	var stable: bool = shop.get("kind", "") == "stable"
+	if not stable:
+		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab != "buy", _set_tab.bind("cook" if kitchen else "sell")))
 	for c in _list.get_children():
 		c.queue_free()
 	if kitchen:
 		_build_kitchen_rows()
-	elif _tab == "buy":
+	elif _tab == "buy" or stable:
 		for entry in shop["stock"]:
 			_list.add_child(_buy_row(entry))
 	else:
@@ -159,6 +161,20 @@ func _row(icon: String, color: Color, title: String, detail: String, stats_bbcod
 
 func _buy_row(entry: Dictionary) -> Control:
 	var id: String = entry["id"]
+	if entry["type"] == "mount":
+		var owned_horse: bool = _player.horse_owned
+		var need_level: int = entry["level"]
+		var price_horse: int = entry["price"]
+		var bh := UiKit.button(Strings.SHOP_BUY_BUTTON, _buy.bind(entry), 120)
+		if owned_horse:
+			bh.text = Strings.SHOP_OWNED
+			bh.disabled = true
+		elif _player.level < need_level:
+			bh.text = Strings.SHOP_LEVEL_NEEDED % need_level
+			bh.disabled = true
+		return _row("horseshoe", Color(0.85, 0.65, 0.4), Strings.SHOP_HORSE_TITLE, Strings.SHOP_HORSE_DESC,
+			"[color=#c9b98a]%s[/color]" % Strings.SHOP_HORSE_OWNED if owned_horse else "",
+			"" if owned_horse else Strings.SHOP_PRICE % price_horse, _player.gold >= price_horse, [bh])
 	if entry["type"] == "item":
 		var info: Dictionary = SkillData.ITEMS[id]
 		var need: int = entry.get("level", 1)
@@ -275,9 +291,17 @@ func _eat(meal_id: String) -> void:
 
 func _buy(entry: Dictionary) -> void:
 	var id: String = entry["id"]
-	var need: int = int(entry.get("level", 1)) if entry["type"] == "item" else int(ShopData.GEAR[id]["level"])
+	var need: int = int(entry.get("level", 1)) if entry["type"] != "gear" else int(ShopData.GEAR[id]["level"])
 	if _player.level < need:
 		_player.message.emit(Strings.SKILL_LOCKED % need)
+		return
+	if entry["type"] == "mount":
+		if not MountRules.can_buy(_player.level, _player.gold, _player.horse_owned) or not _player.spend_gold(int(entry["price"])):
+			return
+		_player.horse_owned = true
+		_player.message.emit(Strings.MOUNT_BOUGHT)
+		Sfx.ui("buy")
+		_refresh()
 		return
 	if entry["type"] == "item":
 		if not _player.spend_gold(int(entry["price"])):

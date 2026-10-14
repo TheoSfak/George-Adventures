@@ -53,6 +53,8 @@ static func draw(ci: CanvasItem, rect: Rect2, icon: String, color: Color) -> voi
 			_fish(ci, c, s, color)
 		"food":
 			_food(ci, c, s, color)
+		"horseshoe":
+			_horseshoe(ci, c, s, color)
 		"cloud":
 			_cloud(ci, c, s, color)
 		"rain":
@@ -76,6 +78,14 @@ static func _food(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
 	_rect(ci, c, s, -0.66, -0.06, 1.32, 0.10, color.lightened(0.25))                                                          # its rim
 	for x in [-0.28, 0.0, 0.28]:                                                                                              # steam
 		ci.draw_line(c + Vector2(x, -0.12) * s, c + Vector2(x + 0.07, -0.55) * s, Color(1, 1, 1, 0.65), maxf(1.5, 0.06 * s))
+
+
+## A horseshoe: an open arc (gap at the top) with a few nail dots.
+static func _horseshoe(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	ci.draw_arc(c + Vector2(0.0, s * 0.05), s * 0.58, deg_to_rad(-65.0), deg_to_rad(245.0), 28, color, maxf(s * 0.26, 2.0))
+	for a in [-35.0, 0.0, 35.0, 145.0, 180.0, 215.0]:
+		var d := Vector2(cos(deg_to_rad(a)), sin(deg_to_rad(a))) * s * 0.58
+		ci.draw_circle(c + Vector2(0.0, s * 0.05) + d, maxf(s * 0.06, 1.0), Color(0.1, 0.07, 0.03))
 
 
 static func _cloud(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
