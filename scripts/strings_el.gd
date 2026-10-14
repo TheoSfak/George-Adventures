@@ -221,6 +221,7 @@ const CREDITS_LINES := [
 	["Δημιουργοί", "Theodore Sfakianakis & George Sfakianakis"],
 	["Σχεδιασμός και προγραμματισμός", "Με τη βοήθεια τεχνητής νοημοσύνης (Claude της Anthropic)"],
 	["Γραφικά", "KayKit της Kay Lousberg (CC0): Adventurers, Skeletons, Medieval Hexagon, Dungeon Remastered, Furniture Bits, Halloween Bits"],
+	["Άλογο", "Quaternius, Farm Animals Animated (CC0)"],
 	["Μηχανή παιχνιδιού", "Godot Engine (άδεια MIT)"],
 	["Ήχοι και μουσική", "Δημιουργήθηκαν από τα δικά μας scripts (Python και numpy)"],
 ]

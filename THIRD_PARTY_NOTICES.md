@@ -10,6 +10,12 @@ Medieval Hexagon, Dungeon Remastered, Furniture Bits and Halloween Bits. They ar
 `assets/characters`, `assets/furniture`, `assets/graveyard`, `assets/items` and
 `assets/world`. License: https://creativecommons.org/publicdomain/zero/1.0/
 
+## Quaternius "Farm Animals Animated" — CC0 1.0 (public domain dedication)
+
+The horse model (`assets/animals/Horse.fbx`) comes from the free pack "LowPoly Animated Animals"
+by Quaternius (https://quaternius.itch.io/lowpoly-animated-animals). License:
+https://creativecommons.org/publicdomain/zero/1.0/
+
 ## Godot Engine — MIT License
 
 The exported game contains the Godot Engine (https://godotengine.org). Godot's own

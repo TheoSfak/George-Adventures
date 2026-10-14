@@ -5,7 +5,7 @@ extends Node3D
 ## characters), with Idle / Walk / Run / Jump picked by the speed the rider gives it.
 
 const MODEL := "res://assets/animals/Horse.fbx"
-const TARGET_LENGTH := 2.5          # nose to tail in metres after scaling
+const TARGET_LENGTH := 3.2          # nose to tail in metres after scaling
 const SEAT_HEIGHT := 1.35           # how high George's model sits above the ground while riding (tuned by eye in mountshot)
 const FACING_FLIP := false          # true if the model's head points toward -Z
 const WALK_MAX := 11.0              # up to this speed (m/s) the horse walks, above it it runs
