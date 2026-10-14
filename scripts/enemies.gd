@@ -45,7 +45,7 @@ const KINDS := {
 	},
 	# Skeleton brute: big, slow, hits very hard
 	"brute": {
-		"kind_id": "brute", "tint_color": Color(0.75, 0.15, 0.12, 0.30), "model_scale": 1.4,
+		"kind_id": "brute", "respawn_after": 60.0, "tint_color": Color(0.75, 0.15, 0.12, 0.30), "model_scale": 1.4,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
 		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
@@ -80,9 +80,9 @@ const KINDS := {
 		"enrage_below": 0.5, "enrage_summon": "warrior",
 		"xp_reward": 500, "gold_min": 120, "gold_max": 160, "potion_chance": 1.0,
 	},
-	# Quest bosses (they do not respawn)
+	# Quest bosses (they come back one minute after they die: "respawn_after")
 	"captain": {
-		"kind_id": "captain", "respawn": false,
+		"kind_id": "captain", "respawn_after": 60.0,
 		"display_name": "Λοχαγός των Νεκρών", "model_scale": 1.6,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
@@ -92,7 +92,7 @@ const KINDS := {
 		"xp_reward": 120, "gold_min": 40, "gold_max": 60, "potion_chance": 1.0,
 	},
 	"king": {
-		"kind_id": "king", "respawn": false,
+		"kind_id": "king", "respawn_after": 60.0,
 		"display_name": "Βασιλιάς των Οστών", "model_scale": 2.3,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
@@ -122,7 +122,7 @@ const KINDS := {
 		"xp_reward": 40, "gold_min": 6, "gold_max": 14, "potion_chance": 0.35,
 	},
 	"warden_bone": {
-		"kind_id": "warden_bone", "respawn": false, "quest": "wardens", "tint_color": Color(0.85, 0.9, 1.0, 0.20),
+		"kind_id": "warden_bone", "respawn_after": 60.0, "quest": "wardens", "tint_color": Color(0.85, 0.9, 1.0, 0.20),
 		"display_name": "Φύλακας των Οστών", "model_scale": 2.1,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
@@ -133,7 +133,7 @@ const KINDS := {
 		"xp_reward": 320, "gold_min": 70, "gold_max": 110, "potion_chance": 1.0,
 	},
 	"warden_flame": {
-		"kind_id": "warden_flame", "respawn": false, "quest": "wardens", "tint_color": Color(1.0, 0.45, 0.10, 0.38),
+		"kind_id": "warden_flame", "respawn_after": 60.0, "quest": "wardens", "tint_color": Color(1.0, 0.45, 0.10, 0.38),
 		"display_name": "Φύλακας της Φλόγας", "model_scale": 2.0,
 		"model_path": CHAR + "Skeleton_Mage.glb",
 		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
@@ -143,7 +143,7 @@ const KINDS := {
 		"xp_reward": 320, "gold_min": 70, "gold_max": 110, "potion_chance": 1.0,
 	},
 	"warden_shadow": {
-		"kind_id": "warden_shadow", "respawn": false, "quest": "wardens", "tint_color": Color(0.35, 0.12, 0.55, 0.45),
+		"kind_id": "warden_shadow", "respawn_after": 60.0, "quest": "wardens", "tint_color": Color(0.35, 0.12, 0.55, 0.45),
 		"display_name": "Φύλακας της Σκιάς", "model_scale": 1.9,
 		"model_path": CHAR + "Skeleton_Rogue.glb",
 		"weapon_path": WEAPONS + "Skeleton_Crossbow.gltf",
@@ -154,7 +154,7 @@ const KINDS := {
 	},
 	# The last boss: fires orbs from afar and calls skeleton helpers
 	"necromancer": {
-		"kind_id": "necromancer", "respawn": false, "quest": "necro", "tint_color": Color(0.20, 0.90, 0.40, 0.32),
+		"kind_id": "necromancer", "respawn_after": 60.0, "quest": "necro", "tint_color": Color(0.20, 0.90, 0.40, 0.32),
 		"display_name": "Αρχιερέας της Σκιάς", "model_scale": 2.3,
 		"model_path": CHAR + "Skeleton_Mage.glb",
 		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
@@ -166,7 +166,7 @@ const KINDS := {
 	},
 	# --- the Frontier beyond the mountains (placed by frontier.gd)
 	"shadow_knight": {
-		"kind_id": "shadow_knight", "tint_color": Color(0.30, 0.20, 0.55, 0.34), "model_scale": 1.3,
+		"kind_id": "shadow_knight", "respawn_after": 60.0, "tint_color": Color(0.30, 0.20, 0.55, 0.34), "model_scale": 1.3,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
 		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
@@ -186,7 +186,7 @@ const KINDS := {
 	},
 	# Mini-boss of the fortress courtyard
 	"giant_skeleton": {
-		"kind_id": "giant_skeleton", "respawn": false, "quest": "f_wall", "tint_color": Color(0.55, 0.50, 0.65, 0.28),
+		"kind_id": "giant_skeleton", "respawn_after": 60.0, "quest": "f_wall", "tint_color": Color(0.55, 0.50, 0.65, 0.28),
 		"display_name": "Γιγάντιος Σκελετός", "model_scale": 2.6,
 		"model_path": CHAR + "Skeleton_Warrior.glb",
 		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
@@ -198,7 +198,7 @@ const KINDS := {
 	},
 	# The last boss: orbs from afar, and when he is hurt badly he calls shadow knights and speeds up
 	"malakar": {
-		"kind_id": "malakar", "respawn": false, "quest": "f_malakar", "tint_color": Color(0.45, 0.10, 0.70, 0.36),
+		"kind_id": "malakar", "respawn_after": 60.0, "quest": "f_malakar", "tint_color": Color(0.45, 0.10, 0.70, 0.36),
 		"display_name": "Μαλάκαρ ο Σκοτεινός Άρχοντας", "model_scale": 2.5,
 		"model_path": CHAR + "Skeleton_Mage.glb",
 		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
@@ -263,8 +263,6 @@ func _ready() -> void:
 
 func _spawn(index: int) -> void:
 	var s: Array = SPAWNS[index]
-	if not KINDS[s[0]].get("respawn", true) and SaveGame.boss_defeated(s[0]):
-		return                            # this boss was killed in an earlier session
 	var enemy := _make(s[0], Vector3(s[1], 0.05, s[2]))
 	enemy.died.connect(_on_enemy_died.bind(index))
 	add_child(enemy)
@@ -274,18 +272,21 @@ func _make(kind: String, pos: Vector3) -> Enemy:
 	var enemy := ENEMY_SCENE.instantiate() as Enemy
 	var stats: Dictionary = KINDS[kind]
 	for key in stats:
-		if key != "respawn" and key != "quest":
+		if key != "respawn" and key != "respawn_after" and key != "quest":
 			enemy.set(key, stats[key])
 	enemy.position = _free_spot(pos)
 	return enemy
 
 
-## A creature of the catacombs (catacombs.gd calls this once the rooms exist). Ordinary
-## ones come back after a long while; the bosses stay dead once their quest is done.
+## A creature of the catacombs or the Frontier (they call this once the rooms exist). Ordinary
+## ones come back after a long while, the bosses and big ones after `respawn_after` (60 s).
+## A quest boss is unique: while one is alive no second one appears.
 func spawn_extra(kind: String, pos: Vector3) -> Enemy:
 	var stats: Dictionary = KINDS[kind]
-	if not stats.get("respawn", true) and SaveGame.boss_defeated(kind) and Quests.state[stats["quest"]] == Quests.S.DONE:
-		return null
+	if stats.has("quest"):
+		for e in get_tree().get_nodes_in_group("enemies"):
+			if e.kind_id == kind and not e.is_dead():
+				return e
 	var enemy := _make(kind, pos)
 	enemy.died.connect(_on_extra_died.bind(kind, pos))
 	add_child(enemy)
@@ -328,12 +329,11 @@ func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
 	Quests.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
 	if KINDS[kind].get("respawn", true):
-		await get_tree().create_timer(respawn_time * 2.0).timeout
-		while player and player.global_position.distance_to(home) < 30.0:
-			await get_tree().create_timer(5.0).timeout
+		await get_tree().create_timer(KINDS[kind].get("respawn_after", respawn_time * 2.0)).timeout
+		var clear := 40.0 if kind in BOSSES else 30.0
+		while player and player.global_position.distance_to(home) < clear:
+			await get_tree().create_timer(5.0).timeout     # never respawn in George's face
 		spawn_extra(kind, home)
-	else:
-		SaveGame.note_boss(kind)
 
 
 ## A night invader: marches on the well, dies for good (index -1: no respawn).
@@ -358,8 +358,6 @@ func _on_enemy_died(enemy: Enemy, index: int) -> void:
 	_drop_loot(enemy)
 	if index >= 0 and KINDS[SPAWNS[index][0]].get("respawn", true):
 		_respawn_later(index)
-	elif index >= 0:
-		SaveGame.note_boss(enemy.kind_id)
 
 
 func _drop_loot(enemy: Enemy) -> void:
@@ -394,10 +392,12 @@ func _drop(pickup: Pickup, at: Vector3) -> void:
 
 
 func _respawn_later(index: int) -> void:
-	await get_tree().create_timer(respawn_time).timeout
+	var kind: String = SPAWNS[index][0]
+	await get_tree().create_timer(KINDS[kind].get("respawn_after", respawn_time)).timeout
 	var home := Vector3(SPAWNS[index][1], 0.0, SPAWNS[index][2])
 	var player := get_tree().get_first_node_in_group("player") as Node3D
-	while player and player.global_position.distance_to(home) < 25.0:
+	var clear := 40.0 if kind in BOSSES else 25.0
+	while player and player.global_position.distance_to(home) < clear:
 		await get_tree().create_timer(5.0).timeout  # never respawn in George's face
 	_spawn(index)
 

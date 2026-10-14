@@ -629,9 +629,6 @@ func _continue_game() -> void:
 	_title = false
 	_close_menu_silent()
 	SaveGame.apply(data)
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if SaveGame.boss_defeated(String(e.get("kind_id"))) and not e.is_in_group("invaders"):
-			e.queue_free()                 # a boss killed in an earlier session
 	Sfx.ui("heal")
 
 
