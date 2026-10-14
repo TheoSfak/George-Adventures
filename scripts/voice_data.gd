@@ -38,14 +38,18 @@ const NPC_PROFILES := {
 }
 
 
-## Profile for the speaker name shown in the dialogue box; "" when that speaker has no voice
-## (villagers and stage musicians have random names and stay silent).
+## Profile for the speaker name shown in the dialogue box; "" when that speaker has no voice.
 static func profile_for(speaker: String) -> String:
 	if speaker == Strings.NARRATOR:
 		return "narrator"
 	for id in QuestData.NPCS:
 		if QuestData.NPCS[id]["name"] == speaker:
 			return NPC_PROFILES.get(id, "")
+	# the ambient villagers, tavern regulars, stall vendors and musicians: the voice follows the name's gender
+	if speaker in VillagerData.NAMES_FEMALE or VillagerData.SQUARE_SPEAKERS.get(speaker, "") == "f":
+		return "woman"
+	if speaker in VillagerData.NAMES_MALE or VillagerData.SQUARE_SPEAKERS.get(speaker, "") == "m":
+		return "man"
 	return ""
 
 
@@ -61,8 +65,10 @@ static func path(profile: String, text: String) -> String:
 
 
 ## Every voiced line of the game as [{"speaker", "profile", "text"}], without duplicates: the prologue
-## (narrator), the idle lines of each NPC, the shop greetings, and the offer / progress / complete lines of
-## every quest, said by the NPC that Quests.dialogue_for() lets say them.
+## (narrator), the idle lines of each NPC, the shop greetings, the offer / progress / complete lines of
+## every quest, said by the NPC that Quests.dialogue_for() lets say them, and what the villagers answer
+## (any ambient villager or regular may say any gossip / drink line, so those exist in both voices;
+## vendors and musicians have their own lines).
 static func lines() -> Array:
 	var out: Array = []
 	var seen := {}
@@ -86,6 +92,16 @@ static func lines() -> Array:
 			_add(out, seen, turn_in, text)
 		for text in q.get("complete", []):
 			_add(out, seen, turn_in, text)
+	for text in VillagerData.GOSSIP + VillagerData.DRINK_LINES:
+		_add(out, seen, VillagerData.NAMES_MALE[0], text)
+		_add(out, seen, VillagerData.NAMES_FEMALE[0], text)
+	for vendor in VillagerData.VENDOR_CALLOUT:
+		for text in VillagerData.vendor_talk(vendor):
+			_add(out, seen, vendor, text)
+	for musician in VillagerData.SQUARE_SPEAKERS:
+		if not VillagerData.VENDOR_CALLOUT.has(musician):
+			for text in VillagerData.MUSICIAN_TALK:
+				_add(out, seen, musician, text)
 	return out
 
 

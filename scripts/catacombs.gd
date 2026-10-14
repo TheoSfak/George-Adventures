@@ -139,11 +139,20 @@ func build() -> void:
 	_build_door()
 	_build_gate()
 	_build_pickups()
+	_build_nav()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_spawn_creatures()
 	Quests.changed.connect(_on_quests_changed)
 	_on_quests_changed()
+
+
+## The walkable-ground grid the creatures use to get round pillars and corners (see nav_grid.gd).
+func _build_nav() -> void:
+	var size := Vector2(GRID) * CELL
+	var grid := NavGrid.build([_root], Rect2(Vector2(ORIGIN.x, ORIGIN.z) - size * 0.5, size))
+	grid.prepare(true)
+	NavGrid.set_region("catacombs", grid)
 
 
 func _carve(r: Rect2i) -> void:
@@ -479,6 +488,7 @@ func _build_gate() -> void:
 	box.size = Vector3(2 * CELL, HEIGHT, 0.6)
 	shape.shape = box
 	body.add_child(shape)
+	body.set_meta("nav_ignore", true)       # the gate dissolves later: the navigation grid must not remember it
 	body.position = wp(GATE_CELL.x, GATE_CELL.y, HEIGHT / 2.0)
 	_gate.add_child(body)
 	var wall := MeshInstance3D.new()

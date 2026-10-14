@@ -638,6 +638,83 @@ def _(rng, i):
     return out
 
 
+# --- creatures made from props (golem, haunted tree, pumpkin, mimic)
+
+@sfx("stone_hit", 3, 0.9)
+def _(rng, i):
+    d = 0.4
+    n = int(d * S.SR)
+    crack = S.bandpass(nz(d, rng), 900 + 200 * i, 700) * S.expdecay(n, 0.02)
+    grind = S.lowpass(S.bandpass(nz(d, rng), 220, 160), 500) * S.expdecay(n, 0.12) * 1.4
+    return crack * 0.9 + grind + thump(70 - 8 * i, d) * 0.9
+
+
+@sfx("stone_death", 2, 0.95)
+def _(rng, i):
+    d = 1.5
+    out = np.zeros(int(d * S.SR))
+    S.place(out, thump(55, 0.6) * 1.1, 0.0)
+    t0 = 0.05
+    while t0 < d - 0.3:
+        n = int(0.09 * S.SR)
+        S.place(out, S.bandpass(nz(0.09, rng), rng.uniform(300, 1800), 500) * S.expdecay(n, 0.03), t0, rng.uniform(0.4, 1.0))
+        t0 += rng.uniform(0.04, 0.16)
+    S.place(out, thump(45, 0.5) * 0.9, 0.9)
+    return S.reverb(out, 0.9, 0.18)[:len(out)]
+
+
+@sfx("wood_hit", 3, 0.85)
+def _(rng, i):
+    d = 0.35
+    n = int(d * S.SR)
+    knock = S.partials(190 + 40 * i, d, [1, 2.4, 4.1], [1.0, 0.5, 0.25], [0.09, 0.05, 0.03])
+    creak = S.lowpass(S.saw(S.pitch_curve(150, 260 + 30 * i, 0.3, 2.0), 0.3, 18), 1200) * swell(int(0.3 * S.SR), 0.5) * 0.5
+    out = np.zeros(n)
+    S.place(out, knock, 0.0)
+    S.place(out, creak, 0.04)
+    S.place(out, click(0.02, 1400, rng) * 1.5, 0.0)
+    return out
+
+
+@sfx("wood_death", 2, 0.9)
+def _(rng, i):
+    d = 1.3
+    out = np.zeros(int(d * S.SR))
+    for k in range(7):
+        S.place(out, click(0.03, rng.uniform(500, 1500), rng) * 2.0, 0.08 * k + rng.uniform(0, 0.03), rng.uniform(0.5, 1.0))
+        S.place(out, S.partials(rng.uniform(120, 220), 0.25, [1, 2.2], [1.0, 0.4], [0.08, 0.04]), 0.08 * k, 0.8)
+    creak = S.lowpass(S.saw(S.pitch_curve(220, 70, 0.9, 2.5), 0.9, 18), 900) * swell(int(0.9 * S.SR), 0.35) * 0.6
+    S.place(out, creak, 0.2)
+    S.place(out, thump(60, 0.5) * 0.9, 0.9)
+    return out
+
+
+@sfx("squish_hit", 3, 0.8)
+def _(rng, i):
+    return S.mix(plop(rng, 520 + 80 * i, 140, 0.22) * 1.3, thump(110, 0.12) * 0.4)
+
+
+@sfx("squish_death", 2, 0.85)
+def _(rng, i):
+    d = 0.9
+    out = np.zeros(int(d * S.SR))
+    for k in range(5):
+        S.place(out, plop(rng, rng.uniform(500, 900), rng.uniform(120, 220), 0.2), 0.11 * k, 1.0 - 0.12 * k)
+    S.place(out, S.lowpass(nz(0.5, rng), 600) * S.expdecay(int(0.5 * S.SR), 0.2) * 0.8, 0.0)
+    return out
+
+
+@sfx("mimic_snap", 3, 0.9)
+def _(rng, i):
+    d = 0.5
+    out = np.zeros(int(d * S.SR))
+    for k in range(2):
+        S.place(out, S.partials(260 - 30 * i, 0.18, [1, 2.1, 3.3], [1.0, 0.6, 0.3], [0.05, 0.03, 0.02]), 0.18 * k, 1.0)
+        S.place(out, click(0.025, 2200, rng) * 2.2, 0.18 * k)
+    S.place(out, roar(0.35, 120 + 20 * i, 70, rng, 0.3) * 0.5, 0.0)
+    return out
+
+
 @sfx("skel_aggro", 2, 0.7)
 def _(rng, i):
     d = 0.7

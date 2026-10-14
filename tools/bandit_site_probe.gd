@@ -3,7 +3,7 @@ extends SceneTree
 ##   godot --path . --headless --script tools/bandit_site_probe.gd
 const ZONES := [Vector2(-175, 20), Vector2(140, 125), Vector2(0, -178), Vector2(172, -40), Vector2(63, 53),
 		Vector2(-70, 108), Vector2(-70, 65), Vector2(0, 0), Vector2(-100, -54), Vector2(95, -79), Vector2(-93, 30),
-		Vector2(95, 39), Vector2(0, -59), Vector2(-59, -10), Vector2(59, -12)]
+		Vector2(95, 39), Vector2(0, -59), Vector2(-59, -10), Vector2(59, -12), Vector2(-140, -90)]
 
 
 func _initialize() -> void:

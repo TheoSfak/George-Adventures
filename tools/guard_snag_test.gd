@@ -75,4 +75,12 @@ func _run() -> void:
 	_box(arena, Vector3(6.5, 1.5, -4.5), Vector3(1, 3, 4))      # a spur on the right of the wall
 	var t_spur := await walk_home(arena, start, start + Vector3(0, 0, -14))
 	check("a spur on one side still gets the guard around (%.1f s)" % t_spur, t_spur > 0.0)
+
+	# 4. the same wall and spur with a navigation grid (nav_grid.gd): the guard plans its way round, no guessing of a side
+	var grid := NavGrid.build([arena], Rect2(7950, 7950, 100, 100))
+	grid.prepare()
+	NavGrid.set_region("arena", grid)
+	var t_nav := await walk_home(arena, start, start + Vector3(0, 0, -14))
+	check("with a navigation grid the guard walks round the wall and the spur (%.1f s)" % t_nav, t_nav > 0.0 and t_nav < 9.0)
+	NavGrid.clear_regions()
 	quit(1 if failed else 0)

@@ -172,7 +172,7 @@ const MAP_PLACES := {
 	"church": "Εκκλησία", "tavern": "Ταβέρνα", "market": "Παζάρι", "smith": "Σιδηρουργείο",
 	"mill": "Πριονιστήριο", "windmill": "Μύλος", "tower": "Πύργος Φρουράς", "well": "Πηγάδι",
 	"camp": "Δυτικό Στρατόπεδο", "quarry": "Λατομείο", "crypt": "Παλιά Κρύπτη", "bigtree": "Η Λίμνη του Αιωνόβιου",
-	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών",
+	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών", "cult": "Ξέφωτο της Σέκτας",
 }
 
 const MUSIC_ON := "Μουσική: ενεργή  [F7]"
@@ -255,6 +255,7 @@ const SET_MUSIC := "Μουσική"
 const SET_SFX := "Εφέ"
 const SET_AMBIENT := "Περιβάλλον"
 const SET_VOICE := "Φωνές"
+const MIMIC_REVEAL := "Το σεντούκι ήταν Μίμικ!"
 const SET_DEVICE := "Συσκευή ήχου"
 const SET_KEYS := "Πλήκτρα  (κλικ σε ένα πλήκτρο και μετά πάτα το νέο)"
 const SET_PRESS := "Πάτα πλήκτρο…"

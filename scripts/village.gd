@@ -73,7 +73,7 @@ const QUEST_ITEMS := [
 # Bone totems (quest "Τα Οστέινα Τοτέμ"): x, z. They only stand while the quest is active.
 const TOTEMS := [Vector2(-175.0, 27.0), Vector2(153.0, 133.0), Vector2(17.0, -142.0)]   # the quarry one used to stand inside a rock (147, 135)
 
-# [x, z, rotation, golden, gold_min, gold_max, potions]   (more chests are inside the houses)
+# [x, z, rotation, golden, gold_min, gold_max, potions, optional: true = a mimic]   (more chests are inside the houses)
 const CHESTS := [
 	[-186.0, 14.0, 80, false, 15, 35, 1],      # west camp
 	[152.0, 116.0, 200, true, 30, 60, 2],      # quarry
@@ -83,6 +83,10 @@ const CHESTS := [
 	[92.0, 120.0, 250, false, 8, 20, 0],       # south-east farm track
 	[-100.0, 130.0, 0, false, 10, 24, 1],      # south-west pines
 	[-135.0, -95.0, 30, true, 150, 250, 2],    # the bandits' hideout (BanditCamp.CHEST)
+	[CultSite.CHEST.x, CultSite.CHEST.y, 200, true, 120, 200, 2],   # the cult's ritual circle
+	[-30.0, -135.0, 200, false, 10, 20, 0, true],   # a mimic by the road to the crypt
+	[128.0, -52.0, 120, false, 10, 20, 0, true],    # a mimic in the east meadow
+	[160.0, 100.0, 60, false, 10, 20, 0, true],     # a mimic at the quarry
 ]
 
 # [text, x, z, rotation in degrees (the board faces +Z when 0)]
@@ -92,6 +96,7 @@ const SIGNPOSTS := [
 	["Το Μεγάλο Δέντρο  →", 112.0, -44.0, 270],
 	["Παλιά Κρύπτη  ↑\nΚίνδυνος!", 14.0, -118.0, 0],
 	["Κρησφύγετο Ληστών  ↖\nΚίνδυνος!", -118.0, -74.0, 42],
+	["Ξέφωτο της Σέκτας  ↖\nΚίνδυνος!", CultSite.SIGN.x, CultSite.SIGN.y, 20],
 ]
 
 const CAMP := Vector2(-175.0, 20.0)
@@ -142,6 +147,8 @@ func _ready() -> void:
 	_build_totems()
 	_build_stable()
 	_build_bandit_camp()
+	_build_cult_site()
+	_build_pumpkin_patch()
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_terrain_details()
@@ -149,6 +156,16 @@ func _ready() -> void:
 	_finish_terrain()
 	_build_clouds()
 	_build_night_lights()
+	_build_nav()
+
+
+## The walkable-ground grid enemies and guards use to get around houses and trees (see nav_grid.gd). It is
+## prepared on worker threads; until it is ready they walk straight as before.
+func _build_nav() -> void:
+	var half := Vector2(HEX_W * (radius + 1.0), ROW_H * (radius + 1.0))
+	var grid := NavGrid.build([self], Rect2(-half, half * 2.0))
+	grid.prepare(true)
+	NavGrid.set_region("village", grid)
 
 
 func _process(delta: float) -> void:
@@ -390,6 +407,73 @@ func _build_bandit_camp() -> void:
 	_occupy(c.x, c.y, BanditCamp.RADIUS)
 
 
+## The cult's ritual circle in the north-west forest: dark ground, a ring of candles, skull posts, a shrine as the altar
+## with a red glow, banners and heaps of bones. The creatures are in Enemies.SPAWNS, the quest is "cult".
+func _build_cult_site() -> void:
+	var holder := Node3D.new()
+	holder.name = "CultSite"
+	add_child(holder)
+	var c := CultSite.CENTER
+	_terrain.add_patch(c, 21.0, Color(0.24, 0.17, 0.19), false, Color(0.12, 0.08, 0.10))
+	var flame_mat := StandardMaterial3D.new()
+	flame_mat.albedo_color = Color(1.0, 0.55, 0.15)
+	flame_mat.emission_enabled = true
+	flame_mat.emission = Color(1.0, 0.5, 0.1)
+	flame_mat.emission_energy_multiplier = 3.5
+	flame_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	var flame_mesh := SphereMesh.new()
+	flame_mesh.radius = 0.1
+	flame_mesh.height = 0.3
+	for i in 16:
+		var a := TAU * float(i) / 16.0
+		var p := c + Vector2(cos(a), sin(a)) * 11.5
+		_place_abs(GRAVE + "candle_triple.gltf", Vector3(p.x, 0.0, p.y), rad_to_deg(-a), 1.6, holder)
+		var flame := MeshInstance3D.new()
+		flame.mesh = flame_mesh
+		flame.material_override = flame_mat
+		flame.position = Vector3(p.x, 1.3, p.y)
+		holder.add_child(flame)
+	for i in 4:
+		var a := TAU * float(i) / 4.0 + PI / 4.0
+		var p := c + Vector2(cos(a), sin(a)) * 15.5
+		var post := _place_abs(GRAVE + "post_skull.gltf", Vector3(p.x, 1.29 * 0.9, p.y), rad_to_deg(-a) + 90.0, 0.9, holder)
+		_add_cylinder_collider(post, 0.5, 2.8, Vector3(0.0, -1.0, 0.0))
+	var altar := _place_abs(GRAVE + "shrine_candles.gltf", Vector3(CultSite.ALTAR.x, 0.0, CultSite.ALTAR.y), 0.0, 2.6, holder)
+	_add_box_collider(altar, 0.8)
+	var glow := OmniLight3D.new()
+	glow.position = Vector3(CultSite.ALTAR.x, 3.2, CultSite.ALTAR.y + 2.0)
+	glow.light_color = Color(0.95, 0.18, 0.30)
+	glow.light_energy = 2.2
+	glow.omni_range = 24.0
+	holder.add_child(glow)
+	for off in [-7.0, 7.0]:
+		_place_abs(ITEMS + "banner_red.gltf.glb", Vector3(CultSite.ALTAR.x + off, 0.0, CultSite.ALTAR.y - 1.5), 0.0, 2.6, holder)
+	for e in [[GRAVE + "ribcage.gltf", -6.0, 2.0, 30.0, 1.8], [GRAVE + "skull.gltf", 5.0, 4.0, 200.0, 1.3],
+			[GRAVE + "bone_C.gltf", -4.0, 6.0, 70.0, 1.8], [GRAVE + "bone_A.gltf", 7.0, -2.0, 140.0, 1.8],
+			[GRAVE + "skull.gltf", -8.0, -4.0, 20.0, 1.2], [GRAVE + "ribcage.gltf", 8.0, 7.0, 250.0, 1.8]]:
+		_place_abs(e[0], Vector3(c.x + e[1], 0.0, c.y + e[2]), float(e[3]), float(e[4]), holder)
+	_occupy(c.x, c.y, CultSite.RADIUS)
+
+
+## A tilled patch beside the road to the crypt full of pumpkins; five of them are alive (Enemies.SPAWNS, kind pumpkin).
+func _build_pumpkin_patch() -> void:
+	var holder := Node3D.new()
+	holder.name = "PumpkinPatch"
+	add_child(holder)
+	var c := CultSite.PATCH
+	_terrain.add_patch(c, 10.5, Color(0.36, 0.27, 0.16), false, Color(0.22, 0.16, 0.10))
+	var rng := RandomNumberGenerator.new()             # its own sequence: the world's random numbers must not shift
+	rng.seed = 4412
+	var kinds := ["pumpkin_orange.gltf", "pumpkin_yellow.gltf", "pumpkin_orange_small.gltf", "pumpkin_yellow_small.gltf",
+			"pumpkin_orange_jackolantern.gltf", "pumpkin_yellow_jackolantern.gltf"]
+	for i in 18:
+		var a := rng.randf() * TAU
+		var d := rng.randf_range(1.0, CultSite.PATCH_RADIUS)
+		var p := c + Vector2(cos(a), sin(a)) * d
+		_place_abs(GRAVE + kinds[rng.randi() % kinds.size()], Vector3(p.x, 0.0, p.y), rng.randf() * 360.0, rng.randf_range(0.8, 1.15), holder)
+	_occupy(c.x, c.y, CultSite.PATCH_RADIUS + 6.0)
+
+
 func _build_quarry() -> void:
 	# The quarry in the south-east, home of the skeleton captain.
 	var holder := Node3D.new()
@@ -544,6 +628,7 @@ func _build_chests_items_signs() -> void:
 		chest.gold_min = c[4]
 		chest.gold_max = c[5]
 		chest.potions = c[6]
+		chest.mimic = c.size() > 7 and bool(c[7])
 		chests.add_child(chest)
 		_occupy(c[0], c[1], 3.0)
 	var items := Node3D.new()
@@ -959,6 +1044,20 @@ func _add_box_collider(root: Node3D, shrink: float = 0.9) -> void:
 	shape.position = a.get_center()
 	body.add_child(shape)
 	root.add_child(body)
+	# The collider is smaller than the model so that George can squeeze between houses; the camera must not follow
+	# him into the walls, so a full-size shell that only the spring arm sees keeps it outside the visible house.
+	if shrink < 0.99:
+		var shell := StaticBody3D.new()
+		shell.name = "CameraShell"
+		shell.collision_layer = Player.CAMERA_LAYER
+		shell.collision_mask = 0
+		var shell_shape := CollisionShape3D.new()
+		var shell_box := BoxShape3D.new()
+		shell_box.size = Vector3(a.size.x, maxf(a.size.y, 0.5), a.size.z)
+		shell_shape.shape = shell_box
+		shell_shape.position = a.get_center()
+		shell.add_child(shell_shape)
+		root.add_child(shell)
 
 
 func _add_cylinder_collider(root: Node3D, r: float, h: float, offset: Vector3) -> void:
