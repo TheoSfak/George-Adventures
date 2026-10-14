@@ -75,12 +75,6 @@ const LOOPED: Array[String] = [
 	"Jump_Idle", "Blocking", "Walking_Backwards", "Sit_Chair_Idle",
 ]
 
-const COMBO: Array[String] = [
-	"1H_Melee_Attack_Slice_Diagonal",
-	"1H_Melee_Attack_Slice_Horizontal",
-	"1H_Melee_Attack_Chop",
-]
-
 @onready var _model_root: Node3D = $Model
 @onready var _rig: Node3D = $CameraRig
 @onready var _arm: SpringArm3D = $CameraRig/SpringArm3D
@@ -161,6 +155,12 @@ var _last_prompt := ""
 var _stun := 0.0
 var _slow_time := 0.0           # a soul collector's shot: George moves slower for a while
 var _attack_serial := 0
+var _upper: UpperBodyLayer      # the sword swings of a running George (legs keep running), see upper_body_layer.gd
+var _swing_layer := false       # the current swing plays on the upper-body layer
+var _free_swing := false        # the current swing is a normal combo hit: George may keep moving
+var _lunge_time := 0.0          # the stab steps forward
+var _lunge_dir := Vector3.ZERO
+var _lunge_speed := 0.0
 var _invulnerable := 0.0
 var _step_dist := 0.0
 
@@ -206,6 +206,8 @@ func _load_model() -> void:
 		if _anim.has_animation(anim_name):
 			_anim.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 	_anim.animation_finished.connect(_on_animation_finished)
+	_upper = UpperBodyLayer.new()
+	_upper.setup(_anim, CombatTiming.animations())
 	_play("Idle")
 
 
@@ -292,12 +294,18 @@ func _physics_process(delta: float) -> void:
 		_attack_queued = 0.25
 	if _mount_swallow > 0.0:
 		_attack_queued = 0.0
-	if can_act and on_floor and not _blocking and _attack_queued > 0.0 and not _attacking:
-		_attack_queued = 0.0
-		_start_attack()
 	_combo_timer -= delta
 	if _combo_timer <= 0.0 and not _attacking:
 		_combo_index = 0
+	if not _attacking:
+		_free_swing = false
+		if _swing_layer:
+			_swing_layer = false
+			if _upper != null:
+				_upper.stop()
+	if can_act and on_floor and not _blocking and _attack_queued > 0.0 and not _attacking:
+		_attack_queued = 0.0
+		_start_attack()
 
 	# --- Steering ---
 	# Right mouse: George always faces where the camera looks, A/D strafe.
@@ -351,13 +359,17 @@ func _physics_process(delta: float) -> void:
 		speed *= 0.6  # backing up is slower
 	var target := dir * speed
 	if _attacking:
-		target = Vector3.ZERO
+		target = target * CombatTiming.SWING_MOVE_FACTOR if _free_swing else Vector3.ZERO
 	elif _blocking:
 		target *= 0.3
 	# Being hit knocks George back, so let the knockback decay instead of snapping to zero.
 	var accel := acceleration if _stun <= 0.0 else 6.0
 	velocity.x = move_toward(velocity.x, target.x, accel * delta)
 	velocity.z = move_toward(velocity.z, target.z, accel * delta)
+	if _lunge_time > 0.0:                    # the step of the stab
+		_lunge_time -= delta
+		velocity.x = _lunge_dir.x * _lunge_speed
+		velocity.z = _lunge_dir.z * _lunge_speed
 	if _dash_time > 0.0:
 		velocity.x = _dash_dir.x * 30.0
 		velocity.z = _dash_dir.z * 30.0
@@ -480,25 +492,44 @@ func _fade_near_characters() -> void:
 
 func _start_attack(skill: String = "") -> void:
 	_attacking = true
-	_assist_aim()
-	_combo_timer = 1.4
+	var moving := Vector2(velocity.x, velocity.z).length() > 1.0
+	_assist_aim(moving)
+	_combo_timer = CombatTiming.COMBO_WINDOW
 	Sfx.play("sword_swing", global_position, -2.0)
+	var swing_speed := CombatTiming.speed(stats.total("attack_speed"))
 	if skill == "power_strike":
-		_play("1H_Melee_Attack_Chop", 0.05, true)
 		attacked.emit(2)
-		get_tree().create_timer(sword_hit_delay + 0.05).timeout.connect(_swing_hits.bind(_attack_serial_next(), sword_damage * 2.2 * (1.0 + stats.total("ps_mult")), 11.0))
+		_swing(CombatTiming.POWER_STRIKE, swing_speed, moving, sword_damage * 2.2 * (1.0 + stats.total("ps_mult")))
 		return
 	var idx := _combo_index
-	_combo_index = (_combo_index + 1) % COMBO.size()
-	_play(COMBO[idx], 0.06)
+	_combo_index = CombatTiming.next_index(idx)
+	var step: Dictionary = CombatTiming.COMBO[idx]
 	attacked.emit(idx)
-	# The third hit of the combo is a heavy chop.
-	var damage := sword_damage * (1.5 if idx == COMBO.size() - 1 else 1.0)
-	get_tree().create_timer(sword_hit_delay).timeout.connect(_swing_hits.bind(_attack_serial_next(), damage))
+	_swing(step, swing_speed, moving, sword_damage * float(step["damage"]))
+
+
+## One blow of the combo (combat_timing.gd): the animation plays faster than normal, the blade lands early and
+## George may move on at `commit`. A running George swings with the upper body only (upper_body_layer.gd).
+func _swing(step: Dictionary, swing_speed: float, moving: bool, damage: float) -> void:
+	_free_swing = true
+	_swing_layer = moving and _upper != null and _upper.has_animation(step["anim"])
+	if _swing_layer:
+		_upper.play(step["anim"], 0.05, swing_speed)
+	else:
+		_play(step["anim"], 0.06, true, swing_speed)
+	var serial := _attack_serial_next()
+	get_tree().create_timer(CombatTiming.hit_delay(step, swing_speed)).timeout.connect(_swing_hits.bind(serial, damage, float(step["knock"]), bool(step["around"])))
+	get_tree().create_timer(CombatTiming.commit_delay(step, swing_speed)).timeout.connect(_end_skill_attack.bind(serial))
+	if float(step["lunge"]) > 0.0:
+		_lunge_dir = _facing()
+		_lunge_time = CombatTiming.LUNGE_TIME
+		# the speed that carries him `lunge` metres in all, counting the slide while he slows down again
+		var reach := float(step["lunge"])
+		_lunge_speed = acceleration * (sqrt(CombatTiming.LUNGE_TIME * CombatTiming.LUNGE_TIME + 2.0 * reach / acceleration) - CombatTiming.LUNGE_TIME)
 
 
 ## Swinging at something close but not quite in front turns George toward it.
-func _assist_aim() -> void:
+func _assist_aim(moving: bool = false) -> void:
 	var best: Enemy = null
 	var best_dist := sword_reach + 1.0
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -508,7 +539,10 @@ func _assist_aim() -> void:
 			best = e as Enemy
 	if best and not _game_rmb:  # with right mouse held the camera aims
 		var to := best.global_position - global_position
-		_heading = atan2(to.x, to.z)
+		var want := atan2(to.x, to.z)
+		if moving and absf(angle_difference(_heading, want)) > deg_to_rad(60.0):
+			return                  # a running George does not swing sideways, he swings the way he runs
+		_heading = want
 		_model_root.rotation.y = _heading
 
 
@@ -518,7 +552,7 @@ func _attack_serial_next() -> int:
 
 
 ## Damages every enemy in the cone in front of George, unless the swing was interrupted.
-func _swing_hits(serial: int, damage: float, knock: float = 5.0) -> void:
+func _swing_hits(serial: int, damage: float, knock: float = 5.0, around: bool = false) -> void:
 	if serial != _attack_serial or not _attacking or is_dead:
 		return
 	var forward := _facing()
@@ -529,10 +563,10 @@ func _swing_hits(serial: int, damage: float, knock: float = 5.0) -> void:
 		var dist := to_enemy.length()
 		if dist > sword_reach:
 			continue
-		if dist > 0.8 and forward.dot(to_enemy / dist) < sword_arc:
-			continue
+		if not around and dist > 0.8 and forward.dot(to_enemy / dist) < sword_arc:
+			continue                # the spinning finisher hits all around him
 		_hit(enemy, damage, knock)
-	_hit_breakables(damage, sword_reach, true)
+	_hit_breakables(damage, sword_reach, not around)
 
 
 ## Totems and other breakable objects take the same blows as skeletons. `reach` is measured
@@ -1458,7 +1492,7 @@ func _respawn() -> void:
 
 
 func _update_animation() -> void:
-	if _anim == null or _attacking or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
+	if _anim == null or (_attacking and not _swing_layer) or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
 		return
 	if mounted:
 		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
@@ -1481,16 +1515,16 @@ func _update_animation() -> void:
 		_play("Idle", 0.2)
 
 
-func _play(anim_name: String, blend: float = 0.15, restart: bool = false) -> void:
+func _play(anim_name: String, blend: float = 0.15, restart: bool = false, speed: float = 1.0) -> void:
 	if _anim == null or not _anim.has_animation(anim_name):
 		return
 	if not restart and _anim.current_animation == anim_name and _anim.is_playing():
 		return
-	_anim.play(anim_name, blend)
+	_anim.play(anim_name, blend, speed)
 
 
 func _on_animation_finished(anim_name: StringName) -> void:
-	if anim_name in COMBO or anim_name == &"1H_Melee_Attack_Chop" or anim_name == &"2H_Melee_Attack_Spin" or anim_name == &"2H_Melee_Attack_Spinning":
+	if String(anim_name) in CombatTiming.animations() or anim_name == &"2H_Melee_Attack_Spin":
 		_attacking = false
 	elif anim_name == &"Jump_Land":
 		_landing = false
