@@ -25,6 +25,14 @@ const SKILLS := {
 		"name": "Εφόρμηση", "level": 5, "cooldown": 12.0, "icon": "arrow", "color": Color(0.92, 0.34, 0.32),
 		"desc": "Ορμάς μπροστά, χτυπάς και ζαλίζεις όσους βρεθούν στον δρόμο σου.",
 	},
+	"thunder_strike": {
+		"name": "Κεραυνός των Αρχαίων", "level": 15, "cooldown": 14.0, "icon": "bolt", "color": Color(0.35, 0.85, 1.0),
+		"desc": "Ένα καταστροφικό χτύπημα κεραυνού: 2.8x ζημιά και ζαλίζει όλους τους εχθρούς μπροστά σου για 2 δευτερόλεπτα.",
+	},
+	"battle_cry": {
+		"name": "Πολεμική Κραυγή", "level": 25, "cooldown": 30.0, "icon": "shout", "color": Color(1.0, 0.40, 0.20),
+		"desc": "Εμψυχώνει τον Γιώργο: αυξάνει τη ζημιά κατά 30% και την ταχύτητα επίθεσης κατά 15% για 12 δευτερόλεπτα.",
+	},
 	# --- skills learned in the talent tree (see talent_data.gd); "talent" is the node that unlocks them
 	"taunt": {
 		"name": "Κραυγή Πρόκλησης", "level": 1, "talent": "g_taunt", "cooldown": 22.0, "icon": "shout", "color": Color(0.45, 0.72, 1.0),

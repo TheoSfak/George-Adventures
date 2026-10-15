@@ -38,6 +38,8 @@ const SPAWNS := [
 	["shadow_knight", -14.0, 104.0], ["shadow_knight", 16.0, 94.0], ["soul_collector", -24.0, 88.0],
 	["shadow_knight", 20.0, 74.0], ["soul_collector", 26.0, 66.0], ["shadow_knight", -22.0, 62.0],
 	["shadow_knight", 12.0, 50.0], ["soul_collector", -16.0, 46.0],
+	["raider", -8.0, 98.0], ["raider", 10.0, 84.0], ["raider", -18.0, 72.0],
+	["raider", 18.0, 60.0], ["raider", -10.0, 52.0],
 	# the road between the camp and the fortress
 	["shadow_knight", -18.0, -44.0], ["shadow_knight", 18.0, -58.0], ["soul_collector", -26.0, -72.0],
 	["soul_collector", 24.0, -86.0], ["shadow_knight", 0.0, -100.0],
@@ -567,6 +569,11 @@ func _build_pickups() -> void:
 	elpida.rest_yaw = -0.8
 	elpida.position = wp(6.0, 3.0, 0.05)
 	_root.add_child(elpida)
+	var kyriakos := Npc.new()
+	kyriakos.npc_id = "kyriakos"
+	kyriakos.rest_yaw = 0.0
+	kyriakos.position = wp(0.0, -8.0, 0.05)
+	_root.add_child(kyriakos)
 
 
 func _spawn_creatures() -> void:

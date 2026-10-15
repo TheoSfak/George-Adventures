@@ -27,6 +27,8 @@ const FLAME := Vector2(0.0, -192.0)                   # the Flame of the Keeper 
 
 # Where the three Shards of the Flame (quest "Τα Θραύσματα της Φλόγας") lie
 const SHARDS := [Vector2(-56.0, 76.0), Vector2(54.0, -24.0), Vector2(-48.0, -98.0)]
+# Where the four Crystals of Lava (quest "Οι Κρύσταλλοι της Λάβας") lie along the banks
+const CRYSTALS := [Vector2(-28.0, -52.0), Vector2(26.0, -50.0), Vector2(-12.0, -70.0), Vector2(32.0, -68.0)]
 
 # [x, z, rotation in degrees, golden, gold_min, gold_max, potions]
 const CHESTS := [
@@ -746,6 +748,14 @@ func _build_pickups() -> void:
 			continue
 		var item := QuestItem.new()
 		item.item_id = "shard"
+		item.position = pos
+		_root.add_child(item)
+	for c in CRYSTALS:
+		var pos := wp(c.x, c.y)
+		if SaveGame.collected_items.has("crystal@" + SaveGame.key_for(pos)):
+			continue
+		var item := QuestItem.new()
+		item.item_id = "crystal"
 		item.position = pos
 		_root.add_child(item)
 	# the two people of the Shelter

@@ -126,6 +126,8 @@ var _leap_time := 0.0
 var _leaping := false
 var _leap_clock := 0.0
 var _crit_notice := 0.0
+var _battle_cry_time := 0.0
+var _active_set_tier := 0
 var potions: int:                # health potions (kept for older code)
 	get:
 		return consumables["health"]
@@ -546,13 +548,17 @@ func _fade_near_characters() -> void:
 			_fading.erase(c)
 
 
+func attack_speed_stat() -> float:
+	return stats.total("attack_speed") + (0.15 if _battle_cry_time > 0.0 else 0.0)
+
+
 func _start_attack(skill: String = "") -> void:
 	_attacking = true
 	var moving := Vector2(velocity.x, velocity.z).length() > 1.0
 	_assist_aim(moving)
 	_combo_timer = CombatTiming.COMBO_WINDOW
 	Sfx.play("sword_swing", global_position, -2.0)
-	var swing_speed := CombatTiming.speed(stats.total("attack_speed"))
+	var swing_speed := CombatTiming.speed(attack_speed_stat())
 	if skill == "power_strike":
 		attacked.emit(2)
 		_swing(CombatTiming.POWER_STRIKE, swing_speed, moving, sword_damage * 2.2 * (1.0 + stats.total("ps_mult")))
@@ -1124,7 +1130,9 @@ func apply_reward(reward: Dictionary) -> void:
 
 ## Adds up equipment and talent modifiers into max_health and sword_damage.
 func _recalc() -> void:
+	var set_t := ShopData.set_tier(equipped)
 	stats.set_source("equip", ShopData.equipment_mods(equipped))
+	stats.set_source("set_bonus", ShopData.set_bonus_mods(set_t))
 	stats.set_source("talents", TalentData.mods_for(talents))
 	stats.set_source("food", ShopData.meal_mods(food))
 	var old_max := max_health
@@ -1134,6 +1142,11 @@ func _recalc() -> void:
 		health += max_health - old_max
 	health = minf(health, max_health)
 	health_changed.emit(health, max_health)
+	if set_t != _active_set_tier:
+		_active_set_tier = set_t
+		if set_t > 0:
+			var mods := ShopData.set_bonus_mods(set_t)
+			message.emit(Strings.MSG_SET_BONUS % [ShopData.set_bonus_name(set_t), int(mods.get("hp_add", 0.0)), int(mods.get("defense", 0.0) * 100), int(mods.get("damage_mult", 0.0) * 100)])
 
 
 func spend_gold(amount: int) -> bool:
@@ -1274,6 +1287,7 @@ func _tick_timers(delta: float) -> void:
 	_pet_buff_time = maxf(_pet_buff_time - delta, 0.0)
 	_special_time = maxf(_special_time - delta, 0.0)
 	_frenzy_time = maxf(_frenzy_time - delta, 0.0)
+	_battle_cry_time = maxf(_battle_cry_time - delta, 0.0)
 	_shout_time = maxf(_shout_time - delta, 0.0)
 	_wall_time = maxf(_wall_time - delta, 0.0)
 	if not food.is_empty():
@@ -1352,6 +1366,8 @@ func buff_time(id: String) -> float:
 			return _guard_time
 		"frenzy":
 			return _frenzy_time
+		"battle_cry":
+			return _battle_cry_time
 		"shout":
 			return _shout_time
 		"wall":
@@ -1373,6 +1389,8 @@ func _damage_mult() -> float:
 		m *= 1.6
 	if _frenzy_time > 0.0:
 		m *= 1.25
+	if _battle_cry_time > 0.0:
+		m *= 1.30
 	return m
 
 
@@ -1412,6 +1430,7 @@ const SKILL_SOUNDS := {
 	"power_strike": "skill_heavy", "whirlwind": "skill_whirl", "guard": "skill_shield", "prayer": "skill_blessing",
 	"charge": "skill_dash", "taunt": "skill_shout", "wall": "skill_wall", "frenzy": "skill_frenzy",
 	"leap": "skill_dash", "flame": "skill_flame", "sanctuary": "skill_holy_circle",
+	"thunder_strike": "thunder", "battle_cry": "skill_shout",
 }
 
 
@@ -1427,7 +1446,7 @@ func use_skill(id: String) -> bool:
 		return false
 	if cooldown_left(id) > 0.0:
 		return false
-	var melee := id == "power_strike" or id == "whirlwind" or id == "charge" or id == "leap"
+	var melee := id == "power_strike" or id == "whirlwind" or id == "charge" or id == "leap" or id == "thunder_strike"
 	if melee and (_attacking or not is_on_floor() or _blocking):
 		return false
 	_cooldowns[id] = cooldown_total(id)
@@ -1437,7 +1456,7 @@ func use_skill(id: String) -> bool:
 			_start_attack("power_strike")
 		"whirlwind":
 			_attacking = true
-			var speed := CombatTiming.speed(stats.total("attack_speed"))
+			var speed := CombatTiming.speed(attack_speed_stat())
 			_play("2H_Melee_Attack_Spin" if _anim and _anim.has_animation("2H_Melee_Attack_Spin") else "1H_Melee_Attack_Slice_Horizontal", 0.05, true, speed)
 			var serial := _attack_serial_next()
 			get_tree().create_timer(0.4 / speed).timeout.connect(_whirl_hits.bind(serial, sword_damage * 1.4))
@@ -1515,7 +1534,43 @@ func use_skill(id: String) -> bool:
 			_spawn_sanctuary_visual()
 			message.emit(Strings.MSG_SANCTUARY)
 			_ring_effect(Color(1.0, 0.92, 0.5), 5.0, 0.6, 0.1)
+		"thunder_strike":
+			_attacking = true
+			var speed := CombatTiming.speed(attack_speed_stat())
+			_play("2H_Melee_Attack_Chop" if _anim and _anim.has_animation("2H_Melee_Attack_Chop") else "1H_Melee_Attack_Chop", 0.05, true, speed)
+			var serial := _attack_serial_next()
+			get_tree().create_timer(0.35 / speed).timeout.connect(_thunder_strike_hit.bind(serial, sword_damage * 2.8))
+			get_tree().create_timer(0.8 / speed).timeout.connect(_end_skill_attack.bind(serial))
+			_ring_effect(Color(0.35, 0.85, 1.0), 6.5, 0.5, 0.4)
+			message.emit(Strings.MSG_THUNDER_STRIKE)
+		"battle_cry":
+			_battle_cry_time = 12.0
+			message.emit(Strings.MSG_BATTLE_CRY)
+			_ring_effect(Color(1.0, 0.45, 0.2), 5.0, 0.5, 0.3)
+			_cheer()
 	return true
+
+
+func _thunder_strike_hit(serial: int, damage: float) -> void:
+	if serial != _attack_serial or not _attacking or is_dead or _stun > 0.0:
+		return
+	var forward := _facing()
+	var landed := false
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var enemy := e as Enemy
+		var to_enemy := enemy.global_position - global_position
+		to_enemy.y = 0.0
+		var dist := to_enemy.length()
+		if dist > 6.0:
+			continue
+		if dist > 0.8 and forward.dot(to_enemy / dist) < 0.2:
+			continue
+		_hit(enemy, damage, 12.0, 2.0)
+		landed = true
+	_hit_breakables(damage, 6.0, true)
+	if landed:
+		Sfx.play("thunder", global_position, 0.0)
+		_ring_effect(Color(0.4, 0.9, 1.0), 3.5, 0.35, 0.8)
 
 
 func _cheer() -> void:

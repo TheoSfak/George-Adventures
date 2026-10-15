@@ -59,6 +59,12 @@ func interact(_player: Player) -> void:
 	if opened:
 		return
 	opened = true
+	var beam := find_child("VictoryBeam", true, false)
+	if beam:
+		beam.queue_free()
+	var vlight := find_child("VictoryLight", true, false)
+	if vlight:
+		vlight.queue_free()
 	SaveGame.note_chest(global_position)
 	Sfx.play("chest_open", global_position)
 	if _lid:

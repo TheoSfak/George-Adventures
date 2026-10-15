@@ -399,3 +399,46 @@ static func equipment_mods(equipped: Dictionary) -> Dictionary:
 		if id != "":
 			out = Stats.merge(out, GEAR[id]["mods"])
 	return out
+
+
+## Returns tier (1..10) if weapon, armor and shield are all equipped and share the same tier (>= 2). Otherwise 0.
+static func set_tier(equipped: Dictionary) -> int:
+	var w: String = equipped.get("weapon", "")
+	var a: String = equipped.get("armor", "")
+	var s: String = equipped.get("shield", "")
+	if w == "" or a == "" or s == "":
+		return 0
+	if not GEAR.has(w) or not GEAR.has(a) or not GEAR.has(s):
+		return 0
+	var tw: int = int(GEAR[w]["tier"])
+	var ta: int = int(GEAR[a]["tier"])
+	var ts: int = int(GEAR[s]["tier"])
+	if tw == ta and ta == ts and tw >= 2:
+		return tw
+	return 0
+
+
+## Greek name for each matching gear tier set.
+static func set_bonus_name(tier: int) -> String:
+	match tier:
+		2: return "Σετ Ατσαλιού"
+		3: return "Σετ του Αγίου"
+		4: return "Βασιλικό Σετ"
+		5: return "Σετ του Σταυροφόρου"
+		6: return "Σετ του Μυθικού Ατσαλιού"
+		7: return "Σετ του Δρακοκτόνου"
+		8: return "Σετ του Φωτός"
+		9: return "Σετ των Τιτάνων"
+		10: return "Σετ της Αιώνιας Φλόγας"
+		_: return "Σετ Εξοπλισμού"
+
+
+## Modifiers granted by a full matching gear set of tier >= 2.
+static func set_bonus_mods(tier: int) -> Dictionary:
+	if tier < 2:
+		return {}
+	return {
+		"hp_add": 20.0 * float(tier),
+		"defense": 0.04 + 0.006 * float(tier),
+		"damage_mult": 0.04 + 0.006 * float(tier),
+	}

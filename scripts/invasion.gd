@@ -59,7 +59,7 @@ func start(night_number: int) -> void:
 	waves_total = InvasionBoss.total_waves(night, WAVES)
 	_alive.clear()
 	_wave_size = 0
-	_say(Strings.INVASION_BANNER, 5.0)
+	_say(theme_banner(night), 5.0)
 	Sfx.ui("invasion_horn")
 	for k in 3:
 		get_tree().create_timer(0.8 + k * 3.2).timeout.connect(func(): Sfx.ui("bell_toll", -3.0))
@@ -162,7 +162,7 @@ func _spawn_wave() -> void:
 	if spawner == null:
 		return
 	var level: int = player.level if player else 1
-	var pool := _kind_pool(level)
+	var pool := _kind_pool(level, night)
 	var gates := GATES.duplicate()
 	gates.shuffle()
 	if InvasionBoss.is_boss_night(night) and wave == waves_total:
@@ -187,8 +187,27 @@ func _spawn_wave() -> void:
 	_emit()
 
 
-## The kinds an ordinary invader can be, by George's level.
-func _kind_pool(level: int) -> Array:
+## Greek banner announcement for the night's theme.
+static func theme_banner(night_num: int) -> String:
+	if InvasionBoss.is_boss_night(night_num):
+		return Strings.INVASION_BANNER
+	match (night_num - 1) % 5:
+		1: return Strings.INVASION_THEME_SHADOWS
+		2: return Strings.INVASION_THEME_GIANTS
+		3: return Strings.INVASION_THEME_CULT
+		_: return Strings.INVASION_BANNER
+
+
+## The kinds an ordinary invader can be, by George's level and night theme.
+func _kind_pool(level: int, night_num: int = 1) -> Array:
+	var theme := (night_num - 1) % 5
+	if not InvasionBoss.is_boss_night(night_num):
+		if theme == 1:
+			return ["rogue", "rogue", "bandit_archer", "bandit_thief", "thief"]
+		elif theme == 2:
+			return ["warrior", "warrior", "brute", "dark_knight"]
+		elif theme == 3:
+			return ["mage", "cultist", "cultist", "witch"]
 	var pool := ["minion", "minion", "warrior", "warrior"]
 	if level >= 3:
 		pool.append_array(["rogue", "rogue"])
@@ -225,9 +244,11 @@ func _spawn_boss_wave(spawner: Node, pool: Array, gates: Array) -> void:
 ## Captain Βασίλης sends his guards to the well: 2, plus one for each of his quests George finished.
 func _spawn_guards() -> void:
 	var count := 2
-	for id in ["archers", "mages", "brutes", "totems"]:
-		if Quests.state[id] == Quests.S.DONE:
-			count += 1
+	var q_node = get_node_or_null("/root/Quests")
+	if q_node != null:
+		for id in ["archers", "mages", "brutes", "totems"]:
+			if int(q_node.state.get(id, -1)) == 4:
+				count += 1
 	var holder := get_parent().get_node_or_null("Enemies")
 	if holder == null:
 		return
@@ -266,7 +287,9 @@ func _succeed() -> void:
 			player.collect("power_potion", 1)
 			player.collect("speed_potion", 1)
 	_spawn_reward_chest(boss_night)
-	Quests.report_defense()
+	var q_node = get_node_or_null("/root/Quests")
+	if q_node != null and q_node.has_method("report_defense"):
+		q_node.report_defense()
 	_say(Strings.INVASION_BOSS_WON if boss_night else Strings.INVASION_WON, 5.0)
 	Sfx.ui("village_saved")
 	_emit()
@@ -314,12 +337,42 @@ func _spawn_reward_chest(boss_night: bool = false) -> void:
 	var chest := Chest.new()
 	chest.golden = true
 	var share := 2 if boss_night else 1
-	chest.gold_min = (30 + 15 * night) * share
-	chest.gold_max = (50 + 25 * night) * share
-	chest.potions = 1
+	chest.gold_min = (60 + 35 * night) * share
+	chest.gold_max = (100 + 55 * night) * share
+	chest.potions = 1 + mini(night / 2, 4) * share
 	chest.position = Vector3(6.0, 0.05, 8.0)
 	chest.rotation_degrees.y = 200.0
+
+	var beam := MeshInstance3D.new()
+	beam.name = "VictoryBeam"
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.4
+	cyl.bottom_radius = 0.65
+	cyl.height = 36.0
+	beam.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_color = Color(1.0, 0.85, 0.3, 0.22)
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	beam.material_override = mat
+	beam.position = Vector3(0.0, 18.0, 0.0)
+	beam.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	chest.add_child(beam)
+
+	var light := OmniLight3D.new()
+	light.name = "VictoryLight"
+	light.light_color = Color(1.0, 0.88, 0.45)
+	light.light_energy = 2.5
+	light.omni_range = 8.0
+	light.position.y = 1.6
+	chest.add_child(light)
+
 	(chests if chests else get_parent()).add_child(chest)
+	var hud := get_tree().get_first_node_in_group("hud")
+	if hud:
+		hud.show_message(Strings.INVASION_REWARD_CHEST)
 
 
 func _say(text: String, seconds: float) -> void:

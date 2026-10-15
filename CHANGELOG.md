@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.11.0 (2026-10-15) — Combat skills & gear sets, new side quests, and themed invasions
+**New in this version**
+- **Combat & Gear System Expansion:**
+  - **High-tier skills:**
+    - **Κεραυνός των Αρχαίων (Ancient Thunder Strike):** Level 15 offensive skill (14s cooldown). Strikes a cone in front of George with divine lightning for 280% damage, stunning non-boss foes for 2.0s with crackling electric impact particles.
+    - **Πολεμική Κραυγή (Battle Cry):** Level 25 combat buff (30s cooldown). George lets out an inspiring battle shout, empowering his strikes with +30% damage and +15% attack speed for 12 seconds.
+  - **Gear Set Bonuses:** Equipping matching tiers of weapon, armor, and shield (tier 2 through 10) activates potent full set bonuses granting bonus maximum health, increased damage percentage, and armor defense mitigation with distinct Greek on-screen activation banners.
+- **Side Quests & NPCs:**
+  - **Frontier Outpost Scout:** New scout NPC **Κυριάκος ο Πρόσκοπος** stationed at the Refugee Camp in The Frontier with the quest **Οι Επιδρομείς του Βουνού** (`f_patrols`), tasking George with repelling 5 mountain raiders threatening supply trails.
+  - **Ash Valley Molten Crystals:** Damianos at the Lava Shelter offers the quest **Οι Κρύσταλλοι της Λάβας** (`a_crystals`), sending George along the treacherous molten riverbanks to recover 4 glowing lava crystals.
+- **Invasion Themes & Morning Victory Chest:**
+  - **Themed Invasion Nights:** Beyond the Night Lord boss nights, regular village invasions feature atmospheric themed incursions:
+    - Night 2: **Εισβολή Σκιών (Invasion of Shadows)** with swarms of agile rogues and sneaky thieves.
+    - Night 3: **Επέλαση Γιγάντων (March of Giants)** with heavy brutes, warriors, and dark knights.
+    - Night 4: **Νύχτα Αιρετικών (Night of the Cult)** featuring dark mages, cultists, and witches.
+  - **Morning Victory Chest:** Successfully defending the village spawns an enriched golden victory chest at dawn in the village square, crowned by a radiant vertical beacon beam and glowing warm light visible from afar, filled with scaled gold and healing draughts.
+- New test: `v111_features_test` (headless, 42 assertions, all pass).
+
 ## 1.10.0 (2026-10-15) — Village animals, upgraded stable, market audio & night ambushes
 **New in this version**
 - **Village Animals & Living World:**
