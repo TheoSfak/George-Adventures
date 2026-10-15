@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.14.1 (2026-10-15) — Parkour Collision Fixes, Start Stairs & Fullscreen Mode
+**New in this version**
+- **Village Parkour Starting Area & Collision Overhaul:**
+  - Resolved physical collision blockers where obstacles overlapped solid building collision boxes (tavern, NW house, church, and windmill). All platforms and walkways are now guaranteed 100% collision-free.
+  - Replaced obstructed tavern crates with an 8-step wooden staircase positioned on the open lawn East of the tavern ($X = -49.5$), rising up to a $4.05\text{m}$ landing terrace for effortless climbing.
+  - Added [InteractSpot] interaction to the start signpost (`[R]`) in addition to stepping on the start pad.
+  - Configured trigger areas with `collision_mask = 1 | 2` so George (layer 2) triggers start and return areas immediately.
+  - Fixed ground-level fall detection loop at checkpoint 0, allowing natural ascent on the starting staircase.
+  - Fixed `[R]` shortcut keybinding to use the proper `"interact"` action for checkpoint respawns.
+  - Automated integration testing with `tools/parkour_probe.gd` verifying 45 physical collision, raycast, and traversal checks (100% pass).
+- **Default Fullscreen Display Mode:**
+  - Game window now loads in full screen by default on initial start and configuration.
+
 ## 1.14.0 (2026-10-15) — Village Rooftop Parkour (Roblox-style Obby) & Jump Pads
 **New in this version**
 - **Το Πάρκουρ των Στεγών & του Μύλου (Village Rooftop Parkour Obby):**
