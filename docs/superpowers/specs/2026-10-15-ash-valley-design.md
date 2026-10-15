@@ -1,6 +1,6 @@
 # Story part 4: the Ash Valley (a first slice for levels 20 to 40) — design
 
-Date: 2026-10-15. Status: **implemented on branch `dodge-bash`** (see "As built" at the end); approved by Theodore in chat (queue "3, then 5, then 4"; answers: **Part 4: a new region + story**, theme **Burning valley**, scope **a solid first slice**). No plan file (he works with spec only, then straight to implementation).
+Date: 2026-10-15. Status: **implemented and released in 1.7.0** (see "As built" at the end); approved by Theodore in chat (queue "3, then 5, then 4"; answers: **Part 4: a new region + story**, theme **Burning valley**, scope **a solid first slice**). No plan file (he works with spec only, then straight to implementation).
 
 ## Goal
 Real content for levels 21 to 40 (today those levels only make the old world tougher): a third outdoor region like the Frontier, with a camp, creatures, four quests and a boss, all scaled by `LevelScaling` on top of base stats tuned for a strong level-20 hero.
