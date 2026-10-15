@@ -110,6 +110,7 @@ var base_damage := 15.0
 var stats := Stats.new()         # equipment and talent modifiers (stats.gd)
 var gear_owned: Array[String] = []                       # ids from ShopData.GEAR that George owns
 var equipped := {"weapon": "", "armor": "", "shield": ""} # slot -> gear id ("" = George's own gear)
+var gear_upgrades := {"weapon": 0, "armor": 0, "shield": 0} # slot -> upgrade level (0..3)
 var fish_seen: Array[String] = []   # fish species caught at least once (the journal)
 var food := {}                   # the meal George ate: {"id": String, "time": seconds left}; empty = none
 var junk := {}                   # junk id -> count, sold at the market
@@ -548,6 +549,11 @@ func _fade_near_characters() -> void:
 			_fading.erase(c)
 
 
+func current_weapon_type() -> String:
+	var wid: String = equipped.get("weapon", "")
+	return ShopData.weapon_type(wid)
+
+
 func attack_speed_stat() -> float:
 	return stats.total("attack_speed") + (0.15 if _battle_cry_time > 0.0 else 0.0)
 
@@ -557,15 +563,17 @@ func _start_attack(skill: String = "") -> void:
 	var moving := Vector2(velocity.x, velocity.z).length() > 1.0
 	_assist_aim(moving)
 	_combo_timer = CombatTiming.COMBO_WINDOW
-	Sfx.play("sword_swing", global_position, -2.0)
+	var wtype := current_weapon_type()
+	var combo := CombatTiming.combo_for(wtype)
 	var swing_speed := CombatTiming.speed(attack_speed_stat())
 	if skill == "power_strike":
 		attacked.emit(2)
 		_swing(CombatTiming.POWER_STRIKE, swing_speed, moving, sword_damage * 2.2 * (1.0 + stats.total("ps_mult")))
 		return
-	var idx := _combo_index
-	_combo_index = CombatTiming.next_index(idx)
-	var step: Dictionary = CombatTiming.COMBO[idx]
+	var idx := _combo_index % combo.size()
+	_combo_index = CombatTiming.next_index(idx, wtype)
+	var step: Dictionary = combo[idx]
+	Sfx.play(step.get("sfx", "sword_swing"), global_position, -2.0)
 	attacked.emit(idx)
 	_swing(step, swing_speed, moving, sword_damage * float(step["damage"]))
 
@@ -763,17 +771,20 @@ func _swing_hits(serial: int, damage: float, knock: float = 5.0, around: bool = 
 	if serial != _attack_serial or not _attacking or is_dead:
 		return
 	var forward := _facing()
+	var wtype := current_weapon_type()
+	var reach := sword_reach * (1.35 if wtype == "2h" else (0.95 if wtype == "dual" else 1.0))
+	var arc := (sword_arc - 0.25) if wtype == "2h" else sword_arc
 	for e in get_tree().get_nodes_in_group("enemies"):
 		var enemy := e as Enemy
 		var to_enemy := enemy.global_position - global_position
 		to_enemy.y = 0.0
 		var dist := to_enemy.length()
-		if dist > sword_reach:
+		if dist > reach:
 			continue
-		if not around and dist > 0.8 and forward.dot(to_enemy / dist) < sword_arc:
+		if not around and dist > 0.8 and forward.dot(to_enemy / dist) < arc:
 			continue                # the spinning finisher hits all around him
 		_hit(enemy, damage, knock)
-	_hit_breakables(damage, sword_reach, not around)
+	_hit_breakables(damage, reach, not around)
 
 
 ## Totems and other breakable objects take the same blows as skeletons. `reach` is measured
@@ -1132,6 +1143,7 @@ func apply_reward(reward: Dictionary) -> void:
 func _recalc() -> void:
 	var set_t := ShopData.set_tier(equipped)
 	stats.set_source("equip", ShopData.equipment_mods(equipped))
+	stats.set_source("upgrades", ShopData.total_upgrade_mods(gear_upgrades))
 	stats.set_source("set_bonus", ShopData.set_bonus_mods(set_t))
 	stats.set_source("talents", TalentData.mods_for(talents))
 	stats.set_source("food", ShopData.meal_mods(food))
@@ -1147,6 +1159,29 @@ func _recalc() -> void:
 		if set_t > 0:
 			var mods := ShopData.set_bonus_mods(set_t)
 			message.emit(Strings.MSG_SET_BONUS % [ShopData.set_bonus_name(set_t), int(mods.get("hp_add", 0.0)), int(mods.get("defense", 0.0) * 100), int(mods.get("damage_mult", 0.0) * 100)])
+
+
+func upgrade_gear(slot: String) -> bool:
+	var cur_lvl: int = int(gear_upgrades.get(slot, 0))
+	if not ShopData.can_upgrade_slot(slot, cur_lvl, gold, junk):
+		message.emit(Strings.MSG_NO_UPGRADE_MATS)
+		Sfx.ui("error")
+		return false
+	var next_lvl := cur_lvl + 1
+	var cost: Dictionary = ShopData.UPGRADE_COSTS[next_lvl]
+	gold -= int(cost["gold"])
+	var mat: String = cost["material"]
+	junk[mat] = int(junk[mat]) - int(cost["count"])
+	if int(junk[mat]) <= 0:
+		junk.erase(mat)
+	gear_upgrades[slot] = next_lvl
+	_recalc()
+	Sfx.ui("craft_upgrade")
+	var slot_label: String = ShopData.SLOT_NAMES.get(slot, slot)
+	message.emit(Strings.MSG_UPGRADED % (slot_label + " +" + str(next_lvl)))
+	inventory_changed.emit(gold, potions)
+	gear_changed.emit()
+	return true
 
 
 func spend_gold(amount: int) -> bool:
@@ -1196,6 +1231,7 @@ const ARMOR_NODES: Array[String] = ["Knight_Body", "Knight_ArmLeft", "Knight_Arm
 func _update_equipment_visuals() -> void:
 	if _model == null:
 		return
+	var wtype := current_weapon_type()
 	var weapon_tier := _gear_tier("weapon")
 	var armor_tier := _gear_tier("armor")
 	var shield_tier := _gear_tier("shield")
@@ -1203,14 +1239,29 @@ func _update_equipment_visuals() -> void:
 	for n in _model.find_children("*", "MeshInstance3D", true, false):
 		var mi := n as MeshInstance3D
 		if mi.name in ["Round_Shield", "Badge_Shield", "Rectangle_Shield", "Spike_Shield"]:
-			mi.visible = mi.name == shield_name
+			mi.visible = (wtype == "1h") and (mi.name == shield_name)
 			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[shield_tier - 1], 0.28) if shield_tier >= 4 and mi.visible else null
 		elif mi.name == "1H_Sword":
-			mi.visible = weapon_tier < 3
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier == 2 else null
+			if wtype == "dual":
+				mi.visible = true
+				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+			elif wtype == "2h":
+				mi.visible = false
+			else:
+				mi.visible = weapon_tier < 3
+				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier == 2 else null
 		elif mi.name == "2H_Sword":
-			mi.visible = weapon_tier >= 3
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 3 else null
+			if wtype == "2h":
+				mi.visible = true
+				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+			elif wtype == "dual":
+				mi.visible = false
+			else:
+				mi.visible = weapon_tier >= 3
+				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 3 else null
+		elif mi.name == "1H_Sword_Offhand":
+			mi.visible = (wtype == "dual")
+			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 and mi.visible else null
 		elif mi.name in ARMOR_NODES:
 			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[armor_tier - 1], 0.07, 0.12) if armor_tier >= 2 else null
 

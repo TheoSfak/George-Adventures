@@ -140,6 +140,9 @@ func _ready() -> void:
 	_build_village()
 	_build_villagers()
 	add_child(VillageSquare.new())
+	var merchant = (load("res://scripts/traveling_merchant.gd") as GDScript).new()
+	merchant.name = "TravelingMerchant"
+	add_child(merchant)
 	_build_camp()
 	_build_quarry()
 	_build_crypt()

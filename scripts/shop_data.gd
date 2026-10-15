@@ -87,6 +87,30 @@ const GEAR := {
 		"mods": {"damage_add": 125, "crit": 0.20, "lifesteal": 0.10, "attack_speed": 0.28},
 		"desc": "Σφυρηλατημένο από τον Δαμιανό στη λάβα του Καταφυγίου. Καίει ό,τι αγγίζει.",
 	},
+	"weapon_2h_1": {
+		"name": "Βαρύ Δίχειρο Σπαθί", "slot": "weapon", "weapon_type": "2h", "tier": 3, "level": 10, "price": 750,
+		"mods": {"damage_add": 24, "crit": 0.08, "attack_speed": -0.04}, "desc": "Μακρύ δίχειρο σπαθί με σαρωτικό εύρος χτυπήματος.",
+	},
+	"weapon_2h_2": {
+		"name": "Δίχειρο της Καταιγίδας", "slot": "weapon", "weapon_type": "2h", "tier": 6, "level": 25, "price": 8500,
+		"mods": {"damage_add": 72, "crit": 0.16, "lifesteal": 0.06}, "desc": "Βαρύ δίχειρο σπαθί που συντρίβει πανοπλίες με ένα χτύπημα.",
+	},
+	"weapon_2h_3": {
+		"name": "Τιτάνιο Δίχειρο της Φλόγας", "slot": "weapon", "weapon_type": "2h", "tier": 10, "level": 40, "price": 68000,
+		"mods": {"damage_add": 175, "crit": 0.24, "lifesteal": 0.12}, "desc": "Κολοσσιαίο δίχειρο φτιαγμένο από ηφαιστειακό βασάλτη. Σαρώνει τα πάντα.",
+	},
+	"weapon_dual_1": {
+		"name": "Δίδυμες Ατσαλένιες Λεπίδες", "slot": "weapon", "weapon_type": "dual", "tier": 2, "level": 5, "price": 280,
+		"mods": {"damage_add": 7, "attack_speed": 0.14, "crit": 0.05}, "desc": "Ζευγάρι αιχμηρών λεπίδων για γρήγορα συνεχή χτυπήματα.",
+	},
+	"weapon_dual_2": {
+		"name": "Δίδυμες Λεπίδες του Ανέμου", "slot": "weapon", "weapon_type": "dual", "tier": 5, "level": 20, "price": 4500,
+		"mods": {"damage_add": 32, "attack_speed": 0.22, "crit": 0.12}, "desc": "Κινούνται τόσο γρήγορα που ο εχθρός βλέπει μόνο τον άνεμο.",
+	},
+	"weapon_dual_3": {
+		"name": "Δίδυμα Σπαθιά της Στάχτης", "slot": "weapon", "weapon_type": "dual", "tier": 9, "level": 40, "price": 52000,
+		"mods": {"damage_add": 95, "attack_speed": 0.35, "crit": 0.20, "lifesteal": 0.08}, "desc": "Δύο φλεγόμενες λεπίδες που κατακαίνε τους αντιπάλους σε μια θύελλα χτυπημάτων.",
+	},
 	"armor_5": {
 		"name": "Πανοπλία της Αυγής", "slot": "armor", "tier": 5, "level": 20, "price": 3500,
 		"mods": {"hp_add": 240, "defense": 0.28, "regen": 1.5}, "desc": "Ελαφριά σαν πρωινή ομίχλη, σκληρή σαν βράχος.",
@@ -144,6 +168,9 @@ const JUNK := {
 	"bone": {"name": "Κόκαλο", "price": 3, "color": Color(0.92, 0.90, 0.82), "icon": "bone", "desc": "Ένα καθαρό κόκαλο σκελετού."},
 	"rust": {"name": "Σκουριασμένη Λεπίδα", "price": 9, "color": Color(0.70, 0.45, 0.28), "icon": "sword", "desc": "Παλιό σίδερο· κάποιος θα το λιώσει."},
 	"charm": {"name": "Φυλαχτό των Νεκρών", "price": 25, "color": Color(0.55, 0.95, 0.65), "icon": "star", "desc": "Λάμπει με ένα ψυχρό πράσινο φως."},
+	"bone_shard": {"name": "Θραύσμα Οστού", "price": 8, "color": Color(0.90, 0.88, 0.82), "icon": "bone", "desc": "Σκληρό οστό κατάλληλο για ενίσχυση εξοπλισμού.", "material": true},
+	"iron_scrap": {"name": "Κομμάτι Σιδήρου", "price": 18, "color": Color(0.72, 0.74, 0.80), "icon": "sword", "desc": "Ακατέργαστο σίδερο για σφυρηλάτηση και ενίσχυση.", "material": true},
+	"lava_ember": {"name": "Αναμμένο Κάρβουνο", "price": 45, "color": Color(1.0, 0.45, 0.12), "icon": "star", "desc": "Ηφαιστειακό κάρβουνο που πάλλεται με μαγική θερμότητα.", "material": true},
 	# --- fish of the pond (fishing.gd). "zone" = share of the catch bar that counts as a hit, "speed" = bar widths
 	# per second of the marker, "weight" = how often it bites, "only" = "day" or "night" (missing = always).
 	"goby": {"name": "Γοβιός", "price": 6, "color": Color(0.75, 0.85, 0.95), "icon": "fish", "desc": "Μικρό και γρήγορο, ζει στα ρηχά.",
@@ -238,13 +265,17 @@ const SHOPS := {
 		],
 		"stock": [
 			{"type": "gear", "id": "weapon_1"}, {"type": "gear", "id": "weapon_2"},
-			{"type": "gear", "id": "weapon_3"}, {"type": "gear", "id": "weapon_4"},
+			{"type": "gear", "id": "weapon_dual_1"},
+			{"type": "gear", "id": "weapon_3"}, {"type": "gear", "id": "weapon_2h_1"}, {"type": "gear", "id": "weapon_4"},
 			{"type": "gear", "id": "armor_1"}, {"type": "gear", "id": "armor_2"},
 			{"type": "gear", "id": "armor_3"}, {"type": "gear", "id": "armor_4"},
 			{"type": "gear", "id": "shield_1"}, {"type": "gear", "id": "shield_2"},
 			{"type": "gear", "id": "shield_3"}, {"type": "gear", "id": "shield_4"},
-			{"type": "gear", "id": "weapon_5"}, {"type": "gear", "id": "weapon_6"}, {"type": "gear", "id": "weapon_7"},
+			{"type": "gear", "id": "weapon_5"}, {"type": "gear", "id": "weapon_dual_2"},
+			{"type": "gear", "id": "weapon_6"}, {"type": "gear", "id": "weapon_2h_2"},
+			{"type": "gear", "id": "weapon_7"},
 			{"type": "gear", "id": "weapon_8"}, {"type": "gear", "id": "weapon_9"},
+			{"type": "gear", "id": "weapon_dual_3"},
 			{"type": "gear", "id": "armor_5"}, {"type": "gear", "id": "armor_6"}, {"type": "gear", "id": "armor_7"},
 			{"type": "gear", "id": "armor_8"}, {"type": "gear", "id": "armor_9"},
 			{"type": "gear", "id": "shield_5"}, {"type": "gear", "id": "shield_6"}, {"type": "gear", "id": "shield_7"},
@@ -285,6 +316,7 @@ const SHOPS := {
 		],
 		"stock": [
 			{"type": "gear", "id": "weapon_10"},
+			{"type": "gear", "id": "weapon_2h_3"},
 			{"type": "gear", "id": "armor_10"},
 			{"type": "gear", "id": "shield_10"},
 			{"type": "item", "id": "health_big", "price": 85},
@@ -305,6 +337,25 @@ const SHOPS := {
 			{"type": "item", "id": "health_big", "price": 55, "level": 8},
 			{"type": "item", "id": "power", "price": 45},
 			{"type": "item", "id": "speed", "price": 35},
+		],
+		"buys": "junk",
+	},
+	# Traveling merchant wandering the island
+	"wandering": {
+		"title": "Πλανόδιος Έμπορος",
+		"keeper": "Κυρ-Παντελής",
+		"greeting": [
+			"Καλώς τον άξιο πολεμιστή! Έχω σπάνια υλικά για σφυρηλάτηση, γιατρικά και περίεργα καλούδια από τα ταξίδια μου!",
+		],
+		"stock": [
+			{"type": "junk", "id": "iron_scrap", "price": 28},
+			{"type": "junk", "id": "bone_shard", "price": 15},
+			{"type": "junk", "id": "lava_ember", "price": 75},
+			{"type": "gear", "id": "weapon_dual_2"},
+			{"type": "gear", "id": "weapon_2h_2"},
+			{"type": "item", "id": "health_big", "price": 60, "level": 5},
+			{"type": "item", "id": "power", "price": 50},
+			{"type": "item", "id": "speed", "price": 40},
 		],
 		"buys": "junk",
 	},
@@ -442,3 +493,60 @@ static func set_bonus_mods(tier: int) -> Dictionary:
 		"defense": 0.04 + 0.006 * float(tier),
 		"damage_mult": 0.04 + 0.006 * float(tier),
 	}
+
+
+# --- Equipment Upgrades (Crafting) ---
+const MAX_UPGRADE_LEVEL := 3
+
+const UPGRADE_COSTS := {
+	1: {"gold": 120, "material": "iron_scrap", "count": 2},
+	2: {"gold": 350, "material": "bone_shard", "count": 3},
+	3: {"gold": 900, "material": "lava_ember", "count": 2},
+}
+
+static func weapon_type(id: String) -> String:
+	return GEAR.get(id, {}).get("weapon_type", "1h")
+
+static func upgrade_mods(slot: String, level: int) -> Dictionary:
+	if level <= 0:
+		return {}
+	level = mini(level, MAX_UPGRADE_LEVEL)
+	match slot:
+		"weapon":
+			return {
+				"damage_mult": 0.12 * float(level),
+				"crit": 0.02 * float(level),
+			}
+		"armor":
+			return {
+				"hp_add": 50.0 * float(level),
+				"defense": 0.04 * float(level),
+			}
+		"shield":
+			return {
+				"hp_add": 30.0 * float(level),
+				"block_add": 0.03 * float(level),
+				"defense": 0.03 * float(level),
+			}
+	return {}
+
+static func total_upgrade_mods(upgrades: Dictionary) -> Dictionary:
+	var out := {}
+	for slot in SLOTS:
+		var lvl: int = int(upgrades.get(slot, 0))
+		if lvl > 0:
+			out = Stats.merge(out, upgrade_mods(slot, lvl))
+	return out
+
+static func can_upgrade_slot(slot: String, current_level: int, gold: int, junk: Dictionary) -> bool:
+	if current_level >= MAX_UPGRADE_LEVEL:
+		return false
+	var next_lvl := current_level + 1
+	var cost: Dictionary = UPGRADE_COSTS[next_lvl]
+	if gold < int(cost["gold"]):
+		return false
+	var mat: String = cost["material"]
+	if int(junk.get(mat, 0)) < int(cost["count"]):
+		return false
+	return true
+

@@ -100,14 +100,19 @@ func _refresh() -> void:
 	for c in _tabs.get_children():
 		c.queue_free()
 	var kitchen: bool = shop.get("kind", "") == "kitchen"
+	var is_forge: bool = _shop_id in ["blacksmith", "ash_forge"]
 	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
 	var stable: bool = shop.get("kind", "") == "stable"
 	if not stable:
-		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab != "buy", _set_tab.bind("cook" if kitchen else "sell")))
+		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab == "sell" or _tab == "cook", _set_tab.bind("cook" if kitchen else "sell")))
+	if is_forge:
+		_tabs.add_child(UiKit.tab_button(Strings.SHOP_TAB_UPGRADE, _tab == "upgrade", _set_tab.bind("upgrade")))
 	for c in _list.get_children():
 		c.queue_free()
 	if kitchen:
 		_build_kitchen_rows()
+	elif _tab == "upgrade" and is_forge:
+		_build_upgrade_rows()
 	elif _tab == "buy" or stable:
 		for entry in shop["stock"]:
 			_list.add_child(_buy_row(entry))
@@ -184,6 +189,13 @@ func _buy_row(entry: Dictionary) -> Control:
 			b.text = Strings.SHOP_LEVEL_NEEDED % need
 			b.disabled = true
 		var have := Strings.SHOP_HAVE % int(_player.consumables.get(id, 0))
+		return _row(info["icon"], info["color"], info["name"], info["desc"], "[color=#c9b98a]%s[/color]" % have,
+			Strings.SHOP_PRICE % price, _player.gold >= price, [b])
+	if entry["type"] == "junk":
+		var info: Dictionary = ShopData.JUNK[id]
+		var price: int = entry["price"]
+		var b := UiKit.button(Strings.SHOP_BUY_BUTTON, _buy.bind(entry), 120)
+		var have := Strings.SHOP_HAVE % int(_player.junk.get(id, 0))
 		return _row(info["icon"], info["color"], info["name"], info["desc"], "[color=#c9b98a]%s[/color]" % have,
 			Strings.SHOP_PRICE % price, _player.gold >= price, [b])
 	# equipment
@@ -309,6 +321,12 @@ func _buy(entry: Dictionary) -> void:
 		_player.consumables[id] = int(_player.consumables.get(id, 0)) + 1
 		_player.inventory_changed.emit(_player.gold, _player.potions)
 		_player.message.emit(Strings.SHOP_BOUGHT % SkillData.ITEMS[id]["name"])
+	elif entry["type"] == "junk":
+		if not _player.spend_gold(int(entry["price"])):
+			return
+		_player.junk[id] = int(_player.junk.get(id, 0)) + 1
+		_player.junk_changed.emit()
+		_player.message.emit(Strings.SHOP_BOUGHT % ShopData.JUNK[id]["name"])
 	else:
 		var g: Dictionary = ShopData.GEAR[id]
 		if _player.gear_owned.has(id) or not _player.spend_gold(int(g["price"])):
@@ -349,3 +367,64 @@ func _sell_gear(id: String) -> void:
 	Sfx.ui("sell")
 	_player.gear_changed.emit()
 	_refresh()
+
+
+func _build_upgrade_rows() -> void:
+	for slot in ShopData.SLOTS:
+		_list.add_child(_upgrade_row(slot))
+
+
+func _upgrade_row(slot: String) -> Control:
+	var gid: String = _player.equipped.get(slot, "")
+	var cur_lvl: int = int(_player.gear_upgrades.get(slot, 0))
+	var base_name: String = ShopData.GEAR[gid]["name"] if gid != "" and ShopData.GEAR.has(gid) else ("Βασικό " + ShopData.SLOT_NAMES.get(slot, slot))
+	var title: String = base_name + (" (+%d)" % cur_lvl if cur_lvl > 0 else "")
+	var icon: String = ShopData.SLOT_ICONS.get(slot, "sword")
+	var col: Color = ShopData.tier_color(gid) if gid != "" and ShopData.GEAR.has(gid) else Color.WHITE
+	var detail := ""
+	var stats_bbcode := ""
+	var buttons: Array = []
+	var price_text := ""
+	var price_ok := true
+
+	if cur_lvl >= ShopData.MAX_UPGRADE_LEVEL:
+		detail = "Εξοπλισμός στο μέγιστο επίπεδο."
+		stats_bbcode = "[color=#40f090]%s[/color]" % Strings.UPGRADE_MAXED
+		var b_max := UiKit.button(Strings.UPGRADE_MAXED, func(): pass, 150)
+		b_max.disabled = true
+		buttons.append(b_max)
+	else:
+		var next_lvl := cur_lvl + 1
+		var cost: Dictionary = ShopData.UPGRADE_COSTS[next_lvl]
+		var mat_id: String = cost["material"]
+		var mat_name: String = ShopData.JUNK[mat_id]["name"]
+		var mat_count: int = int(cost["count"])
+		var have_mat: int = int(_player.junk.get(mat_id, 0))
+		var gold_cost: int = int(cost["gold"])
+		var can_up: bool = ShopData.can_upgrade_slot(slot, cur_lvl, _player.gold, _player.junk)
+
+		var bonus_desc := ""
+		match slot:
+			"weapon": bonus_desc = "+12% Ζημιά, +2% Κρίσιμο"
+			"armor": bonus_desc = "+50 Ζωή, +4% Άμυνα"
+			"shield": bonus_desc = "+30 Ζωή, +3% Απόκρουση, +3% Άμυνα"
+
+		detail = "Επόμενη ενίσχυση (+%d): %s" % [next_lvl, bonus_desc]
+		stats_bbcode = "[color=#ffd24d]%s[/color]   [color=#a0a8b4]%s[/color]" % [
+			Strings.UPGRADE_NEEDS % [str(mat_count) + "x " + mat_name, gold_cost],
+			Strings.UPGRADE_HAVE % [have_mat, mat_name, _player.gold]
+		]
+		price_text = Strings.SHOP_PRICE % gold_cost
+		price_ok = _player.gold >= gold_cost and have_mat >= mat_count
+
+		var b := UiKit.button(Strings.UPGRADE_BUTTON % next_lvl, _on_upgrade_click.bind(slot), 150)
+		b.disabled = not can_up
+		buttons.append(b)
+
+	return _row(icon, col, title, detail, stats_bbcode, price_text, price_ok, buttons)
+
+
+func _on_upgrade_click(slot: String) -> void:
+	_player.upgrade_gear(slot)
+	_refresh()
+

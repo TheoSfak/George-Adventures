@@ -129,7 +129,7 @@ const BUILDING_NAMES := {
 	"market": "Παζάρι",
 	"home": "Σπίτι",
 	"catacombs": "Κατακόμβη",
-	"frontier": "Βουνίσιο Πέρασμα", "ashvalley": "Κοιλάδα της Στάχτης",
+	"frontier": "Βουνίσιο Πέρασμα", "ashvalley": "Κοιλάδα της Στάχτης", "temple": "Άδυτο της Φλόγας",
 }
 
 const CATACOMBS_SEALED := "Σφραγισμένη πύλη"
@@ -336,3 +336,32 @@ const MEAL_DURATION := "Διάρκεια: %d λεπτά"
 const MSG_MEAL_EATEN := "Έφαγες: %s"
 const MSG_MEAL_NO_FISH := "Δεν έχεις αρκετά ψάρια"
 const MSG_MEAL_OVER := "Η δύναμη του φαγητού πέρασε: %s"
+
+# --- crafting & upgrades
+const SHOP_TAB_UPGRADE := "Αναβάθμιση"
+const UPGRADE_TITLE := "Σιδηρουργείο: Ενίσχυση Εξοπλισμού"
+const UPGRADE_BUTTON := "Ενίσχυση (+%d)"
+const UPGRADE_MAXED := "Μέγιστο Επίπεδο (+3)"
+const UPGRADE_NEEDS := "Απαιτούνται: %s και %d χρυσά"
+const UPGRADE_HAVE := "Διαθέτεις: %d %s, %d χρυσά"
+const MSG_UPGRADED := "Το αντικείμενο αναβαθμίστηκε σε: %s!"
+const MSG_NO_UPGRADE_MATS := "Δεν έχεις τα απαραίτητα υλικά για αναβάθμιση!"
+
+# --- weapon types
+const WEAPON_TYPE_1H := "Μονοχείριο"
+const WEAPON_TYPE_2H := "Δίχειρο"
+const WEAPON_TYPE_DUAL := "Δίδυμες Λεπίδες"
+
+# --- Story Part 5: Temple Sanctum
+const SANCTUM_SEALED := "Σφραγισμένο Άδυτο της Φλόγας"
+const MSG_SANCTUM_SEALED := "Το Άδυτο ανοίγει μόνο μετά την ήττα του Πυρφόρου."
+const PROMPT_SANCTUM_ENTER := "[R] Είσοδος στο Άδυτο της Φλόγας"
+const PROMPT_SANCTUM_EXIT := "[R] Έξοδος στον Ναό της Φλόγας"
+const TEMPLE_VICTORY_BANNER := "ΤΟ ΝΗΣΙ ΣΩΘΗΚΕ! Ο Άρχοντας της Τέφρας ηττήθηκε!"
+const PROMPT_SANCTUM_ALTAR := "[R] Βωμός της Αιώνιας Φλόγας"
+const MSG_ALTAR_RESTORED := "Η Αιώνια Φλόγα εξαγνίστηκε! Το σκοτάδι υποχωρεί από τον Άγιο Βλάση."
+
+# --- world encounters
+const SCARECROW_AWAKENS := "Το Καταραμένο Σκιάχτρο ζωντανεύει!"
+const PROMPT_TRAVELING_MERCHANT := "[R] %s (Πλανόδιος Έμπορος)"
+

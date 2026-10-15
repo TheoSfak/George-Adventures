@@ -180,7 +180,7 @@ var _inside := false
 var current_door := ""         # id of the door George went through, "" outside
 var current_kind := ""        # kind of the room George is in ("tavern", "church"...), "" outside
 var _saved_zoom := 7.0
-const REGION_IDS: Array[String] = ["frontier", "ashvalley"]
+const REGION_IDS: Array[String] = ["frontier", "ashvalley", "temple"]
 var _in_region := false            # George is in a region (the Frontier or the Ash Valley: outdoors, far away from the village)
 var _region_outside := {}          # {"pos": Vector3, "heading": float} where the way back leads
 var _regions := {}                 # region id -> the region node, built on the first visit
@@ -263,6 +263,8 @@ func _new_region(region_id: String) -> Node3D:
 			return Frontier.new()
 		"ashvalley":
 			return AshValley.new()
+		"temple":
+			return (load("res://scripts/temple_interior.gd") as GDScript).new()
 	return null
 
 
@@ -273,6 +275,8 @@ static func region_gate(region_id: String) -> Vector3:
 			return Frontier.VILLAGE_GATE
 		"ashvalley":
 			return AshValley.VILLAGE_GATE
+		"temple":
+			return AshValley.wp(0.0, -196.0)
 	return Vector3.ZERO
 
 
@@ -288,7 +292,10 @@ func enter_region(region_id: String, outside_pos: Vector3, outside_heading: floa
 	await hud.fade_out(0.3)
 	if not _regions.has(region_id):
 		var region := _new_region(region_id)
-		region.name = "Frontier" if region_id == "frontier" else "AshValley"
+		match region_id:
+			"frontier": region.name = "Frontier"
+			"ashvalley": region.name = "AshValley"
+			"temple": region.name = "TempleSanctum"
 		region.exit_action = func(p): exit_region(p)
 		add_child(region)
 		_regions[region_id] = region
@@ -310,12 +317,18 @@ func exit_region(player: Player) -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	Sfx.ui("door_close")
 	await hud.fade_out(0.3)
+	var prev_kind := current_kind
 	player.teleport(_region_outside["pos"] + Vector3(0, 0.05, 0), _region_outside["heading"])
-	_in_region = false
-	current_kind = ""
+	if prev_kind == "temple":
+		_in_region = true
+		current_kind = "ashvalley"
+		Quests.report_reach("ashvalley")
+	else:
+		_in_region = false
+		current_kind = ""
+		Quests.report_reach("village")
 	await hud.fade_in(0.3)
 	player.busy = false
-	Quests.report_reach("village")
 
 
 func _exit_room(door_id: String, player: Player) -> void:

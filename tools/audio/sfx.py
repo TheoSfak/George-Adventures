@@ -1054,3 +1054,64 @@ def _(rng, i):
     formant = S.bandpass(sig, 420 + 30 * i, 140) * 1.2 + S.bandpass(sig, 950, 200) * 0.5
     return formant
 
+
+@sfx("craft_upgrade", 1, 0.75)
+def _(rng, i):
+    # Anvil strike followed by a rising magical shimmer
+    d = 0.95
+    out = np.zeros(int(d * S.SR))
+    # Anvil hammer ping
+    ping = coin_ping(1150, 0.45)
+    body = S.bandpass(nz(0.35, rng), 650, 250) * S.expdecay(int(0.35 * S.SR), 0.08)
+    S.place(out, ping * 1.2, 0.0)
+    S.place(out, body * 0.6, 0.0)
+    # Magic chime rising shimmer
+    mag = shimmer(0.65, 950, rng, 18, True)
+    S.place(out, mag * 0.85, 0.15)
+    return out
+
+
+@sfx("swing_2h", 2, 0.75)
+def _(rng, i):
+    # Deep, heavy two-handed greatsword whoosh
+    d = 0.38 + 0.04 * i
+    sweep = sweep_band(nz(d, rng), 280 + 50 * i, 1600 - 150 * i, 0.6)
+    sub = thump(110 - 10 * i, d, 60)
+    return (sweep * 0.85 + sub * 0.45) * swell(len(sweep), 0.3)
+
+
+@sfx("swing_dual", 2, 0.70)
+def _(rng, i):
+    # Rapid twin-blade slashes close together
+    d = 0.30
+    out = np.zeros(int(d * S.SR))
+    slash1 = sweep_band(nz(0.18, rng), 1100, 3600, 0.4) * swell(int(0.18 * S.SR), 0.35)
+    slash2 = sweep_band(nz(0.18, rng), 1400, 4200, 0.4) * swell(int(0.18 * S.SR), 0.35)
+    S.place(out, slash1, 0.0)
+    S.place(out, slash2, 0.10)
+    return out
+
+
+@sfx("scarecrow_groan", 2, 0.60)
+def _(rng, i):
+    # Wooden dry creak and shuddering spooky groan
+    d = 0.65 + 0.1 * i
+    f = S.pitch_curve(140 + 20 * i, 90, d, 2.0)
+    groan = voice(f, d, [O_, U_][i % 2], rng, 0.15, 8.0) * S.adsr(int(d * S.SR), 0.08, 0.15, 0.6, 0.18)
+    crk = crackle(d, rng, 40, 2200) * 0.4
+    return groan * 0.8 + crk
+
+
+@sfx("flame_altar", 1, 0.65)
+def _(rng, i):
+    # Deep resonant temple hum with volcanic flame flare
+    d = 1.4
+    t = S.t_axis(d)
+    hum = S.sine(S.pitch_curve(85, 110, d, -1.0), d) * S.adsr(int(d * S.SR), 0.15, 0.3, 0.7, 0.35)
+    fire = S.bandpass(nz(d, rng), 750, 450) * S.adsr(int(d * S.SR), 0.2, 0.4, 0.5, 0.4)
+    sparkles = shimmer(d * 0.7, 1600, rng, 12, True)
+    out = hum * 0.7 + fire * 0.5
+    S.place(out, sparkles * 0.4, 0.2)
+    return out
+
+

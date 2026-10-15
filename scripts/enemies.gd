@@ -8,6 +8,7 @@ const CHAR := "res://assets/characters/"
 const WEAPONS := CHAR + "skeleton_weapons/"
 const GRAVE := "res://assets/graveyard/"
 const ROCK := "res://assets/world/decoration/nature/"
+const PROP := "res://assets/world/decoration/props/"
 const ITEMS := "res://assets/items/"
 
 const KINDS := {
@@ -439,10 +440,53 @@ const KINDS := {
 		"enrage_below": 0.5, "enrage_summon": "ember_skeleton", "summon_interval": 12.0, "summon_max": 4,
 		"xp_reward": 4000, "gold_min": 500, "gold_max": 650, "potion_chance": 1.0,
 	},
+	# --- Cursed Scarecrow in the wheat fields of the village
+	"cursed_scarecrow": {
+		"kind_id": "cursed_scarecrow", "static_mob": true, "sound_set": "scarecrow",
+		"display_name": "Καταραμένο Σκιάχτρο", "model_scale": 1.35, "sway": 0.08,
+		"model_path": "", "glow_color": Color(1.0, 0.45, 0.1, 0.7),
+		"parts": [
+			{"path": PROP + "target.gltf", "pos": Vector3(0.0, 0.0, 0.0), "scale": 1.25},
+			{"path": GRAVE + "pumpkin_orange_jackolantern.gltf", "pos": Vector3(0.0, 1.85, 0.0), "scale": 0.85, "yaw": 0.0},
+			{"path": GRAVE + "bone_A.gltf", "pos": Vector3(-0.75, 1.2, 0.1), "scale": 1.4, "yaw": 90.0},
+			{"path": GRAVE + "bone_B.gltf", "pos": Vector3(0.75, 1.2, 0.1), "scale": 1.4, "yaw": -90.0},
+			{"eye": 0.06, "pos": Vector3(-0.16, 1.95, 0.32), "color": Color(1.0, 0.4, 0.05)},
+			{"eye": 0.06, "pos": Vector3(0.16, 1.95, 0.32), "color": Color(1.0, 0.4, 0.05)},
+		],
+		"max_health": 85.0, "attack_damage": 15.0, "chase_speed": 4.2, "patrol_speed": 1.5,
+		"attack_range": 2.4, "attack_hit_time": 0.5, "static_attack_time": 1.0, "attack_cooldown": 1.4,
+		"aggro_range": 14.0, "patrol_radius": 5.0,
+		"xp_reward": 45, "gold_min": 6, "gold_max": 16, "potion_chance": 0.35,
+	},
+	# --- The Temple Sanctum (Άδυτο της Φλόγας): Cinder Guardians and the final boss Cinder Archon
+	"cinder_guardian": {
+		"kind_id": "cinder_guardian", "tint_color": Color(1.0, 0.22, 0.05, 0.65), "model_scale": 1.5,
+		"display_name": "Φύλακας της Τέφρας",
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 550.0, "attack_damage": 42.0, "chase_speed": 4.6, "attack_range": 3.0,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.6, "attack_anim": "1H_Melee_Attack_Slice_Horizontal",
+		"aggro_range": 18.0, "leash_range": 35.0,
+		"xp_reward": 240, "gold_min": 35, "gold_max": 75, "potion_chance": 0.6,
+	},
+	"cinder_archon": {
+		"kind_id": "cinder_archon", "respawn_after": 60.0, "quest": "t_archon",
+		"display_name": "Ο Άρχοντας της Τέφρας", "model_scale": 3.2,
+		"tint_color": Color(1.0, 0.15, 0.02, 0.75), "glow_color": Color(1.0, 0.35, 0.05, 0.9),
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Blade.gltf",
+		"max_health": 9500.0, "attack_damage": 68.0, "chase_speed": 4.5, "attack_range": 5.0,
+		"attack_hit_time": 0.75, "attack_cooldown": 1.9, "attack_anim": "1H_Melee_Attack_Chop",
+		"aggro_range": 28.0, "leash_range": 55.0, "patrol_radius": 3.0, "need_los": true,
+		"enrage_below": 0.45, "enrage_summon": "cinder_guardian", "summon_interval": 11.0, "summon_max": 3,
+		"xp_reward": 6000, "gold_min": 800, "gold_max": 1200, "potion_chance": 1.0,
+	},
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord"]
+const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord", "cinder_archon"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -494,6 +538,8 @@ const SPAWNS := [
 	["thief", -60.0, 40.0], ["thief", 80.0, 20.0],
 	["raider", -70.0, 140.0], ["raider", 90.0, 130.0],
 	["cursed_coffin", -50.0, -195.0], ["cursed_coffin", 50.0, -195.0],
+	# --- Cursed Scarecrows haunting the wheat fields and farm tracks
+	["cursed_scarecrow", -114.0, -48.0], ["cursed_scarecrow", -86.0, -62.0], ["cursed_scarecrow", -102.0, -74.0], ["cursed_scarecrow", 86.0, 112.0],
 ]
 
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns
@@ -669,6 +715,19 @@ func _drop_loot(enemy: Enemy) -> void:
 		_drop(Pickup.make("junk_rust", 1), enemy.global_position)
 	elif roll < 0.42:
 		_drop(Pickup.make("junk_bone", 1), enemy.global_position)
+
+	# crafting materials
+	var mat_roll := randf()
+	var kind := enemy.kind_id
+	if kind in ["ember_skeleton", "ash_caster", "magma_golem", "pyrforos", "ash_lord", "cinder_archon", "cinder_guardian"]:
+		if is_boss or mat_roll < 0.40:
+			_drop(Pickup.make("junk_lava_ember", randi_range(1, 2) if is_boss else 1), enemy.global_position)
+	elif bool(KINDS.get(kind, {}).get("human", false)) or kind in ["dark_knight", "raider", "thief", "bandit_chief"]:
+		if is_boss or mat_roll < 0.45:
+			_drop(Pickup.make("junk_iron_scrap", 1), enemy.global_position)
+	else:
+		if is_boss or mat_roll < 0.45:
+			_drop(Pickup.make("junk_bone_shard", 1), enemy.global_position)
 
 
 func _drop(pickup: Pickup, at: Vector3) -> void:

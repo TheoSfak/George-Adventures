@@ -105,6 +105,7 @@ static func save() -> bool:
 			"base_max_health": player.base_max_health, "base_damage": player.base_damage,
 			"consumables": player.consumables, "junk": player.junk,
 			"gear_owned": player.gear_owned, "equipped": player.equipped,
+			"gear_upgrades": player.gear_upgrades,
 			"talents": player.talents, "bar": player.bar,
 			"position": [position.x, position.y, position.z], "heading": player._heading,
 			"in_frontier": in_frontier,
@@ -190,6 +191,9 @@ static func apply(d: Dictionary) -> void:
 	player.gear_owned.assign(pd.get("gear_owned", []))
 	for slot in pd.get("equipped", {}):
 		player.equipped[slot] = String(pd["equipped"][slot])
+	player.gear_upgrades = {"weapon": 0, "armor": 0, "shield": 0}
+	for slot in pd.get("gear_upgrades", {}):
+		player.gear_upgrades[slot] = int(pd["gear_upgrades"][slot])
 	player.talents = {}
 	for id in pd.get("talents", {}):
 		player.talents[id] = int(pd["talents"][id])

@@ -61,6 +61,9 @@ const JUNK_MODELS := {
 	"bone": ["res://assets/graveyard/bone_A.gltf", 2.2],
 	"rust": ["res://assets/characters/skeleton_weapons/Skeleton_Blade.gltf", 1.3],
 	"charm": ["res://assets/items/coin.gltf.glb", 2.2],
+	"bone_shard": ["res://assets/graveyard/bone_A.gltf", 2.0],
+	"iron_scrap": ["res://assets/characters/skeleton_weapons/Skeleton_Blade.gltf", 1.2],
+	"lava_ember": ["res://assets/items/coin.gltf.glb", 2.0],
 }
 
 

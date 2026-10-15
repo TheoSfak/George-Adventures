@@ -247,7 +247,9 @@ func _slot_row(slot: String) -> Control:
 	h.add_child(UiKit.icon_box(ShopData.SLOT_ICONS[slot], color, 54.0))
 	var texts := VBoxContainer.new()
 	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	texts.add_child(UiKit.label("%s:  %s" % [ShopData.SLOT_NAMES[slot], ShopData.GEAR[id]["name"] if id != "" else Strings.GEAR_EMPTY], 18))
+	var up_lvl: int = int(player.gear_upgrades.get(slot, 0))
+	var up_tag: String = " (+%d)" % up_lvl if up_lvl > 0 else ""
+	texts.add_child(UiKit.label("%s:  %s%s" % [ShopData.SLOT_NAMES[slot], ShopData.GEAR[id]["name"] if id != "" else Strings.GEAR_EMPTY, up_tag], 18))
 	if id != "":
 		texts.add_child(UiKit.paragraph(Stats.describe(ShopData.GEAR[id]["mods"]), 14, 300.0, UiKit.GOOD))
 	h.add_child(texts)

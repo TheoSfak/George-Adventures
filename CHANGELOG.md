@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.13.0 (2026-10-15) — Equipment Crafting & Upgrades, 2H & Dual-Wield Weapons, Temple Sanctum, Living World & SFX Synthesizer
+**New in this version**
+- **Equipment Crafting & Upgrades (Backlog I):**
+  - Upgrade weapons, armors, and shields from +1 to +3 at both village Blacksmith and Ash Valley Forge.
+  - Upgrades require mob materials (`iron_scrap`, `bone_shard`, `lava_ember`) and gold, boosting damage, HP, defense, and block.
+  - Dedicated "Αναβάθμιση" (Upgrade) tab in blacksmith shops and upgrade rank tags (`(+1)`, `(+2)`, `(+3)`) displayed in the Hero gear window.
+- **New Weapon Types (2H Greatswords & Dual-Wield Blades) (Backlog M):**
+  - **2H Greatswords:** Massive two-handed greatswords with extended attack reach (+35%), wider hit cone, and heavy damage, featuring custom combo animations (`2H_Melee_Attack_Slice`, `2H_Melee_Attack_Spin`, `2H_Melee_Attack_Chop`).
+  - **Dual-Wield Blades:** Rapid dual blade flurry with boosted attack speed (+10%) and dynamic animations (`Dualwield_Melee_Attack_Slice`, `Dualwield_Melee_Attack_Chop`), rendering two equipped blades.
+  - 6 new weapons across tiers 2 to 10 stocked in village blacksmith and Ash Valley forge.
+- **Story Part 5: The Temple Sanctum (Άδυτο της Φλόγας) (Backlog N):**
+  - New endgame dungeon region beneath the Ash Valley unlocked after defeating Pyrforos.
+  - Grand volcanic sanctum hall populated by **Φύλακες της Τέφρας** (`cinder_guardian`) and the final climax boss **Ο Άρχοντας της Τέφρας** (`cinder_archon`).
+  - **Βωμός της Αιώνιας Φλόγας** (Altar of the Eternal Flame): interactive altar that purifies the corrupt fire upon the Archon's defeat, culminating the island's defense with grand victory celebration.
+- **Living World & Roaming Encounters (Backlog K/L):**
+  - **Καταραμένο Σκιάχτρο (Cursed Scarecrow):** Animated wooden scarecrows haunting village wheat fields, with unique groaning sounds, custom rig, and mob bounty quest **Τα Καταραμένα Σκιάχτρα** (`f_scarecrows`) given by Stelios the Miller.
+  - **Κυρ-Παντελής (Traveling Merchant):** Roaming merchant dynamically patrolling village paths between the well, tavern, church, and market, opening an exotic mobile shop with crafting materials, rare weapons, and potions.
+- **Audio & SFX Synthesizer (Backlog H):**
+  - Synthesized 8 new sound effects: anvil forge upgrade (`craft_upgrade`), heavy 2H swings (`swing_2h_1`, `swing_2h_2`), swift dual-blade slashes (`swing_dual_1`, `swing_dual_2`), scarecrow groans (`scarecrow_groan_1`, `scarecrow_groan_2`), and celestial flame altar cleansing (`flame_altar`).
+- New test: `tools/v113_features_test.gd` (32 tests covering all 5 features, 100% pass).
+
 ## 1.12.0 (2026-10-15) — 12-slot primary action bar & optional second action bar
 **New in this version**
 - **Expanded Primary Action Bar:**

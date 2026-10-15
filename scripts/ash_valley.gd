@@ -583,6 +583,7 @@ func _build_temple() -> void:
 			if z != -162.0:                                           # the middle pair burns without a light (frame rate at night)
 				_fire_light(bx, z, 3.2, Color(1.0, 0.55, 0.22), 1.7, 15.0)
 	_build_flame()
+	_build_sanctum_portal()
 	# bones and skulls on the stones
 	var bones := [G + "bone_A.gltf", G + "bone_B.gltf", G + "bone_C.gltf", G + "skull.gltf", G + "ribcage.gltf"]
 	var yard := t.grow(-7.0)
@@ -619,6 +620,34 @@ func _build_flame() -> void:
 	fire.position = wp(FLAME.x, FLAME.y, 4.4)
 	_root.add_child(fire)
 	_fire_light(FLAME.x, FLAME.y + 3.0, 4.6, Color(1.0, 0.5, 0.15), 4.2, 34.0)
+
+
+func _build_sanctum_portal() -> void:
+	var arch := _prop(G + "arch_gate.gltf", 0.0, -199.0, 0.0, 3.8, 0.0, true)
+	var light := OmniLight3D.new()
+	light.position = wp(0.0, -198.0, 3.0)
+	light.light_color = Color(1.0, 0.40, 0.12)
+	light.light_energy = 2.2
+	light.omni_range = 10.0
+	_root.add_child(light)
+
+	var enter_pos := wp(0.0, -195.0, 0.05)
+	var spot := InteractSpot.make(Strings.PROMPT_SANCTUM_ENTER, func(player: Player):
+		if not _sanctum_open():
+			player.message.emit(Strings.MSG_SANCTUM_SEALED)
+			return
+		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+		if interiors:
+			interiors.enter_region("temple", enter_pos, 0.0, player)
+	, 4.8)
+	spot.prompt_func = func():
+		return Strings.PROMPT_SANCTUM_ENTER if _sanctum_open() else "[R] " + Strings.SANCTUM_SEALED
+	spot.position = wp(0.0, -197.0)
+	_root.add_child(spot)
+
+
+func _sanctum_open() -> bool:
+	return Quests.state.get("a_boss", Quests.S.LOCKED) >= Quests.S.DONE or Quests.state.get("t_sanctum", Quests.S.LOCKED) >= Quests.S.ACTIVE
 
 
 ## The sealed temple gate: it dissolves when the quest "Τα Θραύσματα της Φλόγας" is ready.

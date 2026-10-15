@@ -83,6 +83,7 @@ const SOUND_SETS := {
 	"wood": {"skel_attack": "wood_hit", "skel_hurt": "wood_hit", "skel_death": "wood_death", "skel_aggro": "brute_roar"},
 	"squish": {"skel_attack": "squish_hit", "skel_hurt": "squish_hit", "skel_death": "squish_death", "skel_aggro": "skel_aggro"},
 	"mimic": {"skel_attack": "mimic_snap", "skel_hurt": "wood_hit", "skel_death": "wood_death", "skel_aggro": "mimic_snap"},
+	"scarecrow": {"skel_attack": "wood_hit", "skel_hurt": "scarecrow_groan", "skel_death": "wood_death", "skel_aggro": "scarecrow_groan"},
 }
 
 @onready var _model_root: Node3D = $Model
