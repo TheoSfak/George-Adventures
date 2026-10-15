@@ -365,3 +365,21 @@ const MSG_ALTAR_RESTORED := "Η Αιώνια Φλόγα εξαγνίστηκε! 
 const SCARECROW_AWAKENS := "Το Καταραμένο Σκιάχτρο ζωντανεύει!"
 const PROMPT_TRAVELING_MERCHANT := "[R] %s (Πλανόδιος Έμπορος)"
 
+# --- Village Parkour (Obby)
+const PARKOUR_TITLE := "Πάρκουρ των Στεγών"
+const PARKOUR_SUBTITLE := "Ακροβατική Δοκιμασία Αγίου Βλάση"
+const PARKOUR_START_PROMPT := "[R] Έναρξη Δοκιμασίας Πάρκουρ"
+const PARKOUR_RETRY_PROMPT := "[R] Επανεκκίνηση Πάρκουρ"
+const PARKOUR_RESPAWN_PROMPT := "[R] Επαναφορά στο Checkpoint"
+const PARKOUR_CHECKPOINT_REACHED := "Σημείο Ελέγχου %d/%d!"
+const PARKOUR_HUD_CP := "Checkpoint: %d/%d"
+const PARKOUR_HUD_TIME := "Χρόνος: %s"
+const PARKOUR_HUD_BEST := "Ρεκόρ: %s"
+const PARKOUR_FALL_MSG := "Έπεσες! Επαναφορά στο Checkpoint (+3.0δλ)"
+const PARKOUR_WIN_TITLE := "ΝΙΚΗΤΗΣ ΠΑΡΚΟΥΡ!"
+const PARKOUR_WIN_MSG := "Ολοκλήρωσες το Πάρκουρ των Στεγών σε %s!"
+const PARKOUR_NEW_RECORD := "ΝΕΟ ΠΡΟΣΩΠΙΚΟ ΡΕΚΟΡ!"
+const PARKOUR_SIGN_TEXT := "=== ΠΑΡΚΟΥΡ ΤΩΝ ΣΤΕΓΩΝ ===\nΞεκίνα από τα κιβώτια της Ταβέρνας!\nΠέρασε τα δοκάρια, πάτα τα τραμπολίνα\nκαι φτάσε στον Ανεμόμυλο!\n\nΚαλύτερος Χρόνος: %s"
+const PARKOUR_CHEST_TITLE := "Σεντούκι του Ακροβάτη"
+
+

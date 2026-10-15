@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.14.0 (2026-10-15) — Village Rooftop Parkour (Roblox-style Obby) & Jump Pads
+**New in this version**
+- **Το Πάρκουρ των Στεγών & του Μύλου (Village Rooftop Parkour Obby):**
+  - Full Roblox-inspired parkour course throughout the village of Agios Vlasis, starting from tavern crate stacks and traversing over tavern roofs, tree canopy balance beams, the north-west house, the Church Bell Tower, moving sky flotilla platforms, and the Windmill.
+  - **Roblox Obby Checkpoints:** 6 glowing checkpoint pads that transition from warning yellow to neon lime green when stepped on, playing a bright celestial chime (`checkpoint_chime`) and recording respawn checkpoints.
+  - **Bouncy Jump Pads (Trampolines):** Dynamic jump pads launching George high into the sky with an explosive spring boing (`jump_pad_boing`), squash-and-stretch mesh animation, and directional catapult physics propelling him across rooftop gaps.
+  - **Moving Obstacle Platforms:** Smoothly bobbing and sliding sky platforms (`ParkourMover`) traversing the open void between the Church and Windmill.
+  - **Live Time-Trial HUD & Fall Recovery:** Dedicated top-center runner HUD showing live elapsed time, checkpoint counter (e.g. `2/6`), and personal record. Falling to the ground automatically respawns George at his latest checkpoint (+3.0s penalty), with instant `[R]` respawn shortcut.
+  - **Village Square Leaderboard Signpost:** Interactive signboard at tavern start area displaying instructions and persistent personal record saved to disk.
+  - **Acrobat's Trophy Chest & Return Launcher:** Reaching the summit sky podium at the windmill completes the trial with celebratory crowd cheers, unlocking the golden «Σεντούκι του Ακροβάτη» (500 gold, potions, speed elixir) and a high-speed return launch pad that shoots George safely back to the village well.
+- **Audio Synthesizer Expansion:**
+  - Added springy FM trampoline launch sound (`jump_pad_boing`) and bright 4-tone celestial checkpoint chime (`checkpoint_chime`).
+- New test: `tools/v114_parkour_test.gd` (18 assertions covering all mechanics, 100% pass).
+
 ## 1.13.0 (2026-10-15) — Equipment Crafting & Upgrades, 2H & Dual-Wield Weapons, Temple Sanctum, Living World & SFX Synthesizer
 **New in this version**
 - **Equipment Crafting & Upgrades (Backlog I):**

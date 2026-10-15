@@ -1780,6 +1780,17 @@ func teleport(pos: Vector3, heading: float) -> void:
 	_rig.global_position = pos + Vector3.UP * camera_height
 
 
+## Launches George upward (jump pads/trampolines) with optional forward directional impulse.
+func launch_up(power: float = 18.0, forward_kick: Vector3 = Vector3.ZERO) -> void:
+	velocity.y = power
+	if forward_kick.length_squared() > 0.01:
+		velocity.x = forward_kick.x
+		velocity.z = forward_kick.z
+	_landing = false
+	if not mounted:
+		_play("Jump_Start", 0.05)
+
+
 func _announce() -> void:
 	health_changed.emit(health, max_health)
 	xp_changed.emit(level, xp, xp_needed())

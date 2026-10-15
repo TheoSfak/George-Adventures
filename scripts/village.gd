@@ -143,6 +143,9 @@ func _ready() -> void:
 	var merchant = (load("res://scripts/traveling_merchant.gd") as GDScript).new()
 	merchant.name = "TravelingMerchant"
 	add_child(merchant)
+	var parkour = ParkourCourse.new()
+	parkour.name = "ParkourCourse"
+	add_child(parkour)
 	_build_camp()
 	_build_quarry()
 	_build_crypt()
