@@ -531,7 +531,7 @@ func _advance_dialogue() -> void:
 func toggle_big_map() -> void:
 	if is_dialogue_open() or _shop.is_open():
 		return
-	if _interiors != null and _interiors.in_region():
+	if _interiors != null and _interiors.is_inside():
 		Quests.message.emit(Strings.MSG_NO_MAP)
 		return
 	_big_map.visible = not _big_map.visible
@@ -681,7 +681,7 @@ func _process(_delta: float) -> void:
 	if _interiors == null:
 		_interiors = get_tree().get_first_node_in_group("interiors") as Interiors
 	elif _mini_frame != null:
-		_mini_frame.visible = not (_interiors.is_inside() or _interiors.in_region())
+		_mini_frame.visible = not _interiors.is_inside()
 	if _player == null:
 		return
 	_refresh_mount_pill()

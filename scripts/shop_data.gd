@@ -293,6 +293,21 @@ const SHOPS := {
 		],
 		"buys": "gear",
 	},
+	# Andreas' herbs and provisions in the village square after rescue
+	"andreas_herbs": {
+		"title": "Βότανα & Προμήθειες",
+		"keeper": "Αντρέας",
+		"greeting": [
+			"Γεια σου, σωτήρα μου Γιώργο! Μάζεψα αυτά τα φρέσκα βότανα και έφτιαξα γιατρικά. Για σένα, πάντα στις καλύτερες τιμές!",
+		],
+		"stock": [
+			{"type": "item", "id": "health", "price": 18},
+			{"type": "item", "id": "health_big", "price": 55, "level": 8},
+			{"type": "item", "id": "power", "price": 45},
+			{"type": "item", "id": "speed", "price": 35},
+		],
+		"buys": "junk",
+	},
 }
 
 

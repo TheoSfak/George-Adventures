@@ -816,6 +816,28 @@ def _(rng, i):
     return S.reverb(out, 2.0, 0.3)[:len(out)]
 
 
+@sfx("rescue_alert", 1, 0.95)
+def _(rng, i):
+    # A fast, urgent call: three rising brass herald blasts that cut through the ambience
+    d = 2.4
+    out = np.zeros(int((d + 1.2) * S.SR))
+    for fnote, st in [(S.midi(55), 0.0), (S.midi(60), 0.35), (S.midi(67), 0.75)]:
+        h = S.brass(fnote, 0.7, 2200) + 0.4 * S.brass(fnote * 1.5, 0.7, 1800)
+        S.place(out, h, st, 0.85)
+    return S.reverb(out, 1.4, 0.25)[:len(out)]
+
+
+@sfx("rescue_failed", 1, 0.9)
+def _(rng, i):
+    # A sad, mournful cue when Andreas falls: a deep bell followed by falling minor chords
+    out = np.zeros(int(4.0 * S.SR))
+    S.place(out, S.bell(S.midi(45), 3.8), 0.0, 0.85)
+    S.place(out, S.strings(S.midi(57), 3.0) * 0.45, 0.25)
+    S.place(out, S.strings(S.midi(53), 2.8) * 0.40, 0.7)
+    S.place(out, S.strings(S.midi(48), 2.6) * 0.35, 1.2)
+    return S.reverb(out, 1.8, 0.3)[:len(out)]
+
+
 @sfx("rooster", 1, 0.55)
 def _(rng, i):
     out = np.zeros(int(1.6 * S.SR))

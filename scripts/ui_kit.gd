@@ -30,8 +30,26 @@ static func font() -> Font:
 ## Makes the UI font the default of every Control and of code-drawn text. Call once at start-up.
 static func install_font() -> void:
 	var f := font()
-	ThemeDB.get_default_theme().default_font = f
+	var theme := ThemeDB.get_default_theme()
+	theme.default_font = f
 	ThemeDB.fallback_font = f
+	var tt := StyleBoxFlat.new()
+	tt.bg_color = Color(0.06, 0.07, 0.11, 0.94)
+	tt.border_color = Color(0.88, 0.72, 0.35, 0.75)
+	tt.set_border_width_all(1)
+	tt.border_width_top = 2
+	tt.set_corner_radius_all(8)
+	tt.shadow_color = Color(0, 0, 0, 0.6)
+	tt.shadow_size = 8
+	tt.shadow_offset = Vector2(0, 3)
+	tt.content_margin_left = 12
+	tt.content_margin_right = 12
+	tt.content_margin_top = 8
+	tt.content_margin_bottom = 8
+	theme.set_stylebox("panel", "TooltipPanel", tt)
+	theme.set_color("font_color", "TooltipLabel", CREAM)
+	theme.set_color("font_shadow_color", "TooltipLabel", Color(0, 0, 0, 0.6))
+	theme.set_constant("shadow_offset_y", "TooltipLabel", 1)
 
 
 ## A dark glass panel with rounded corners, a light rim and a soft drop shadow.

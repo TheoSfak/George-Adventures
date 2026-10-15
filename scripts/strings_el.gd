@@ -177,7 +177,15 @@ const MAP_PLACES := {
 	"mill": "Πριονιστήριο", "windmill": "Μύλος", "tower": "Πύργος Φρουράς", "well": "Πηγάδι",
 	"camp": "Δυτικό Στρατόπεδο", "quarry": "Λατομείο", "crypt": "Παλιά Κρύπτη", "bigtree": "Η Λίμνη του Αιωνόβιου",
 	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών", "cult": "Ξέφωτο της Σέκτας",
+	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
+	"frontier_road": "Δρόμος της Σκιάς", "frontier_fort": "Φρούριο της Σκιάς",
+	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",
+	"ash_bridge": "Γέφυρα της Λάβας", "ash_temple": "Ναός της Φλόγας",
 }
+
+const MAP_REGION_VILLAGE := "Άγιος Βλάσης"
+const MAP_REGION_FRONTIER := "Τα Σύνορα"
+const MAP_REGION_ASHVALLEY := "Κοιλάδα της Στάχτης"
 
 const MUSIC_ON := "Μουσική: ενεργή  [F7]"
 const MUSIC_OFF := "Μουσική: σίγαση  [F7]"

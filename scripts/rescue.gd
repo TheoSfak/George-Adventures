@@ -79,7 +79,7 @@ func trigger_now() -> void:
 		return
 	state = RescueRules.State.ALERT
 	_player.busy = true
-	Sfx.ui("invasion_horn")
+	Sfx.ui("rescue_alert")
 	var alert := RescueAlert.new()
 	alert.accepted.connect(_on_alert_accepted)
 	get_tree().get_first_node_in_group("hud").add_child(alert)
@@ -163,7 +163,7 @@ func _fail() -> void:
 		andreas.fall()
 	Quests.fail_event_quest(QUEST_ID)
 	Quests.message.emit(Strings.RESCUE_LOST)
-	Sfx.ui("window_close")
+	Sfx.ui("rescue_failed")
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud:
 		hud.show_banner(Strings.RESCUE_LOST, 3.5)

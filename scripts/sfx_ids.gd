@@ -61,6 +61,8 @@ const VARIANTS := {
 	"quest_item": 1,
 	"quest_new": 1,
 	"quest_ready": 1,
+	"rescue_alert": 1,
+	"rescue_failed": 1,
 	"rooster": 1,
 	"sell": 1,
 	"skel_aggro": 2,

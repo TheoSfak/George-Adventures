@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.0 (2026-10-15) — Region maps, Andreas herb shop & UI polish
+**New in this version**
+- **Autonomous Map & Minimap for outdoor regions:**
+  - The corner minimap and full-screen map (**M**) now function seamlessly outdoors in **The Frontier** (Τα Σύνορα) and **The Ash Valley** (Κοιλάδα της Στάχτης) instead of being hidden.
+  - The full map displays a prominent top region banner ("Τα Σύνορα", "Κοιλάδα της Στάχτης", "Άγιος Βλάσης") and labels all key landmarks (Mountain Pass, Refugee Camp, Fortress of Shadow, Ash Gate, Damianos' Shelter, Lava Bridge, Temple of the Flame).
+  - Region-specific styled terrain graphics illustrate mountain trails, stockades, forts, and glowing molten lava rivers.
+  - Minimap marker decluttering: Off-edge quest and NPC markers along the minimap border are spaced along the perimeter to prevent overlapping and visual clutter.
+- **Rescue event follow-ups:**
+  - Distinct synthesized audio cues: A herald trumpet blast (`rescue_alert`) when Andreas is in peril and a mournful chime (`rescue_failed`) if he falls, replacing generic horns and window clicks.
+  - Andreas' Herbs & Provisions shop (`andreas_herbs`): Once rescued and standing in the village square, Andreas opens a shop offering health potions with a friendly savior discount (18g vs 25g), large potions, speed and power elixirs.
+  - Expanded interactive dialogue: Andreas reacts to George's ongoing heroic deeds across the Catacombs, Frontier, and Ash Valley.
+- **Visual & UI polish:**
+  - Fixed boss and elite nameplates (`no_depth_test`): Named bosses (Malakar, Giant Skeleton, Ignatius, Pyrforos, etc.) and totems no longer have floating name tags or health bars shining through dungeon walls, fortress gates, or mountains.
+  - Modern dark-glass tooltips: All item and button hover tooltips now feature sleek dark-glass panels with gold accent borders, rounded corners, and soft drop shadows matching the game's UI system.
+- New test: `v19_features_test` (headless).
+
 ## 1.8.0 (2026-10-15) — Ash Valley expansion, new creatures, kick and plunge combat
 **New in this version**
 - **Ash Valley expansion & Tier 10 gear:** Tier 10 equipment ("της Αιώνιας Φλόγας", sword, armor, shield at level 40, 60,000 gold) available at Damianos' forge shop (`ash_forge`) in the Shelter camp. Ash Valley now features drifting ember particles that swirl around the player, a smoky reddish volcanic atmosphere tinting the sky and horizon fog, and a second roaming elite boss, **Ιγνάτιος ο Σταχτοφόρος** (`ash_lord`), guarding the eastern lava ridge.

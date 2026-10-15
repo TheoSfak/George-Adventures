@@ -49,12 +49,13 @@ func _ready() -> void:
 	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	tag.modulate = Color(0.7, 1.0, 0.6)
 	tag.position.y = 7.3
-	tag.no_depth_test = true
+	tag.no_depth_test = false
 	add_child(tag)
 	_bar = Sprite3D.new()
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.shaded = false
+	_bar.no_depth_test = false
 	_bar.pixel_size = 0.0175
 	_bar.position.y = 6.6
 	add_child(_bar)

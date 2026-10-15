@@ -148,7 +148,10 @@ func _file(id: String, variant: int) -> String:
 
 func _stream(path: String) -> AudioStream:
 	if not _streams.has(path):
-		_streams[path] = load(path) if ResourceLoader.exists(path) else null
+		var s: AudioStream = load(path) if ResourceLoader.exists(path) else null
+		if s == null and FileAccess.file_exists(path):
+			s = AudioStreamWAV.load_from_file(path)
+		_streams[path] = s
 		if _streams[path] == null:
 			push_warning("SoundManager: missing sound %s" % path)
 	return _streams[path]

@@ -232,6 +232,7 @@ func _build_health_bar() -> void:
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.shaded = false
+	_bar.no_depth_test = false
 	_bar.position = Vector3(0.0, 2.35 * model_scale, 0.0)
 	_bar.pixel_size = 0.014 * maxf(1.0, model_scale * 0.8)
 	_bar.visible = display_name != "" and not dormant      # a sleeping boulder must not give itself away
@@ -248,7 +249,7 @@ func _build_health_bar() -> void:
 		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		tag.modulate = Color(1.0, 0.45, 0.35)
 		tag.position = Vector3(0.0, 2.35 * model_scale + 0.55 * maxf(1.0, model_scale * 0.8), 0.0)
-		tag.no_depth_test = true
+		tag.no_depth_test = false
 		add_child(tag)
 
 
