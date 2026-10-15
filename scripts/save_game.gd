@@ -4,8 +4,9 @@ class_name SaveGame
 ##
 ## Saved: George (level, xp, gold, health, potions, gear, talents, action bar, fish journal, position),
 ## the quests, the rescue event of Andreas, the time of day, opened chests and collected quest items.
-## Not saved: where ordinary skeletons stand (they respawn), a night invasion in progress,
-## chests inside buildings. In the Frontier the real position is saved ("in_frontier": true)
+## Also saved: which village spawns are defeated (and when they come back) and how hurt the living ones are,
+## a night invasion in progress (it comes back from the wave that was running), the chests inside the houses.
+## Not saved: where ordinary skeletons stand, the creatures of the catacombs and the Frontier. In the Frontier the real position is saved ("in_frontier": true)
 ## and loading rebuilds the region.
 ##
 ## SaveGame.start_action tells the next scene load what to do ("continue", "new", or "" for
@@ -92,6 +93,8 @@ static func save() -> bool:
 		in_frontier = true                          # in the Frontier: save the real position, load rebuilds the region
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight
 	var rescue := tree.get_first_node_in_group("rescue")
+	var spawner := tree.get_first_node_in_group("enemy_spawner")
+	var invasion := tree.get_first_node_in_group("invasion")
 	var data := {
 		"version": VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
@@ -107,12 +110,15 @@ static func save() -> bool:
 			"horse_owned": player.horse_owned,
 		},
 		"rescue": rescue.save_data() if rescue != null else {},
+		"enemies": spawner.save_data() if spawner != null else {},
+		"invasion": invasion.save_data() if invasion != null else {},
 		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
 			"day": daynight.day_number if daynight else 1,
 			"night": daynight.night_number if daynight else 0,
 			"defeated_bosses": defeated_bosses, "opened_chests": opened_chests, "collected_items": collected_items, "destroyed_totems": destroyed_totems,
+			"stable_rooms": true,
 		},
 	}
 	if exists():
@@ -154,6 +160,10 @@ static func load_progress(d: Dictionary) -> void:
 	opened_chests = (w.get("opened_chests", []) as Array).duplicate()
 	collected_items = (w.get("collected_items", []) as Array).duplicate()
 	destroyed_totems = (w.get("destroyed_totems", []) as Array).duplicate()
+	if not bool(w.get("stable_rooms", false)):
+		# an older save: the rooms of the houses stood where the visit order put them, so their chest keys (x 1500 to
+		# 4000) point at other rooms now and are dropped (those chests can be opened again)
+		opened_chests = opened_chests.filter(func(k): var x := int(String(k).get_slice(",", 0)); return x < 1500 or x > 4000)
 
 
 ## Puts a loaded save into the running game. The world must already be built.
@@ -220,6 +230,9 @@ static func apply(d: Dictionary) -> void:
 		rescue.load_data(d.get("rescue", {}))
 
 	var wd: Dictionary = d["world"]
+	var village_spawns := tree.get_first_node_in_group("enemy_spawner")
+	if village_spawns != null:
+		village_spawns.load_data(d.get("enemies", {}))
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight
 	if daynight != null:
 		daynight.time_of_day = float(wd.get("time_of_day", 9.0))
@@ -228,6 +241,9 @@ static func apply(d: Dictionary) -> void:
 		daynight.phase = daynight._phase_for(daynight.time_of_day)
 		if daynight.phase == DayNight.Phase.NIGHT or daynight.phase == DayNight.Phase.DUSK:
 			daynight._shelter_villagers(true)
+	var running_invasion := tree.get_first_node_in_group("invasion")
+	if running_invasion != null:
+		running_invasion.load_data(d.get("invasion", {}))      # a night invasion in progress comes back
 	for chest in tree.get_nodes_in_group("chests"):
 		if opened_chests.has(key_for(chest.global_position)):
 			chest.mark_opened()

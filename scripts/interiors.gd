@@ -349,12 +349,22 @@ func _set_indoor_light(indoor: bool, kind: String = "") -> void:
 
 # ----------------------------------------------------------------- building ----
 
+## Every room stands at a fixed place that comes from its door id ("home_3" is building 3), not from the order in
+## which the doors were opened: the save game remembers an opened chest by its position, so the position of a
+## chest inside a house must be the same in every session.
+func _slot_for(door_id: String) -> int:
+	var tail := door_id.get_slice("_", door_id.get_slice_count("_") - 1)
+	if tail.is_valid_int():
+		return int(tail)
+	_count += 1                         # an id without a number (none today): behind the fixed rooms, in order
+	return 1000 + _count
+
+
 func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_heading: float) -> void:
 	var def: Dictionary = DEFS[kind]
 	var size: Vector2 = def["size"]
 	var h: float = def["height"]
-	var origin := FAR_AWAY + Vector3(ROOM_SPACING * _count, 0.0, 0.0)
-	_count += 1
+	var origin := FAR_AWAY + Vector3(ROOM_SPACING * _slot_for(door_id), 0.0, 0.0)
 	_rooms[door_id] = {"origin": origin, "size": size, "outside_pos": outside_pos, "outside_heading": outside_heading}
 
 	var root := Node3D.new()
@@ -448,6 +458,8 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 		chest.position = origin + Vector3(c[0], 0, c[1])
 		chest.rotation_degrees.y = c[2]
 		root.add_child(chest)
+		if SaveGame.opened_chests.has(SaveGame.key_for(chest.position)):
+			chest.mark_opened()                  # opened in an earlier session
 
 	# The way out
 	var door_z := size.y / 2

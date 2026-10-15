@@ -72,6 +72,54 @@ func start(night_number: int) -> void:
 		_spawn_wave()
 
 
+## What the save game remembers of a night invasion in progress.
+func save_data() -> Dictionary:
+	if not active:
+		return {"active": false}
+	return {"active": true, "night": night, "wave": wave, "safety": snappedf(safety, 0.1)}
+
+
+## Loading a save: an invasion that is running now is dropped quietly, and the saved one (if there was one and it is
+## night) comes back: the wave that was in progress marches in again from the gates, the safety is as it was.
+func load_data(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	if active:
+		_dismiss_guards()
+		active = false
+	for e in get_tree().get_nodes_in_group("invaders"):
+		e.queue_free()
+	_alive.clear()
+	if not bool(d.get("active", false)):
+		return
+	var daynight := get_parent().get_node_or_null("DayNight") as DayNight
+	if daynight == null or daynight.phase != DayNight.Phase.NIGHT:
+		return
+	await resume(int(d.get("night", 1)), int(d.get("wave", 1)), float(d.get("safety", 100.0)))
+
+
+func resume(night_number: int, saved_wave: int, saved_safety: float) -> void:
+	if active:
+		return
+	active = true
+	night = night_number
+	waves_total = InvasionBoss.total_waves(night, WAVES)
+	wave = maxi(saved_wave - 1, 0)           # _spawn_wave() counts up to the saved wave again
+	safety = saved_safety
+	last_success = false
+	_alive.clear()
+	_wave_size = 0
+	_say(Strings.INVASION_RESUMED, 4.0)
+	Sfx.ui("invasion_horn")
+	_emit()
+	_wave_pending = true
+	await get_tree().create_timer(FIRST_WAVE_DELAY).timeout
+	_wave_pending = false
+	if active:
+		_spawn_guards()
+		_spawn_wave()
+
+
 func _process(delta: float) -> void:
 	if not active or _wave_pending:
 		return

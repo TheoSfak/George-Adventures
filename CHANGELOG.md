@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+**Fixed**
+- **The game remembers more when you save and load.** The chests inside the houses stay opened (before, they could be opened again after every load). The skeletons you defeated stay defeated until their respawn time is up, and the ones you hurt stay hurt. If you save in the middle of a night invasion, loading brings it back (the wave that was running marches in again and the village safety is as it was). Old saves load as before; their house chests can be opened one more time.
+- New test: `save_gaps_test` (headless).
+
 **New in this version**
 - **Dodge roll.** Press **V** (rebindable in the settings, listed on the controls page) to roll in the direction you are moving, or hop back when you stand still. For a moment (about 0.4 s) nothing can hurt you, then there is a short cooldown. It also cancels a sword swing.
 - **Shield bash.** Attack while you block (K / Ctrl) and George hits with the shield: a little damage, a strong knockback and a stun for the enemies in front of him (bosses are only stunned for a moment). It has a cooldown of a couple of seconds.

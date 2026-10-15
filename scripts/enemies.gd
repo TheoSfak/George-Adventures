@@ -379,6 +379,10 @@ const SPAWNS := [
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns
 
 var _loot: Node3D
+var _clock := 0.0                      # game seconds (stands still while the game is paused), for the respawn times
+var _spawned := {}                     # spawn index -> the enemy that stands there now
+var _due := {}                         # spawn index -> the clock time at which the defeated enemy comes back
+var _pending_load := {}                # a saved game that arrived before the first spawn: applied right after it
 
 
 func _ready() -> void:
@@ -392,6 +396,26 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	for i in SPAWNS.size():
 		_spawn(i)
+	if not _pending_load.is_empty():
+		var pending := _pending_load
+		_pending_load = {}
+		load_data(pending)
+
+
+func _process(delta: float) -> void:
+	_clock += delta
+	if _due.is_empty():
+		return
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	for index in _due.keys():
+		if _clock < float(_due[index]):
+			continue
+		var home := Vector3(SPAWNS[index][1], 0.0, SPAWNS[index][2])
+		var clear := 40.0 if SPAWNS[index][0] in BOSSES else 25.0
+		if player != null and player.global_position.distance_to(home) < clear:
+			continue                               # never respawn in George's face
+		_due.erase(index)
+		_spawn(index)
 
 
 func _spawn(index: int) -> void:
@@ -399,6 +423,7 @@ func _spawn(index: int) -> void:
 	var enemy := _make(s[0], Vector3(s[1], 0.05, s[2]))
 	enemy.died.connect(_on_enemy_died.bind(index))
 	add_child(enemy)
+	_spawned[index] = enemy
 
 
 func _make(kind: String, pos: Vector3) -> Enemy:
@@ -489,8 +514,10 @@ func _on_enemy_died(enemy: Enemy, index: int) -> void:
 		player.gain_xp(int(round(enemy.xp_reward * LevelScaling.xp_mult(player.level))))
 	Quests.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
-	if index >= 0 and KINDS[SPAWNS[index][0]].get("respawn", true):
-		_respawn_later(index)
+	if index >= 0:
+		_spawned.erase(index)
+		if KINDS[SPAWNS[index][0]].get("respawn", true):
+			_respawn_later(index)
 
 
 func _drop_loot(enemy: Enemy) -> void:
@@ -529,15 +556,54 @@ func _drop(pickup: Pickup, at: Vector3) -> void:
 	_loot.add_child(pickup)
 
 
-func _respawn_later(index: int) -> void:
+## A defeated spawn comes back after `delay` seconds (default: its kind's respawn time); `_process` does the rest.
+func _respawn_later(index: int, delay: float = -1.0) -> void:
 	var kind: String = SPAWNS[index][0]
-	await get_tree().create_timer(KINDS[kind].get("respawn_after", respawn_time)).timeout
-	var home := Vector3(SPAWNS[index][1], 0.0, SPAWNS[index][2])
-	var player := get_tree().get_first_node_in_group("player") as Node3D
-	var clear := 40.0 if kind in BOSSES else 25.0
-	while player and player.global_position.distance_to(home) < clear:
-		await get_tree().create_timer(5.0).timeout  # never respawn in George's face
-	_spawn(index)
+	_due[index] = _clock + (delay if delay >= 0.0 else float(KINDS[kind].get("respawn_after", respawn_time)))
+
+
+# ------------------------------------------------------------ save game ----
+
+## What the save game remembers of the village spawns: which ones are defeated (and in how many seconds they come
+## back) and how hurt the living ones are. Creatures of the catacombs and the Frontier and the night invaders are not saved.
+func save_data() -> Dictionary:
+	var dead := {}
+	for index in _due:
+		dead[str(index)] = snappedf(maxf(float(_due[index]) - _clock, 0.0), 0.1)
+	var hurt := {}
+	for index in _spawned:
+		var e = _spawned[index]
+		if is_instance_valid(e) and not e.is_dead() and e.health < e.max_health - 0.5:
+			hurt[str(index)] = snappedf(e.health / e.max_health, 0.01)
+	return {"dead": dead, "hurt": hurt}
+
+
+## Puts a saved game into the running village (a save without this block leaves the village as it is).
+func load_data(d: Dictionary) -> void:
+	if d.is_empty():
+		return
+	if _spawned.is_empty() and _due.is_empty():
+		_pending_load = d                        # the first spawn has not happened yet
+		return
+	var dead: Dictionary = d.get("dead", {})
+	for index in SPAWNS.size():
+		var key := str(index)
+		var enemy = _spawned.get(index)
+		if dead.has(key):
+			if enemy != null and is_instance_valid(enemy):
+				enemy.queue_free()               # no loot, no XP: it was defeated in the saved game
+			_spawned.erase(index)
+			_due[index] = _clock + float(dead[key])
+		elif _due.has(index):
+			_due.erase(index)                    # alive in the saved game, defeated in this session: it stands again
+			_spawn(index)
+	var hurt: Dictionary = d.get("hurt", {})
+	for key in hurt:
+		var enemy = _spawned.get(int(key))
+		if enemy != null and is_instance_valid(enemy) and not enemy.is_dead():
+			enemy.health = maxf(enemy.max_health * float(hurt[key]), 1.0)
+			enemy._bar.visible = true
+			enemy._update_health_bar()
 
 
 ## Returns the closest open position to `wanted` (spiralling outwards), or `wanted` itself.

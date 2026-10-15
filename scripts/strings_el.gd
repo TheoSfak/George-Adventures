@@ -137,6 +137,7 @@ const MSG_GATE_OPEN := "Οι σφραγίδες έσβησαν. Η πύλη το
 const DAY_WORD := "Ημέρα"
 
 const DUSK_FALLS := "Σουρουπώνει… οι χωρικοί μπαίνουν στα σπίτια τους."
+const INVASION_RESUMED := "Η εισβολή συνεχίζεται!"
 const INVASION_BANNER := "ΕΙΣΒΟΛΗ!  Οι νεκροί πλησιάζουν το χωριό!"
 const INVASION_WAVE_BANNER := "Κύμα %d!"
 const INVASION_WAVE := "Κύμα %d/%d — Σκελετοί: %d"
