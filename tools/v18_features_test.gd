@@ -81,7 +81,7 @@ func _run() -> void:
 	print("\n=== Part 3: Combat Extensions (Kick, Air Plunge, Attack Speed) ===")
 	# CombatExtras data & pure logic
 	check("KICK_ANIM is Unarmed_Melee_Attack_Kick", CombatExtras.KICK_ANIM == "Unarmed_Melee_Attack_Kick")
-	check("KICK_HIT and KICK_COMMIT timing are valid", CombatExtras.KICK_HIT < CombatExtras.KICK_COMMIT and CombatExtras.KICK_COOLDOWN > 1.0)
+	check("KICK_HIT and KICK_COMMIT timing are valid", CombatExtras.KICK_HIT < CombatExtras.KICK_COMMIT and CombatExtras.KICK_COOLDOWN >= 0.0)
 	check("KICK_DAMAGE and KICK_KNOCK are configured", CombatExtras.KICK_DAMAGE > 0.5 and CombatExtras.KICK_KNOCK >= 10.0)
 	check("kick_stun stuns bosses less than normal mobs", CombatExtras.kick_stun(true) < CombatExtras.kick_stun(false))
 	check("AIR_ATTACK_ANIM is 1H_Melee_Attack_Chop", CombatExtras.AIR_ATTACK_ANIM == "1H_Melee_Attack_Chop")
@@ -99,6 +99,7 @@ func _run() -> void:
 	dummy_player.set_script(player_script)
 	check("Player has _kick_cd member", "_kick_cd" in dummy_player)
 	check("Player has _kicking member", "_kicking" in dummy_player)
+	check("Player has _kick_queued member", "_kick_queued" in dummy_player)
 	check("Player has _air_attacking member", "_air_attacking" in dummy_player)
 	check("Player has _start_kick method", dummy_player.has_method("_start_kick"))
 	check("Player has _kick_hits method", dummy_player.has_method("_kick_hits"))

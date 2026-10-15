@@ -24,15 +24,15 @@ const BASH_COOLDOWN := 2.5
 
 # --- the front kick (key C, gamepad left stick click; rebindable)
 const KICK_ANIM := "Unarmed_Melee_Attack_Kick"
-const KICK_HIT := 0.20             # animation seconds until the kick lands
-const KICK_COMMIT := 0.45          # animation seconds until George can act again
+const KICK_HIT := 0.12             # animation seconds until the kick lands
+const KICK_COMMIT := 0.28          # animation seconds until George can act again
 const KICK_REACH := 2.6            # metres in front of George
 const KICK_ARC := 0.35             # forward cone
 const KICK_DAMAGE := 0.70          # share of sword damage
 const KICK_KNOCK := 12.0           # strong knockback
-const KICK_STUN := 1.2             # stuns and interrupts enemies
-const KICK_STUN_BOSS := 0.4        # bosses get brief stagger
-const KICK_COOLDOWN := 2.0         # seconds cooldown
+const KICK_STUN := 0.9             # stuns and interrupts enemies
+const KICK_STUN_BOSS := 0.3        # bosses get brief stagger
+const KICK_COOLDOWN := 0.05        # low cooldown allowing rapid chaining when pressing C
 
 # --- the air / plunge attack (attack while in the air)
 const AIR_ATTACK_ANIM := "1H_Melee_Attack_Chop"

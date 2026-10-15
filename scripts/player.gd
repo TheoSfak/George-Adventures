@@ -171,6 +171,7 @@ var _dodge_serial := 0
 var _bash_cd := 0.0             # the shield bash can be used again when this is 0
 var _kicking := false           # the front kick animation is playing
 var _kick_cd := 0.0             # cooldown until George can kick again
+var _kick_queued := 0.0         # input buffer for kick
 var _air_attacking := false     # mid-air plunge attack is falling
 var _invulnerable := 0.0
 var _step_dist := 0.0
@@ -306,8 +307,19 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dodge") and can_act and on_floor and not mounted and not _dodging and _dodge_cd <= 0.0 \
 			and _special_time <= 0.0 and _dash_time <= 0.0 and not _leaping:
 		_start_dodge()
-	if Input.is_action_just_pressed("kick") and can_act and on_floor and not mounted and not _dodging and not _kicking and _kick_cd <= 0.0 \
+	_kick_queued = maxf(_kick_queued - delta, 0.0)
+	if Input.is_action_just_pressed("kick"):
+		_kick_queued = 0.25
+	if _mount_swallow > 0.0:
+		_kick_queued = 0.0
+	if _kick_queued > 0.0 and can_act and on_floor and not mounted and not _dodging and not _kicking and _kick_cd <= 0.0 \
 			and _special_time <= 0.0 and _dash_time <= 0.0 and not _leaping:
+		_kick_queued = 0.0
+		if _attacking and not _kicking:
+			_attacking = false
+			_attack_queued = 0.0
+			if _upper != null:
+				_upper.stop()
 		_start_kick()
 	_blocking = can_act and on_floor and not _attacking and not _dodging and not _kicking and Input.is_action_pressed("block")
 	_attack_queued = maxf(_attack_queued - delta, 0.0)
@@ -647,12 +659,12 @@ func _bash_hits(serial: int) -> void:
 func _start_kick() -> void:
 	_kicking = true
 	_attacking = true
-	_free_swing = false
-	_assist_aim(false)
+	_free_swing = true
+	_assist_aim(true)
 	_kick_cd = CombatExtras.KICK_COOLDOWN
-	var kick_speed := CombatTiming.speed(stats.total("attack_speed"))
-	_play(CombatExtras.KICK_ANIM, 0.05, true, kick_speed)
-	Sfx.play("sword_swing", global_position, 2.0)
+	var kick_speed := CombatTiming.speed(stats.total("attack_speed")) * 1.25
+	_play(CombatExtras.KICK_ANIM, 0.04, true, kick_speed)
+	Sfx.play("sword_swing", global_position, 2.2)
 	var serial := _attack_serial_next()
 	get_tree().create_timer(CombatExtras.KICK_HIT / kick_speed).timeout.connect(_kick_hits.bind(serial))
 	get_tree().create_timer(CombatExtras.KICK_COMMIT / kick_speed).timeout.connect(_end_kick.bind(serial))
@@ -1676,6 +1688,7 @@ func _respawn() -> void:
 	_stun = 0.0
 	_invulnerable = 2.0
 	_kicking = false
+	_kick_queued = 0.0
 	_air_attacking = false
 	_play("Idle", 0.2, true)
 	Sfx.ui("heal")
