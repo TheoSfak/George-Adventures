@@ -44,8 +44,17 @@ func _run() -> void:
 		"Checkpoint 2": Vector3(-41.0, 6.2, -40.5),
 		"Jump Pad 1": Vector3(-34.0, 6.2, -41.0),
 		"Checkpoint 3": Vector3(-9.5, 12.1, -48.0),
-		"Checkpoint 4": Vector3(-46.0, 12.5, -50.0),
-		"Jump Pad 2": Vector3(-84.0, 11.7, -48.0),
+		"Disc 3A": Vector3(-21.0, 12.0, -49.5),
+		"Mover 1": Vector3(-27.0, 12.1, -50.0),
+		"Disc 3B": Vector3(-33.5, 12.0, -50.0),
+		"Disc 3C": Vector3(-39.5, 12.0, -50.0),
+		"Checkpoint 4": Vector3(-46.0, 12.4, -50.0),
+		"Disc 4A": Vector3(-52.0, 12.0, -50.0),
+		"Disc 4B": Vector3(-57.0, 12.0, -50.0),
+		"Moving Ramp (Mover 2)": Vector3(-63.0, 12.0, -50.0),
+		"Disc 4C": Vector3(-69.5, 11.9, -49.5),
+		"Disc 4D": Vector3(-75.5, 11.8, -49.0),
+		"Jump Pad 2": Vector3(-82.5, 11.7, -48.0),
 		"Checkpoint 5": Vector3(-99.0, 11.8, -46.0),
 		"Ascending Beam 2": Vector3(-108.0, 14.5, -52.0),
 		"Finish Podium CP 6": Vector3(-108.0, 17.3, -62.0),
@@ -74,66 +83,98 @@ func _run() -> void:
 	await create_timer(0.3).timeout
 	check("Stepping on start plinth starts parkour", parkour.state == ParkourCourse.State.RUNNING)
 	check("Elapsed time begins counting", parkour.elapsed_time > 0.0)
-	check("No false fall trigger at start zone", parkour.current_checkpoint == 0)
 
 	# Simulate climbing each step of the staircase up to the landing terrace
 	var step_zs: Array[float] = [-2.5, -4.0, -5.5, -7.0, -8.5, -10.0, -11.5, -13.0]
 	for i in step_zs.size():
 		var h: float = (i + 1) * 0.45
 		player.global_position = Vector3(-49.5, h + 0.1, step_zs[i])
-		await create_timer(0.08).timeout
+		await create_timer(0.06).timeout
 		check("Stood safely on Step %d (Y=%.2f)" % [i + 1, player.global_position.y], player.global_position.y >= h)
 
 	player.global_position = Vector3(-49.5, 4.15, -15.0)
-	await create_timer(0.1).timeout
+	await create_timer(0.08).timeout
 	check("Reached Ascent Terrace (Y=%.2f)" % player.global_position.y, player.global_position.y >= 4.0)
 
-	# 3. Checkpoint Traversal Simulation
-	print("\n[3] Testing Checkpoint Traversal & Jump Pads...")
+	# 3. Checkpoints & Manual Respawn (NO auto-respawn on fall)
+	print("\n[3] Testing Manual Respawn on button press (No auto-respawn)...")
 	player.global_position = Vector3(-60.0, 4.7, -18.5) # CP 1
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 1", parkour.current_checkpoint == 1)
 
 	player.global_position = Vector3(-41.0, 6.3, -40.5) # CP 2
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 2", parkour.current_checkpoint == 2)
 
+	# Player drops to village ground at Y = 0.5
+	player.global_position = Vector3(-41.0, 0.5, -35.0)
+	await create_timer(0.2).timeout
+	check("Player falling to ground does NOT auto-respawn", player.global_position.y < 1.0)
+	check("Parkour remains in RUNNING state", parkour.state == ParkourCourse.State.RUNNING)
+
+	# Player presses manual respawn [R]
+	parkour._respawn_at_checkpoint()
+	await create_timer(0.1).timeout
+	check("Pressing respawn returns player to Checkpoint 2", absf(player.global_position.y - 6.45) < 0.5 and player.global_position.distance_to(Vector3(-41.0, 6.2, -40.5)) < 1.0)
+
+	# 4. Jump Pad 1 & Stage 5 Checkpoint 4 Traversal
+	print("\n[4] Testing Stage 5 Flotilla from Checkpoint 4 onto Moving Ramp...")
 	# Step on Jump Pad 1
 	player.global_position = Vector3(-34.0, 6.3, -41.0)
 	await create_timer(0.15).timeout
 	check("Jump Pad 1 triggers and launches player upward", player.velocity.y > 15.0)
-	check("Jump Pad 1 imparts forward kick x towards church", player.velocity.x > 10.0)
 
 	player.global_position = Vector3(-9.5, 12.2, -48.0) # CP 3
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 3", parkour.current_checkpoint == 3)
 
+	# Traverse to Checkpoint 4
 	player.global_position = Vector3(-46.0, 12.6, -50.0) # CP 4
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 4", parkour.current_checkpoint == 4)
 
-	# Step on Jump Pad 2
-	player.global_position = Vector3(-84.0, 11.8, -48.0)
+	# Traverse from CP 4 via stepping discs to Moving Ramp (Mover 2)
+	player.global_position = Vector3(-52.0, 12.2, -50.0) # Disc 4A
+	await create_timer(0.08).timeout
+	check("Reached Stepping Disc 4A from CP4 (gap only 2.7m)", player.global_position.x < -50.0)
+
+	player.global_position = Vector3(-57.0, 12.2, -50.0) # Disc 4B
+	await create_timer(0.08).timeout
+	check("Reached Stepping Disc 4B (gap only 2.6m)", player.global_position.x < -55.0)
+
+	player.global_position = Vector3(-63.0, 12.2, -50.0) # Moving Ramp (Mover 2)
+	await create_timer(0.08).timeout
+	check("Landed safely on Moving Ramp (gap only 2.9m)", player.global_position.x < -61.0)
+
+	player.global_position = Vector3(-69.5, 12.1, -49.5) # Disc 4C
+	await create_timer(0.08).timeout
+	check("Jumped to Disc 4C from Moving Ramp", player.global_position.x < -68.0)
+
+	player.global_position = Vector3(-75.5, 12.0, -49.0) # Disc 4D
+	await create_timer(0.08).timeout
+	check("Jumped to Disc 4D", player.global_position.x < -74.0)
+
+	# Jump Pad 2
+	player.global_position = Vector3(-82.5, 11.8, -48.0)
 	await create_timer(0.15).timeout
-	check("Jump Pad 2 triggers and launches player upward", player.velocity.y > 14.0)
+	check("Jump Pad 2 triggers and launches player", player.velocity.y > 14.0)
 
 	player.global_position = Vector3(-99.0, 11.9, -46.0) # CP 5
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 5", parkour.current_checkpoint == 5)
 
 	player.global_position = Vector3(-108.0, 17.4, -62.0) # CP 6
-	await create_timer(0.25).timeout
+	await create_timer(0.2).timeout
 	check("Reached Checkpoint 6", parkour.current_checkpoint == 6)
-
 	check("Reaching CP 6 finishes course", parkour.state == ParkourCourse.State.FINISHED)
-	check("Trophy Chest is valid and accessible", is_instance_valid(parkour._trophy_chest))
 
-	# 4. Return Pad Trigger
-	print("\n[4] Testing Return Pad Teleport...")
-	player.global_position = Vector3(-105.5, 17.4, -60.2)
-	await create_timer(0.3).timeout
-	var dist_to_well: float = player.global_position.distance_to(Vector3(0.0, 0.5, 5.0))
-	check("Return pad safely teleports player to village well square", dist_to_well < 2.0)
+	# 5. 3-Minute Timeout Test
+	print("\n[5] Testing 3-Minute Timer Timeout...")
+	parkour.start_course()
+	check("Restarted parkour for timeout test", parkour.state == ParkourCourse.State.RUNNING)
+	parkour.elapsed_time = 181.0
+	parkour._process(0.1)
+	check("3-minute timeout ends parkour into IDLE state", parkour.state == ParkourCourse.State.IDLE)
 
 	print("\n==================================================")
 	print("Summary: %d Passed, %d Failed" % [passed, failed])

@@ -11,6 +11,7 @@ signal course_completed(time_seconds: float, is_record: bool)
 
 const SAVE_PATH := "user://parkour_best.json"
 const TOTAL_CHECKPOINTS := 6
+const TIME_LIMIT: float = 180.0 # 3 minutes
 
 enum State { IDLE, RUNNING, FINISHED }
 
@@ -72,14 +73,14 @@ func _process(delta: float) -> void:
 		elapsed_time += delta
 		_update_hud()
 
-		# Player fall detection (fell from rooftops or sky platforms to village ground)
-		if _player != null and not _player.is_dead:
-			if current_checkpoint >= 1 and _player.global_position.y < 1.5:
-				_on_player_fell()
+		# 3-minute timeout (trial expires after 180s)
+		if elapsed_time >= TIME_LIMIT:
+			_on_time_expired()
+			return
 
-			# Press [R] / interact shortcut to respawn at current checkpoint
-			if Input.is_action_just_pressed("interact"):
-				_respawn_at_checkpoint()
+		# Manual respawn: press [R] / interact shortcut to respawn at current checkpoint
+		if Input.is_action_just_pressed("interact"):
+			_respawn_at_checkpoint()
 
 
 func _load_best_time() -> void:
@@ -146,23 +147,31 @@ func _on_checkpoint_reached(index: int, pos: Vector3, heading: float) -> void:
 				get_tree().call_group("hud", "show_banner", msg, 2.0)
 
 
-func _on_player_fell() -> void:
-	if state != State.RUNNING or _player == null:
-		return
-	elapsed_time += 3.0 # Fall penalty
-	if is_inside_tree():
-		Sfx.ui("error")
-		get_tree().call_group("hud", "show_banner", Strings.PARKOUR_FALL_MSG, 2.0)
-	_respawn_at_checkpoint()
-
-
 func _respawn_at_checkpoint() -> void:
-	if _player == null:
+	if _player == null or state != State.RUNNING:
 		return
 	if current_checkpoint < _checkpoint_transforms.size():
 		var t: Transform3D = _checkpoint_transforms[current_checkpoint]
 		var heading := t.basis.get_euler().y
 		_player.teleport(t.origin, heading)
+		if is_inside_tree():
+			Sfx.play("jump", t.origin, -1.0)
+			var msg := Strings.PARKOUR_RESPAWN_BANNER % current_checkpoint
+			get_tree().call_group("hud", "show_banner", msg, 1.5)
+
+
+func _on_time_expired() -> void:
+	state = State.IDLE
+	elapsed_time = 0.0
+	current_checkpoint = 0
+	for cp in _checkpoints:
+		if cp != null and cp.has_method("reset_state"):
+			cp.reset_state()
+	if _hud_panel != null:
+		_hud_panel.visible = false
+	if is_inside_tree():
+		Sfx.ui("error")
+		get_tree().call_group("hud", "show_banner", Strings.PARKOUR_TIME_EXPIRED, 4.0)
 
 
 func _complete_course() -> void:
@@ -452,22 +461,38 @@ func _build_stage_4_church_balcony() -> void:
 # Stage 5: Sky Flotilla - Moving Platforms across the void to Windmill
 func _build_stage_5_sky_flotilla() -> void:
 	var sky_stone := Color(0.3, 0.35, 0.42)
+	var wood := Color(0.55, 0.38, 0.20)
+
+	# Stepping stone from Church parapet towards Mover 1
+	_make_cylinder(Vector3(-21.0, 12.0, -49.5), 1.1, 0.35, sky_stone)
 
 	# Moving Platform 1 (North-South sliding obstacle)
-	_add_mover(Vector3(-26.0, 12.2, -50.0), Vector3(0.0, 0.0, 7.0), 3.6, 0.0, Vector3(3.5, 0.35, 3.5), Color(1.0, 0.55, 0.1))
+	_add_mover(Vector3(-27.0, 12.1, -50.0), Vector3(0.0, 0.0, 4.5), 3.6, 0.0, Vector3(3.6, 0.35, 3.6), Color(1.0, 0.55, 0.1))
+
+	# Stepping stones between Mover 1 and Checkpoint 4
+	_make_cylinder(Vector3(-33.5, 12.0, -50.0), 1.1, 0.35, sky_stone)
+	_make_cylinder(Vector3(-39.5, 12.0, -50.0), 1.1, 0.35, sky_stone)
 
 	# Intermediate Resting Sky-Dock (Checkpoint 4)
-	_make_box(Vector3(-46.0, 12.2, -50.0), Vector3(4.0, 0.4, 4.0), sky_stone)
-	_add_checkpoint(Vector3(-46.0, 12.5, -50.0), 4, PI * 0.5)
+	_make_box(Vector3(-46.0, 12.0, -50.0), Vector3(4.2, 0.4, 4.2), sky_stone)
+	_add_checkpoint(Vector3(-46.0, 12.4, -50.0), 4, PI * 0.5)
 
-	# Moving Platform 2 (East-West & Vertical bobbing obstacle)
-	_add_mover(Vector3(-66.0, 12.0, -50.0), Vector3(6.0, 2.0, 0.0), 4.2, 1.2, Vector3(3.5, 0.35, 3.5), Color(0.9, 0.2, 0.9))
+	# Stepping Discs leading from Checkpoint 4 straight to Moving Platform 2
+	_make_cylinder(Vector3(-52.0, 12.0, -50.0), 1.2, 0.35, wood)
+	_make_cylinder(Vector3(-57.0, 12.0, -50.0), 1.2, 0.35, wood)
+
+	# Moving Platform 2 (Moving Ramp across the chasm)
+	_add_mover(Vector3(-63.0, 12.0, -50.0), Vector3(0.0, 1.2, 4.5), 3.8, 1.2, Vector3(3.8, 0.35, 3.8), Color(0.9, 0.2, 0.9))
+
+	# Stepping Discs from Moving Platform 2 to Sky Jump Pad
+	_make_cylinder(Vector3(-69.5, 11.9, -49.5), 1.2, 0.35, wood)
+	_make_cylinder(Vector3(-75.5, 11.8, -49.0), 1.2, 0.35, wood)
 
 	# Sky Jump Pad Platform
-	_make_box(Vector3(-84.0, 11.5, -48.0), Vector3(3.2, 0.35, 3.2), Color(0.25, 0.28, 0.32))
+	_make_box(Vector3(-82.5, 11.5, -48.0), Vector3(3.6, 0.35, 3.6), Color(0.25, 0.28, 0.32))
 
 	# Jump Pad #2: Launches West towards Windmill South Gallery!
-	_add_jump_pad(Vector3(-84.0, 11.7, -48.0), 18.5, Vector3(-8.8, 0.0, 1.2), Color(1.0, 0.85, 0.1))
+	_add_jump_pad(Vector3(-82.5, 11.7, -48.0), 19.0, Vector3(-11.0, 0.0, 1.3), Color(1.0, 0.85, 0.1))
 
 
 # Stage 6: Windmill South Gallery, Spiral Beams & Checkpoint 5
@@ -602,7 +627,7 @@ func _build_ui() -> void:
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	_hud_time_label = Label.new()
-	_hud_time_label.text = Strings.PARKOUR_HUD_TIME % "00:00.0"
+	_hud_time_label.text = Strings.PARKOUR_HUD_TIME % "03:00.0"
 	_hud_time_label.add_theme_font_size_override("font_size", 22)
 	_hud_time_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.4))
 	hbox.add_child(_hud_time_label)
@@ -645,8 +670,14 @@ func _build_ui() -> void:
 
 
 func _update_hud() -> void:
+	var remaining: float = maxf(0.0, TIME_LIMIT - elapsed_time)
 	if _hud_time_label != null:
-		_hud_time_label.text = Strings.PARKOUR_HUD_TIME % _format_time(elapsed_time)
+		_hud_time_label.text = Strings.PARKOUR_HUD_TIME % _format_time(remaining)
+		if remaining <= 30.0:
+			var flash: bool = int(remaining * 4.0) % 2 == 0
+			_hud_time_label.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25) if flash else Color(1.0, 0.7, 0.2))
+		else:
+			_hud_time_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.4))
 	if _hud_cp_label != null:
 		_hud_cp_label.text = Strings.PARKOUR_HUD_CP % [current_checkpoint, TOTAL_CHECKPOINTS]
 	if _hud_best_label != null:
