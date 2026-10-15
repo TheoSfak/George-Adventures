@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.12.0 (2026-10-15) — 12-slot primary action bar & optional second action bar
+**New in this version**
+- **Expanded Primary Action Bar:**
+  - The main action bar now features 12 slots (expanded from 8).
+  - Default shortcut keybindings mapped to `9`, `0`, `-` (`KEY_MINUS`), and `=` (`KEY_EQUAL`) as well as Numpad equivalents.
+- **Secondary Action Bar Option:**
+  - Added an option in the Settings menu ("Δεύτερη μπάρα δεξιοτήτων") to toggle a second 12-slot action bar.
+  - Positioned directly below the primary action bar for seamless skill management.
+  - Dynamically adjusts HUD hints and status buff icon offsets to prevent any visual overlap.
+  - Full key rebinding support for all 24 skill slots (`slot_1` to `slot_24`).
+  - Seamless backwards compatibility with existing save games.
+- New tests: `action_bar_12_test`, `second_action_bar_test` (headless, all pass).
+
 ## 1.11.0 (2026-10-15) — Combat skills & gear sets, new side quests, and themed invasions
 **New in this version**
 - **Combat & Gear System Expansion:**
