@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.14.2 (2026-10-15) — 3-Minute Parkour Timer, Manual Checkpoint Return & Stage 5 Path Connection
+**New in this version**
+- **Manual Checkpoint Return on Button Press:**
+  - Removed automatic teleport upon falling to the ground; players are now free to walk around if they fall off platforms.
+  - Pressing `[R]` (interact button) while the course is running instantly returns George to his latest checkpoint with audio-visual confirmation.
+- **3-Minute Challenge Timer & HUD Countdown:**
+  - Added a 3-minute (`180.0s`) trial limit with a live HUD countdown (`03:00.0` down to `00:00.0`).
+  - Implemented urgency color flashing on the HUD timer in the final 30 seconds.
+  - Graceful timeout handling when time expires, resetting the trial and displaying a notification.
+- **Stage 5 Checkpoint 4 Gap Connection:**
+  - Added intermediate suspended stepping discs (4A, 4B) between Checkpoint 4 and the moving ramp, reducing jump gaps to a comfortable 2.6m–2.9m.
+  - Added stepping discs (4C, 4D) between the moving ramp and the Sky Jump Pad platform for consistent, rhythmic progression.
+  - Connected the entire sky flotilla from the church parapet to the windmill with 2.6m–4.0m gaps.
+- **Automated Verification:**
+  - Expanded `tools/parkour_probe.gd` with 60 comprehensive physical simulation, collision, raycast, and timeout tests (100% pass).
+
 ## 1.14.1 (2026-10-15) — Parkour Collision Fixes, Start Stairs & Fullscreen Mode
 **New in this version**
 - **Village Parkour Starting Area & Collision Overhaul:**
