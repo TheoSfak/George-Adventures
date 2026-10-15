@@ -74,11 +74,11 @@ func _process(delta: float) -> void:
 
 		# Player fall detection (fell from rooftops or sky platforms to village ground)
 		if _player != null and not _player.is_dead:
-			if _player.global_position.y < 1.1:
+			if current_checkpoint >= 1 and _player.global_position.y < 1.5:
 				_on_player_fell()
 
-			# Press [R] / action shortcut to respawn at current checkpoint
-			if Input.is_action_just_pressed("action"):
+			# Press [R] / interact shortcut to respawn at current checkpoint
+			if Input.is_action_just_pressed("interact"):
 				_respawn_at_checkpoint()
 
 
@@ -187,7 +187,7 @@ func _complete_course() -> void:
 # ---------------------------------------------------------------- Start & Sign ----
 
 func _build_start_zone() -> void:
-	var start_pos := Vector3(-51.5, 0.0, -5.0)
+	var start_pos := Vector3(-49.5, 0.0, -1.0)
 
 	# Decorative Start Plinth Pad
 	var plinth := MeshInstance3D.new()
@@ -198,22 +198,23 @@ func _build_start_zone() -> void:
 	plinth.mesh = cyl
 	plinth.position = start_pos + Vector3(0, 0.075, 0)
 	var p_mat := StandardMaterial3D.new()
-	p_mat.albedo_color = Color(0.9, 0.75, 0.2)
+	p_mat.albedo_color = Color(0.95, 0.8, 0.2)
 	p_mat.emission_enabled = true
-	p_mat.emission = Color(0.9, 0.75, 0.2)
-	p_mat.emission_energy_multiplier = 0.8
+	p_mat.emission = Color(0.95, 0.8, 0.2)
+	p_mat.emission_energy_multiplier = 0.9
 	plinth.material_override = p_mat
 	add_child(plinth)
 
-	# Trigger area for starting course
+	# Trigger area for starting course (detects Player layer 2)
 	_start_area = Area3D.new()
+	_start_area.collision_mask = 1 | 2
 	_start_area.position = start_pos
 	var shape := CollisionShape3D.new()
 	var c_shape := CylinderShape3D.new()
-	c_shape.radius = 1.8
-	c_shape.height = 1.5
+	c_shape.radius = 2.0
+	c_shape.height = 1.6
 	shape.shape = c_shape
-	shape.position.y = 0.75
+	shape.position.y = 0.8
 	_start_area.add_child(shape)
 	_start_area.body_entered.connect(func(b):
 		if b is Player and state != State.RUNNING:
@@ -222,7 +223,7 @@ func _build_start_zone() -> void:
 	add_child(_start_area)
 
 	# Start Signpost
-	var sign_pos := start_pos + Vector3(2.2, 0.0, 0.5)
+	var sign_pos := start_pos + Vector3(2.5, 0.0, 0.0)
 	_sign_body = StaticBody3D.new()
 	_sign_body.position = sign_pos
 
@@ -238,7 +239,7 @@ func _build_start_zone() -> void:
 
 	var board := MeshInstance3D.new()
 	var board_mesh := BoxMesh.new()
-	board_mesh.size = Vector3(2.0, 1.3, 0.1)
+	board_mesh.size = Vector3(2.2, 1.3, 0.1)
 	board.mesh = board_mesh
 	board.position.y = 1.8
 	board.material_override = wood_mat
@@ -246,7 +247,7 @@ func _build_start_zone() -> void:
 
 	_sign_label = Label3D.new()
 	_sign_label.position = Vector3(0.0, 1.8, 0.06)
-	_sign_label.pixel_size = 0.0055
+	_sign_label.pixel_size = 0.0052
 	_sign_label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	_sign_label.font_size = 32
 	_sign_label.modulate = Color(1.0, 0.95, 0.8)
@@ -255,14 +256,22 @@ func _build_start_zone() -> void:
 
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(2.0, 2.4, 0.3)
+	box.size = Vector3(2.2, 2.4, 0.3)
 	col.shape = box
 	col.position.y = 1.2
 	_sign_body.add_child(col)
 	add_child(_sign_body)
 
+	# InteractSpot so player can also start by walking up and pressing [R]
+	var spot := InteractSpot.make(Strings.PARKOUR_TITLE, func(_p: Player):
+		if state != State.RUNNING:
+			start_course()
+	, 3.2)
+	spot.position = start_pos
+	add_child(spot)
+
 	# Store checkpoint 0 as start platform
-	var t := Transform3D(Basis.from_euler(Vector3(0, PI * 0.75, 0)), start_pos + Vector3(0, 0.2, 0))
+	var t := Transform3D(Basis.from_euler(Vector3(0, PI, 0)), start_pos + Vector3(0, 0.2, 0))
 	_checkpoint_transforms.append(t)
 
 
@@ -367,23 +376,30 @@ func _add_mover(pos: Vector3, offset: Vector3, dur: float, phase: float, size: V
 	return m
 
 
-# Stage 1: Stack of crates & ramp to Tavern roof ridge (Checkpoint 1)
+# Stage 1: Wooden Ascent Stairs & Tavern North Catwalk (Checkpoint 1)
 func _build_stage_1_tavern() -> void:
 	var wood := Color(0.55, 0.35, 0.18)
-	# Crates climbing up
-	_make_box(Vector3(-53.8, 0.0, -5.5), Vector3(1.4, 0.8, 1.4), wood)
-	_make_box(Vector3(-55.4, 0.0, -6.5), Vector3(1.4, 1.6, 1.4), wood)
-	_make_box(Vector3(-57.0, 0.0, -7.8), Vector3(1.4, 2.5, 1.4), wood)
+	var deck_wood := Color(0.48, 0.30, 0.15)
 
-	# Scaffolding platform landing on Tavern eaves
-	_make_box(Vector3(-58.6, 0.0, -9.0), Vector3(1.8, 3.6, 1.8), wood)
-	_make_box(Vector3(-60.2, 0.0, -9.8), Vector3(2.4, 4.6, 2.4), wood)
+	# Gentle 8-step wooden staircase along X = -49.5 (clear east of tavern wall at X = -53.12)
+	var step_zs: Array[float] = [-2.5, -4.0, -5.5, -7.0, -8.5, -10.0, -11.5, -13.0]
+	for i in step_zs.size():
+		var sz: float = step_zs[i]
+		var h: float = (i + 1) * 0.45
+		_make_box(Vector3(-49.5, 0.0, sz), Vector3(2.4, h, 1.3), wood)
 
-	# Tavern Roof Ridge Walkway
-	_make_box(Vector3(-60.0, 4.6, -12.5), Vector3(1.2, 0.3, 5.0), wood)
+	# High Landing Terrace 1
+	_make_box(Vector3(-49.5, 0.0, -15.0), Vector3(2.8, 4.05, 2.5), wood)
 
-	# Checkpoint 1 on Tavern chimney ridge
-	_add_checkpoint(Vector3(-60.0, 4.8, -15.5), 1, PI * 0.9)
+	# Transition walkway heading West to Tavern North Catwalk (North of tavern Z = -16.96)
+	_make_box(Vector3(-52.0, 4.1, -18.5), Vector3(2.6, 0.3, 1.8), deck_wood)
+	_make_box(Vector3(-56.0, 4.3, -18.5), Vector3(5.5, 0.3, 1.8), deck_wood)
+
+	# Checkpoint 1 Deck
+	_make_box(Vector3(-60.0, 4.4, -18.5), Vector3(3.4, 0.35, 3.4), wood)
+
+	# Checkpoint 1
+	_add_checkpoint(Vector3(-60.0, 4.6, -18.5), 1, PI)
 
 
 # Stage 2: Balance beam across to Tree Canopy platform & stepping logs
@@ -391,50 +407,46 @@ func _build_stage_2_canopy() -> void:
 	var wood := Color(0.48, 0.30, 0.15)
 	var leaf_wood := Color(0.38, 0.45, 0.20)
 
-	# Narrow balance beam heading North towards tree
-	_make_box(Vector3(-58.5, 4.9, -19.5), Vector3(0.65, 0.25, 6.0), wood)
-	_make_box(Vector3(-56.5, 5.2, -24.0), Vector3(0.65, 0.25, 4.0), wood)
+	# Narrow balance beam heading North towards big tree
+	_make_box(Vector3(-58.0, 4.8, -23.0), Vector3(0.85, 0.25, 6.0), wood)
 
 	# Large Oak Tree canopy wooden ring platform
-	_make_cylinder(Vector3(-54.0, 5.4, -28.0), 2.2, 0.3, leaf_wood)
+	_make_cylinder(Vector3(-54.0, 5.2, -28.5), 2.2, 0.35, leaf_wood)
 
-	# Suspended Stepping Logs / Discs
-	_make_cylinder(Vector3(-50.5, 5.6, -33.5), 0.85, 0.3, wood)
-	_make_cylinder(Vector3(-47.0, 5.7, -38.5), 0.85, 0.3, wood)
-	_make_cylinder(Vector3(-44.0, 5.6, -43.0), 0.85, 0.3, wood)
+	# Stepping Discs
+	_make_cylinder(Vector3(-50.0, 5.5, -33.5), 0.95, 0.35, wood)
+	_make_cylinder(Vector3(-45.5, 5.8, -37.5), 0.95, 0.35, wood)
 
 
-# Stage 3: NW House Roof, Checkpoint 2 & Jump Pad #1 to Church
+# Stage 3: NW House South Gallery, Checkpoint 2 & Jump Pad #1 to Church
 func _build_stage_3_nw_house() -> void:
 	var wood := Color(0.52, 0.34, 0.18)
 
-	# NW House roof platform
-	_make_box(Vector3(-41.0, 5.6, -47.6), Vector3(3.4, 0.3, 3.4), wood)
+	# Gallery deck South of NW house (Z = -40.5, clear of house wall Z = -43.37)
+	_make_box(Vector3(-41.0, 6.0, -40.5), Vector3(4.2, 0.35, 3.2), wood)
 
-	# Checkpoint 2 on NW House Roof
-	_add_checkpoint(Vector3(-41.0, 5.8, -46.5), 2, deg_to_rad(75.0))
+	# Checkpoint 2 on Gallery deck
+	_add_checkpoint(Vector3(-41.0, 6.2, -40.5), 2, deg_to_rad(75.0))
 
 	# Launch Ramp platform holding Jump Pad #1
-	_make_box(Vector3(-36.5, 5.7, -50.5), Vector3(2.6, 0.3, 2.6), Color(0.25, 0.28, 0.32))
+	_make_box(Vector3(-34.0, 6.0, -41.0), Vector3(3.2, 0.35, 3.2), Color(0.25, 0.28, 0.32))
 
-	# Jump Pad #1: Launches East towards the Church Bell Tower ledge!
-	# Church is at (0, 0, -59), dx ≈ +35m, dy ≈ +6.5m, dz ≈ -9m
-	_add_jump_pad(Vector3(-36.5, 5.9, -50.5), 22.5, Vector3(14.5, 0.0, -3.6), Color(0.1, 0.9, 1.0))
+	# Jump Pad #1: Launches East-North-East towards Church Overlook terrace at (-9.5, 11.8, -48.0)!
+	_add_jump_pad(Vector3(-34.0, 6.2, -41.0), 22.0, Vector3(14.5, 0.0, -4.1), Color(0.1, 0.9, 1.0))
 
 
-# Stage 4: Church Bell Tower cornice & Checkpoint 3
+# Stage 4: Church High Overlook & Checkpoint 3
 func _build_stage_4_church_balcony() -> void:
 	var stone := Color(0.65, 0.62, 0.58)
 
-	# Church West Cornice Landing Platform
-	_make_box(Vector3(-6.5, 11.8, -58.5), Vector3(4.5, 0.4, 3.5), stone)
+	# Church West Overlook Landing Terrace (X = -9.5 clear west of church X = -5.56, Z = -48.0 clear south of Z = -52.55)
+	_make_box(Vector3(-9.5, 11.8, -48.0), Vector3(4.5, 0.4, 4.5), stone)
 
-	# Narrow gothic parapet walkway along the Church Tower front
-	_make_box(Vector3(-3.0, 11.9, -58.5), Vector3(3.5, 0.3, 1.2), stone)
-	_make_box(Vector3(0.0, 12.0, -58.5), Vector3(3.0, 0.3, 2.5), stone)
+	# Checkpoint 3 on Church Overlook
+	_add_checkpoint(Vector3(-9.5, 12.1, -48.0), 3, PI * 0.75)
 
-	# Checkpoint 3 on Church Bell Tower ledge
-	_add_checkpoint(Vector3(0.0, 12.2, -58.5), 3, PI)
+	# Gothic Parapet Walkway extending westward into sky
+	_make_box(Vector3(-15.0, 12.0, -49.0), Vector3(4.5, 0.35, 2.0), stone)
 
 
 # Stage 5: Sky Flotilla - Moving Platforms across the void to Windmill
@@ -442,45 +454,44 @@ func _build_stage_5_sky_flotilla() -> void:
 	var sky_stone := Color(0.3, 0.35, 0.42)
 
 	# Moving Platform 1 (North-South sliding obstacle)
-	_add_mover(Vector3(-22.0, 12.4, -59.0), Vector3(0.0, 0.0, 8.5), 3.6, 0.0, Vector3(3.2, 0.35, 3.2), Color(1.0, 0.55, 0.1))
+	_add_mover(Vector3(-26.0, 12.2, -50.0), Vector3(0.0, 0.0, 7.0), 3.6, 0.0, Vector3(3.5, 0.35, 3.5), Color(1.0, 0.55, 0.1))
 
 	# Intermediate Resting Sky-Dock (Checkpoint 4)
-	_make_box(Vector3(-46.0, 12.2, -58.0), Vector3(3.6, 0.4, 3.6), sky_stone)
-	_add_checkpoint(Vector3(-46.0, 12.5, -58.0), 4, PI * 0.5)
+	_make_box(Vector3(-46.0, 12.2, -50.0), Vector3(4.0, 0.4, 4.0), sky_stone)
+	_add_checkpoint(Vector3(-46.0, 12.5, -50.0), 4, PI * 0.5)
 
 	# Moving Platform 2 (East-West & Vertical bobbing obstacle)
-	_add_mover(Vector3(-68.0, 11.8, -57.0), Vector3(7.5, 2.4, 0.0), 4.2, 1.2, Vector3(3.2, 0.35, 3.2), Color(0.9, 0.2, 0.9))
+	_add_mover(Vector3(-66.0, 12.0, -50.0), Vector3(6.0, 2.0, 0.0), 4.2, 1.2, Vector3(3.5, 0.35, 3.5), Color(0.9, 0.2, 0.9))
 
 	# Sky Jump Pad Platform
-	_make_box(Vector3(-85.0, 10.8, -55.5), Vector3(2.8, 0.35, 2.8), Color(0.25, 0.28, 0.32))
+	_make_box(Vector3(-84.0, 11.5, -48.0), Vector3(3.2, 0.35, 3.2), Color(0.25, 0.28, 0.32))
 
-	# Jump Pad #2: Launches West-North-West directly onto Windmill upper gallery!
-	_add_jump_pad(Vector3(-85.0, 11.0, -55.5), 18.5, Vector3(-7.2, 0.0, 0.8), Color(1.0, 0.85, 0.1))
+	# Jump Pad #2: Launches West towards Windmill South Gallery!
+	_add_jump_pad(Vector3(-84.0, 11.7, -48.0), 18.5, Vector3(-8.8, 0.0, 1.2), Color(1.0, 0.85, 0.1))
 
 
-# Stage 6: Windmill Balcony, Spiral Gear Beams & Checkpoint 5
+# Stage 6: Windmill South Gallery, Spiral Beams & Checkpoint 5
 func _build_stage_6_windmill() -> void:
 	var wood := Color(0.55, 0.38, 0.20)
 
-	# Windmill Balcony Landing Deck
-	_make_box(Vector3(-96.5, 9.8, -54.0), Vector3(3.5, 0.35, 3.5), wood)
+	# Windmill South Gallery Landing Deck (Z = -46.0 clear south of windmill Z = -49.58)
+	_make_box(Vector3(-99.0, 11.5, -46.0), Vector3(4.2, 0.4, 4.2), wood)
 
-	# Checkpoint 5 on Windmill Balcony
-	_add_checkpoint(Vector3(-96.5, 10.1, -54.0), 5, deg_to_rad(135.0))
+	# Checkpoint 5 on Windmill South Gallery
+	_add_checkpoint(Vector3(-99.0, 11.8, -46.0), 5, deg_to_rad(135.0))
 
-	# Ascending spiral timber beams around windmill wall
-	_make_box(Vector3(-101.5, 11.4, -51.5), Vector3(2.2, 0.3, 1.2), wood)
-	_make_box(Vector3(-104.5, 13.0, -54.8), Vector3(1.2, 0.3, 2.2), wood)
-	_make_box(Vector3(-101.5, 14.6, -57.8), Vector3(2.2, 0.3, 1.2), wood)
-	_make_box(Vector3(-98.0, 15.6, -55.0), Vector3(1.6, 0.3, 2.0), wood)
+	# Ascending timber beams along West side (X = -108.0 clear west of windmill X = -105.74)
+	_make_box(Vector3(-108.0, 13.0, -48.0), Vector3(2.5, 0.35, 1.8), wood)
+	_make_box(Vector3(-108.0, 14.5, -52.0), Vector3(2.5, 0.35, 1.8), wood)
+	_make_box(Vector3(-108.0, 16.0, -56.0), Vector3(2.5, 0.35, 1.8), wood)
 
 
 # Stage 7: Finish Sky Podium, Trophy Chest & Return Launcher
 func _build_stage_7_finish_podium() -> void:
 	var gold_podium := Color(0.72, 0.58, 0.22)
-	var finish_pos := Vector3(-106.0, 16.4, -49.0)
+	var finish_pos := Vector3(-108.0, 17.0, -62.0)
 
-	# Grand Sky Podium Platform
+	# Grand Sky Podium Platform (clear north of windmill Z = -58.39)
 	_make_cylinder(finish_pos, 4.2, 0.5, gold_podium)
 
 	# Decorative Golden Pillars
@@ -524,6 +535,7 @@ func _build_stage_7_finish_podium() -> void:
 
 	# Attach return teleport trigger to launch pad
 	var ret_area := Area3D.new()
+	ret_area.collision_mask = 1 | 2
 	ret_area.position = ret_pos
 	var shape := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
