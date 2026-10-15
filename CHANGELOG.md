@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.14.3 (2026-10-15) — Lava Crystals Reachability Fix & Return Portal to Agios Vlasis
+**New in this version**
+- **Lava Crystals Reachability Overhaul (Quest "Οι Κρύσταλλοι της Λάβας"):**
+  - Resolved unreachable lava crystal placement where Crystal 2 was located $2.5\text{m}$ inside the molten lava river and blocked by invisible collision walls.
+  - Relocated Crystal 2 to $(24.0, -42.0)$ on the dry South riverbank ($5.7\text{m}$ clearance from lava) and Crystal 3 to $(-16.0, -76.0)$ on the dry North riverbank ($5.0\text{m}$ clearance).
+  - Preserved original coordinates for Crystal 1 and Crystal 4 so existing saves with partial progress continue seamlessly without item duplication.
+  - Added crystals to `_blocked()` procedural rejection list to prevent randomly generated boulders or dead trees from ever obstructing them.
+- **Return Portal to Agios Vlasis & Multi-Region Outside Tracking:**
+  - Fixed an issue where visiting the Temple Sanctum corrupted the stored outside teleport target for Ash Valley, causing the return portal to leave the player trapped inside the valley.
+  - Implemented per-region outside destination tracking (`_region_outside[region_id]`) in `Interiors` with automatic fallback to village gates and recovery if `_in_region` is desynchronized.
+  - Added an `Area3D` walk-through trigger under the exit stone archway: walking directly into the portal automatically teleports George back to Agios Vlasis.
+  - Expanded `InteractSpot` radius to $5.0\text{m}$ centered on the archway with a warm glowing beacon light (`OmniLight3D`).
+  - Added fallback recovery for `exit_action` across Ash Valley, Frontier, and Temple Sanctum.
+- **Verification:**
+  - Automated tests `tools/crystal_reach_test.gd` (A* pathfinding and dry ground verification) and comprehensive flow test across all transitions 100% pass.
+
 ## 1.14.2 (2026-10-15) — 3-Minute Parkour Timer, Manual Checkpoint Return & Stage 5 Path Connection
 **New in this version**
 - **Manual Checkpoint Return on Button Press:**
