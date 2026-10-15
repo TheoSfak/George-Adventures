@@ -138,6 +138,7 @@ var _guard_time := 0.0
 var _guard_hit_cd := 0.0         # keeps the shield's hit sound and ring from repeating every frame
 var _power_time := 0.0
 var _speed_time := 0.0
+var _pet_buff_time := 0.0
 var _dash_time := 0.0
 var _dash_dir := Vector3.ZERO
 var _dash_hit: Array = []
@@ -397,6 +398,8 @@ func _physics_process(delta: float) -> void:
 	var speed := run_speed if Input.is_action_pressed("run") else walk_speed
 	if _speed_time > 0.0:
 		speed *= 1.4
+	if _pet_buff_time > 0.0:
+		speed *= 1.10
 	if _slow_time > 0.0:
 		speed *= 0.6
 	speed *= 1.0 + stats.total("speed_mult") + (0.15 if _frenzy_time > 0.0 else 0.0)
@@ -1268,6 +1271,7 @@ func _tick_timers(delta: float) -> void:
 	_kick_cd = maxf(_kick_cd - delta, 0.0)
 	_power_time = maxf(_power_time - delta, 0.0)
 	_speed_time = maxf(_speed_time - delta, 0.0)
+	_pet_buff_time = maxf(_pet_buff_time - delta, 0.0)
 	_special_time = maxf(_special_time - delta, 0.0)
 	_frenzy_time = maxf(_frenzy_time - delta, 0.0)
 	_shout_time = maxf(_shout_time - delta, 0.0)
@@ -1352,9 +1356,15 @@ func buff_time(id: String) -> float:
 			return _shout_time
 		"wall":
 			return _wall_time
+		"pet":
+			return _pet_buff_time
 		"food":
 			return float(food.get("time", 0.0))
 	return 0.0
+
+
+func apply_pet_buff(duration: float = 120.0) -> void:
+	_pet_buff_time = duration
 
 
 func _damage_mult() -> float:

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.10.0 (2026-10-15) — Village animals, upgraded stable, market audio & night ambushes
+**New in this version**
+- **Village Animals & Living World:**
+  - **Μούργος ο Σκύλος (Mourgos the Village Dog):** A loyal village dog trots around the village square and tavern porch. He greets George with friendly barks (`dog_bark`) and affectionate whimpers (`dog_whimper`). Interacting with Mourgos pets him, causing his tail to wag enthusiastically and granting George a joyful +10% movement speed buff for 2 minutes.
+  - **Μαντρί με Πρόβατα (Farm Sheep Pen):** A rustic fenced sheep pen in the eastern meadows by the farm. Three fluffy sheep graze peacefully, chewing grass, bobbing their heads, and bleating (`sheep_baa`). Players can interact to feed them, triggering happy chewing and sparkle animations.
+  - **Αναβαθμισμένος Στάβλος (Upgraded Stable Yard):** Replaced makeshift crate fences with real wooden post-and-rail fencing and a gate. Added a roofed shelter structure with hay sacks, grain barrels, water troughs, and lantern. The paddock now hosts companion horses—a chestnut grazing mare and a young foal standing alongside the player's mount.
+- **Dynamic Night Roadside Encounters:**
+  - When traveling along wilderness trails at night, a stealthy bandit ambush can spring from the tree line once per night (`rescue_alert` audio cue and warning banner). Defeating the ambushers rewards bonus gold and healing potions.
+- **Village Square Market Soundscape:**
+  - Added a synthesized daytime market chatter ambience loop (`amb_market`): smooth outdoor murmurs, distant chatter, and village bustle that naturally fades in as George approaches the central well during daytime and fades at night or in the wild.
+- New test: `v110_features_test` (headless, 18 assertions, all pass).
+
 ## 1.9.0 (2026-10-15) — Region maps, Andreas herb shop & UI polish
 **New in this version**
 - **Autonomous Map & Minimap for outdoor regions:**

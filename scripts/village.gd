@@ -146,6 +146,7 @@ func _ready() -> void:
 	_build_chests_items_signs()
 	_build_totems()
 	_build_stable()
+	_build_animals()
 	_build_bandit_camp()
 	_build_cult_site()
 	_build_pumpkin_patch()
@@ -706,8 +707,8 @@ func _build_totems() -> void:
 
 
 ## The Great Tree area in the east: a lake with rock islands, bridges and a giant tree (great_tree.gd).
-## The stable yard: a small paddock fenced with crates and pallets, hay sacks and barrels, the horse
-## standing inside and Μανώλης at the gate. It faces the well.
+## The stable yard: a rustic wooden yard with shelter, hay sacks, barrels, water troughs,
+## companion horses (mare and foal) and Μανώλης at the gate. It faces the well.
 func _build_stable() -> void:
 	var holder := Node3D.new()
 	holder.name = "Stable"
@@ -716,48 +717,118 @@ func _build_stable() -> void:
 	var center := Vector3(STABLE.x, 0.0, STABLE.y)
 	var forward := Vector3(sin(heading), 0.0, cos(heading))
 	var right := Vector3(-cos(heading), 0.0, sin(heading))
-	var half := Vector2(5.5, 4.0)                          # half width (right) and half depth (forward)
+	var half := Vector2(6.5, 4.8)                          # half width (right) and half depth (forward)
 	var rot := rad_to_deg(heading)
-	# the fence: crates along the back and the sides, a gap of 3 m in the middle of the front
+	# wooden fence posts and rails around the perimeter with gate opening
 	var pieces := []
 	for x in range(-5, 6, 2):
 		pieces.append(Vector2(float(x), -half.y))                 # back
-	for z in range(-2, 3, 2):
-		pieces.append(Vector2(-half.x, float(z) * 1.6))           # left side
-		pieces.append(Vector2(half.x, float(z) * 1.6))            # right side
-	for x in [-5.0, -3.0, 3.0, 5.0]:
-		pieces.append(Vector2(x, half.y))                          # front, with the gap
-	var models := ["decoration/props/crate_long_A.gltf", "decoration/props/crate_long_B.gltf", "decoration/props/pallet.gltf"]
+	for z in range(-3, 4, 2):
+		pieces.append(Vector2(-half.x, float(z) * 1.3))           # left side
+		pieces.append(Vector2(half.x, float(z) * 1.3))            # right side
+	for x in [-5.0, -3.2, 3.2, 5.0]:
+		pieces.append(Vector2(x, half.y))                          # front, with gate gap
+	var fence_models := ["buildings/neutral/fence_wood_straight.gltf", "buildings/neutral/fence_wood_straight.gltf", "decoration/props/pallet.gltf"]
 	for i in pieces.size():
 		var v: Vector2 = pieces[i]
 		var pos := center + right * v.x + forward * v.y
-		var turn := rot + (90.0 if absf(v.x) > half.x - 0.1 else 0.0)
-		var node := _place(models[i % models.size()], pos, turn, PS * 1.0, holder)
+		var turn := rot + (90.0 if absf(v.x) > half.x - 0.2 else 0.0)
+		var node := _place(fence_models[i % fence_models.size()], pos, turn, PS * 0.95, holder)
 		_add_box_collider(node, 0.8)
-	# hay sacks, barrels and a bucket near the back
+	# stable shelter structure at the back
+	var shelter := _place("buildings/neutral/building_scaffolding.gltf", center - forward * (half.y - 1.2), rot, PS * 0.9, holder)
+	_add_box_collider(shelter, 1.2)
+	# hay sacks, barrels, water buckets, lantern
 	var extras := [
-		["decoration/props/sack.gltf", Vector2(-3.5, -2.6), 20.0], ["decoration/props/sack.gltf", Vector2(-2.6, -3.0), 80.0],
-		["decoration/props/barrel.gltf", Vector2(3.6, -2.8), 0.0], ["decoration/props/bucket_water.gltf", Vector2(2.4, -3.0), 30.0],
+		["decoration/props/sack.gltf", Vector2(-3.8, -3.2), 20.0],
+		["decoration/props/sack.gltf", Vector2(-3.0, -3.5), 75.0],
+		["decoration/props/barrel.gltf", Vector2(4.2, -3.2), 0.0],
+		["decoration/props/barrel.gltf", Vector2(3.4, -3.6), 35.0],
+		["decoration/props/bucket_water.gltf", Vector2(2.2, -3.4), 30.0],
+		["decoration/props/bucket_empty.gltf", Vector2(1.2, -3.6), 0.0],
+		["items/torch_mounted.gltf.glb", Vector2(2.5, half.y + 0.2), rot],
 	]
 	for e in extras:
 		var v: Vector2 = e[1]
 		var pos := center + right * v.x + forward * v.y
 		var node := _place(e[0], pos, rot + float(e[2]), PS, holder)
 		_add_box_collider(node, 0.8)
-	# the horse that stands in the paddock
+	# the main horse that stands in the paddock ready to mount/buy
 	var horse := Horse.new()
-	horse.position = center + right * 0.8 - forward * 0.5
+	horse.position = center + right * 1.0 - forward * 0.4
 	horse.rotation.y = heading + 2.2
 	holder.add_child(horse)
 	horse.stand()
-	# the keeper at the gate, a step outside the fence
+	# companion mare (chestnut coat)
+	var mare := Horse.new()
+	mare.position = center - right * 2.2 - forward * 1.5
+	mare.rotation.y = heading - 1.3
+	holder.add_child(mare)
+	mare.stand()
+	# companion young foal
+	var foal := Horse.new()
+	foal.position = center - right * 3.6 - forward * 0.9
+	foal.rotation.y = heading - 0.8
+	foal.scale = Vector3.ONE * 0.65
+	holder.add_child(foal)
+	foal.stand()
+	# the keeper at the gate
 	var keeper := Npc.new()
 	keeper.npc_id = "manolis"
 	keeper.rest_yaw = heading
-	keeper.position = center + forward * (half.y + 2.2) + right * 2.4
+	keeper.position = center + forward * (half.y + 1.8) + right * 2.2
 	var npcs := get_node_or_null("Npcs")
 	(npcs if npcs else holder).add_child(keeper)
-	_occupy(center.x, center.z, 11.0)
+	_occupy(center.x, center.z, 12.0)
+
+
+## Village animal life: Mourgos the village dog, farm sheep in their pasture pen, and roadside encounters.
+func _build_animals() -> void:
+	var holder := Node3D.new()
+	holder.name = "Animals"
+	add_child(holder)
+
+	# 1. Mourgos the Village Dog
+	var dog := VillageDog.new()
+	dog.position = Vector3(VillageDog.REST_POS.x, 0.0, VillageDog.REST_POS.y)
+	holder.add_child(dog)
+
+	# 2. Sheep pen in the eastern farm meadow near (45.0, -84.0)
+	var pen_center := Vector3(45.0, 0.0, -84.0)
+	var pen_half := Vector2(4.5, 3.8)
+	# wooden post-and-rail fences
+	for x in range(-4, 5, 2):
+		var pos_back := pen_center + Vector3(float(x), 0.0, -pen_half.y)
+		var n_b := _place("buildings/neutral/fence_wood_straight.gltf", pos_back, 0.0, PS * 0.85, holder)
+		_add_box_collider(n_b, 0.6)
+	for z in range(-2, 3, 2):
+		var pos_left := pen_center + Vector3(-pen_half.x, 0.0, float(z) * 1.5)
+		var n_l := _place("buildings/neutral/fence_wood_straight.gltf", pos_left, 90.0, PS * 0.85, holder)
+		_add_box_collider(n_l, 0.6)
+		var pos_right := pen_center + Vector3(pen_half.x, 0.0, float(z) * 1.5)
+		var n_r := _place("buildings/neutral/fence_wood_straight.gltf", pos_right, 90.0, PS * 0.85, holder)
+		_add_box_collider(n_r, 0.6)
+	for x in [-3.5, 3.5]:
+		var pos_front := pen_center + Vector3(x, 0.0, pen_half.y)
+		var n_f := _place("buildings/neutral/fence_wood_straight.gltf", pos_front, 0.0, PS * 0.85, holder)
+		_add_box_collider(n_f, 0.6)
+	# hay trough in sheep pen
+	var trough := _place("decoration/props/sack.gltf", pen_center + Vector3(-2.8, 0.0, -2.2), 30.0, PS * 0.9, holder)
+	_add_box_collider(trough, 0.5)
+
+	# 3 gentle pasture sheep
+	var sheep_offsets := [Vector3(-1.2, 0.0, -0.6), Vector3(1.6, 0.0, -1.2), Vector3(0.5, 0.0, 1.4)]
+	for s_pos in sheep_offsets:
+		var sheep := VillageSheep.new()
+		sheep.position = pen_center + s_pos
+		sheep.rotation.y = randf() * TAU
+		holder.add_child(sheep)
+
+	_occupy(pen_center.x, pen_center.z, 7.5)
+
+	# 3. Dynamic Night Roadside Encounters
+	var ambush := RoadAmbush.new()
+	add_child(ambush)
 
 
 func _build_great_tree() -> void:

@@ -1002,3 +1002,55 @@ def _(rng, i):
 def _(rng, i):
     d = 12.0
     return loopable(wind(d + 2, rng, 1.0) + S.bandpass(nz(d + 2, rng), 900, 300) * 0.08, 2.0)
+
+
+@sfx("amb_market", 1, 0.45, True)
+def _(rng, i):
+    # Village square market chatter: gentle outdoor murmurs, distant conversation, occasional rustling
+    d = 16.0
+    out = np.zeros(int((d + 2) * S.SR))
+    for _k in range(32):
+        t0 = rng.uniform(0, d)
+        dd = rng.uniform(0.18, 0.55)
+        f = S.pitch_curve(rng.uniform(120, 260), rng.uniform(110, 220), dd, 1.8)
+        v = voice(f, dd, [A_, E_, O_, I_][rng.randint(4)], rng, 0.08)
+        S.place(out, v * np.hanning(len(v)), t0, 0.22)
+    for _k in range(12):
+        t0 = rng.uniform(0, d)
+        click_dur = rng.uniform(0.02, 0.05)
+        clatter = S.bandpass(nz(click_dur, rng), rng.uniform(800, 2200), 400) * S.expdecay(int(click_dur * S.SR), 0.02)
+        S.place(out, clatter, t0, 0.12)
+    out = S.lowpass(out, 2800, 1) + S.lowpass(nz(d + 2, rng), 600, 2) * 0.04
+    return loopable(out, 2.0)
+
+
+@sfx("dog_bark", 2, 0.6)
+def _(rng, i):
+    # Friendly canine bark: quick pitch drop with husky body
+    d = 0.22 + 0.04 * i
+    f = S.pitch_curve(360 - 30 * i, 160 - 20 * i, d, 2.5)
+    body = S.saw(f, d, 8) * S.adsr(int(d * S.SR), 0.015, 0.06, 0.5, 0.1)
+    growl = S.bandpass(nz(d, rng), 450, 200) * S.expdecay(int(d * S.SR), 0.08)
+    return S.lowpass(body * 0.8 + growl * 0.4, 1800, 1)
+
+
+@sfx("dog_whimper", 1, 0.5)
+def _(rng, i):
+    # Affectionate happy whimper when petted
+    d = 0.35
+    f = S.pitch_curve(420, 680, d, -2.0)
+    w = S.sine(f, d) * S.adsr(int(d * S.SR), 0.04, 0.1, 0.6, 0.12)
+    return w * (1 + 0.08 * np.sin(2 * np.pi * 12 * S.t_axis(d)))
+
+
+@sfx("sheep_baa", 2, 0.55)
+def _(rng, i):
+    # Farm sheep bleat: nasal formant around 320 Hz with trembling vibrato
+    d = 0.55 + 0.1 * i
+    t = S.t_axis(d)
+    vibrato = 1.0 + 0.05 * np.sin(2 * np.pi * 7.5 * t)
+    f0 = (180 + 20 * i) * vibrato
+    sig = S.saw(f0, d, 10) * S.adsr(int(d * S.SR), 0.05, 0.15, 0.7, 0.15)
+    formant = S.bandpass(sig, 420 + 30 * i, 140) * 1.2 + S.bandpass(sig, 950, 200) * 0.5
+    return formant
+

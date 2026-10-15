@@ -27,9 +27,13 @@ const MIN_GAP := {
 	"footstep_grass": 0.12, "footstep_stone": 0.12, "footstep_wood": 0.12, "footstep_heavy": 0.15, "footstep_hoof": 0.12,
 	"gold_pickup": 0.06, "sword_hit": 0.05, "skel_hurt": 0.06, "skel_attack": 0.1, "dialogue_blip": 0.0,
 	"voice_blip": 0.2, "ui_hover": 0.05, "arrow_hit": 0.05, "orb_hit": 0.05, "block_hit": 0.1,
+	"dog_bark": 1.2, "sheep_baa": 2.5,
 }
 # loudness trims (dB) for sounds that are too loud/quiet for their role
-const TRIM := {"footstep_grass": -3.0, "footstep_stone": -2.0, "footstep_wood": -2.0, "footstep_hoof": -3.0, "ui_click": -4.0, "dialogue_blip": -4.0}
+const TRIM := {
+	"footstep_grass": -3.0, "footstep_stone": -2.0, "footstep_wood": -2.0, "footstep_hoof": -3.0, "ui_click": -4.0, "dialogue_blip": -4.0,
+	"dog_bark": -2.0, "sheep_baa": -3.0,
+}
 
 var music_on := true
 var sfx_on := true
@@ -88,7 +92,7 @@ func _ready() -> void:
 		m.volume_db = -60.0
 		add_child(m)
 		_music.append(m)
-	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain", "amb_ash", "amb_rain", "amb_rain_roof"]:
+	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain", "amb_ash", "amb_rain", "amb_rain_roof", "amb_market"]:
 		var a := AudioStreamPlayer.new()
 		a.bus = "Ambient"
 		a.stream = _loop_stream(SFX_DIR + id + ".wav")
@@ -335,11 +339,18 @@ func _update_ambience(delta: float) -> void:
 		"amb_ash": -3.0 if ash and sfx_on else -60.0,
 		"amb_rain": -60.0,
 		"amb_rain_roof": -60.0,
+		"amb_market": -60.0,
 	}
 	# the day layer fades with the light, the night layer with the dark
 	if out > 0.0 and not near_crypt and not region:
 		target["amb_day"] = lerpf(-4.0, -45.0, clampf(dark * 1.4, 0.0, 1.0))
 		target["amb_night"] = lerpf(-45.0, -4.0, clampf(dark * 1.4 - 0.3, 0.0, 1.0))
+		# Village square market chatter: active during daytime when near the village square (well at 0,0)
+		var sq_dist: float = flat.length()
+		if sq_dist < 38.0 and dark < 0.6:
+			var day_factor: float = clampf(1.0 - dark / 0.6, 0.0, 1.0)
+			var dist_factor: float = clampf(1.0 - (sq_dist / 38.0), 0.0, 1.0)
+			target["amb_market"] = lerpf(-45.0, -3.5, dist_factor * day_factor)
 	# weather: the rain on the meadow outdoors, the rain on the roof inside buildings; birds and
 	# crickets are quieter in the rain and the wind rises in a storm
 	if _weather != null:
