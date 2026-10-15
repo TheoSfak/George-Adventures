@@ -14,6 +14,16 @@ func _ready() -> void:
 	_register_defaults()
 	GameSettings.apply_keys()          # keys the player re-bound in the settings window
 
+	if not Engine.is_editor_hint() and DisplayServer.get_name() != "headless":
+		var args := OS.get_cmdline_args()
+		var is_test_run := false
+		for a in args:
+			if a == "-s" or a.begins_with("--script"):
+				is_test_run = true
+				break
+		if not is_test_run:
+			DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+
 
 ## Back to the built-in controls (settings window: "Επαναφορά").
 func restore_defaults() -> void:
