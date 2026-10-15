@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.6.1 (2026-10-15) — click while steering, horse in the panel, quiet nights
 **Fixed**
 - **No more alarm in the night ambience.** The night "crickets" were a steady train of high beeps, nine and a half a second, all night long, which sounded like an alarm going off. The night layer is now only a soft wind. A new check (`tools/check_ambience.py`) fails when any ambience loop has such a repeating tone.
 
