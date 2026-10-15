@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 (2026-10-15) — the Ash Valley, dodge roll and a better memory
 **Fixed**
 - **The game remembers more when you save and load.** The chests inside the houses stay opened (before, they could be opened again after every load). The skeletons you defeated stay defeated until their respawn time is up, and the ones you hurt stay hurt. If you save in the middle of a night invasion, loading brings it back (the wave that was running marches in again and the village safety is as it was). Old saves load as before; their house chests can be opened one more time.
 - New test: `save_gaps_test` (headless).
