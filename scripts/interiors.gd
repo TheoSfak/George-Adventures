@@ -301,7 +301,7 @@ func enter_region(region_id: String, outside_pos: Vector3, outside_heading: floa
 		_regions[region_id] = region
 		await region.build()
 	var built: Node3D = _regions[region_id]
-	_region_outside = {"pos": outside_pos, "heading": outside_heading}
+	_region_outside[region_id] = {"pos": outside_pos, "heading": outside_heading}
 	player.teleport(built.spawn_point() if spawn_override == Vector3.INF else spawn_override, spawn_heading)
 	_in_region = true
 	current_kind = region_id
@@ -311,14 +311,36 @@ func enter_region(region_id: String, outside_pos: Vector3, outside_heading: floa
 
 
 func exit_region(player: Player) -> void:
-	if player.busy or not _in_region:
+	if player.busy:
+		return
+	if not _in_region:
+		if current_kind != "":
+			_in_region = true
+		else:
+			for r_id in REGION_IDS:
+				var r: Node3D = _regions.get(r_id)
+				if r != null and is_instance_valid(r) and player.global_position.distance_to(r.global_position) < 3000.0:
+					current_kind = r_id
+					_in_region = true
+					break
+	if not _in_region:
 		return
 	player.busy = true
 	var hud := get_tree().get_first_node_in_group("hud")
 	Sfx.ui("door_close")
 	await hud.fade_out(0.3)
 	var prev_kind := current_kind
-	player.teleport(_region_outside["pos"] + Vector3(0, 0.05, 0), _region_outside["heading"])
+	var out_info: Dictionary = _region_outside.get(prev_kind, {})
+	var target_pos: Vector3 = out_info.get("pos", Vector3.ZERO)
+	var target_heading: float = float(out_info.get("heading", 0.0))
+	if target_pos == Vector3.ZERO:
+		if prev_kind == "temple":
+			target_pos = AshValley.wp(0.0, -195.0, 0.05)
+		elif prev_kind == "ashvalley":
+			target_pos = AshValley.VILLAGE_GATE + Vector3(0, 0.05, 5.0)
+		elif prev_kind == "frontier":
+			target_pos = Frontier.VILLAGE_GATE + Vector3(0, 0.05, 5.0)
+	player.teleport(target_pos + Vector3(0, 0.05, 0), target_heading)
 	if prev_kind == "temple":
 		_in_region = true
 		current_kind = "ashvalley"

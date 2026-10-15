@@ -237,9 +237,41 @@ func _build_exit() -> void:
 	arch.position = wp(EXIT.x, EXIT.y + 3.0)
 	arch.scale = Vector3.ONE * 3.0
 	_root.add_child(arch)
-	var spot := InteractSpot.make(Strings.PROMPT_ASH_BACK, func(p: Player): exit_action.call(p), 3.6)
-	spot.position = wp(EXIT.x, EXIT.y)
+
+	var light := OmniLight3D.new()
+	light.position = wp(EXIT.x, EXIT.y + 3.0, 3.2)
+	light.light_color = Color(1.0, 0.60, 0.25)
+	light.light_energy = 2.4
+	light.omni_range = 10.0
+	light.add_to_group("night_lights")
+	_root.add_child(light)
+
+	var on_exit := func(p: Player):
+		if exit_action.is_valid():
+			exit_action.call(p)
+		else:
+			var interiors := get_tree().get_first_node_in_group("interiors")
+			if interiors:
+				interiors.exit_region(p)
+
+	var spot := InteractSpot.make(Strings.PROMPT_ASH_BACK, on_exit, 5.0)
+	spot.position = wp(EXIT.x, EXIT.y + 1.5)
 	_root.add_child(spot)
+
+	var area := Area3D.new()
+	area.collision_layer = 0
+	area.collision_mask = 2
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(6.0, 5.0, 3.0)
+	shape.shape = box
+	area.add_child(shape)
+	area.position = wp(EXIT.x, EXIT.y + 3.0, 2.5)
+	area.body_entered.connect(func(body: Node3D):
+		if body is Player:
+			on_exit.call(body as Player)
+	)
+	_root.add_child(area)
 
 
 # ---------------------------------------------------------------------- helpers ----

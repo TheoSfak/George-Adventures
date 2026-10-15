@@ -121,12 +121,31 @@ func _build_hall() -> void:
 
 	# Exit Archway
 	var arch := _prop(G + "arch_gate.gltf", EXIT.x, EXIT.y, 0.0, 3.8, 0.0, true)
-	var exit_spot := InteractSpot.make(Strings.PROMPT_SANCTUM_EXIT, func(p: Player):
+	var on_exit := func(p: Player):
 		if exit_action.is_valid():
 			exit_action.call(p)
-	, 4.5)
+		else:
+			var interiors := get_tree().get_first_node_in_group("interiors")
+			if interiors:
+				interiors.exit_region(p)
+	var exit_spot := InteractSpot.make(Strings.PROMPT_SANCTUM_EXIT, on_exit, 5.0)
 	exit_spot.position = wp(EXIT.x, EXIT.y - 1.5)
 	_root.add_child(exit_spot)
+
+	var area := Area3D.new()
+	area.collision_layer = 0
+	area.collision_mask = 2
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(6.0, 5.0, 3.0)
+	shape.shape = box
+	area.add_child(shape)
+	area.position = wp(EXIT.x, EXIT.y, 2.5)
+	area.body_entered.connect(func(body: Node3D):
+		if body is Player:
+			on_exit.call(body as Player)
+	)
+	_root.add_child(area)
 
 	# Pillars with flaming braziers along both sides
 	var pillar_z := [36.0, 20.0, 4.0, -12.0, -28.0]
