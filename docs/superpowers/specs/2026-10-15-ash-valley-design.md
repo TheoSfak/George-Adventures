@@ -50,5 +50,5 @@ All numbers (stats, rewards, distances), the layout, the look of the lava and th
 - Layout: `BOUNDS` 180 x 350 m (z from -210 to 140), camp at (0, 30), lava river along z = -60 with a 6 m wave and one bridge at x = 0, temple walls from z = -200 to -130 with the gate at z = -130. 32 spawns (19 ember skeletons, 8 ash casters, 3 magma golems, the boss), 4 chests, 3 shards.
 - Lava is a spatial shader (`shaders/lava.gdshader`: two layers of drifting noise, `world_offset` like the ground shaders), the river has invisible wall colliders so nobody walks into it (only the bridge is open), the nav grid knows both.
 - Sound: ambience loop `amb_ash` (new recipe) instead of the planned reuse; music `crypt`; footsteps `footstep_stone`.
-- Measured: about 28 lights in the region, 60 fps everywhere by day and night except 49 fps at the Flame during a night fight before two braziers lost their light (not re-measured after that change).
+- Measured: about 28 lights in the region, 60 fps everywhere by day and night except 49 fps at the Flame during a night fight before two braziers lost their light; measured again after that change: 60 fps at every spot, day and night.
 - Not done (as planned): everything under "Not in this slice". Also: by day the sky and fog are the village's, so the valley only looks "burning" thanks to the lava, the lights and the night.
