@@ -67,6 +67,7 @@ var _rng := RandomNumberGenerator.new()
 var _stone: StandardMaterial3D
 var _lava: ShaderMaterial
 var _wash: StandardMaterial3D               # one dark red wash for mountains and rocks
+var _terrain: Terrain
 var _gate: Node3D
 var _gate_open := false
 var _bosses := {}                           # boss kind -> Enemy
@@ -111,7 +112,7 @@ func build() -> void:
 	add_child(_root)
 	_wash = StandardMaterial3D.new()
 	_wash.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_wash.albedo_color = Color(0.30, 0.08, 0.03, 0.50)
+	_wash.albedo_color = Color(0.14, 0.05, 0.03, 0.72)
 	_lava = ShaderMaterial.new()
 	_lava.shader = load("res://shaders/lava.gdshader") as Shader
 	_lava.set_shader_parameter("world_offset", Vector2(ORIGIN.x, ORIGIN.z))
@@ -145,6 +146,7 @@ func _build_nav() -> void:
 ## a dirt track up the road and a cobbled one to the temple.
 func _build_ground() -> void:
 	var terrain := Terrain.new()
+	_terrain = terrain
 	terrain.name = "Terrain"
 	terrain.position = ORIGIN                  # its geometry is local, the shaders use world noise
 	_root.add_child(terrain)
@@ -155,6 +157,10 @@ func _build_ground() -> void:
 	mat.set_shader_parameter("grass_mid", Color(0.31, 0.26, 0.23))
 	mat.set_shader_parameter("grass_dark", Color(0.17, 0.13, 0.12))
 	mat.set_shader_parameter("dry_grass", Color(0.42, 0.22, 0.10))
+	terrain._path_dirt.set_shader_parameter("base_color", Color(0.27, 0.23, 0.21))      # ash tracks, not sand
+	terrain._path_dirt.set_shader_parameter("edge_color", Color(0.14, 0.11, 0.10))
+	terrain._path_cobble.set_shader_parameter("base_color", Color(0.33, 0.28, 0.27))
+	terrain._path_cobble.set_shader_parameter("edge_color", Color(0.14, 0.11, 0.10))
 	terrain.build_ground(Vector2(140.0, 250.0))   # after the colours: the far plane copies them
 	terrain.add_patch(CAMP, CAMP_RADIUS + 6.0, Color(0.34, 0.29, 0.25), false, Color(0.20, 0.16, 0.14))
 	terrain.add_patch(Vector2(0.0, -165.0), 50.0, Color(0.24, 0.20, 0.20), true, Color(0.12, 0.09, 0.09))
@@ -431,12 +437,12 @@ func _build_valley() -> void:
 				_rng.randf_range(BOUNDS.position.y + 8.0, BOUNDS.end.y - 8.0))
 		if (p - CAMP).length() < CAMP_RADIUS + 4.0 or absf(p.y - stream_z(p.x)) < STREAM_WIDTH * 0.5 + 3.0:
 			continue
-		if TEMPLE.grow(4.0).has_point(p) or absf(p.x) < 5.0 or ENTRY.distance_to(p) < 12.0:
+		if TEMPLE.grow(4.0).has_point(p) or _terrain.near_path(p, 5.0) or ENTRY.distance_to(p) < 12.0:
 			continue
 		cracks += 1
 		var crack := MeshInstance3D.new()
 		var mesh := BoxMesh.new()
-		mesh.size = Vector3(_rng.randf_range(3.0, 9.0), 0.04, _rng.randf_range(0.35, 0.8))
+		mesh.size = Vector3(_rng.randf_range(2.5, 7.0), 0.04, _rng.randf_range(0.18, 0.4))
 		crack.mesh = mesh
 		crack.material_override = _lava
 		crack.position = wp(p.x, p.y, 0.1)
@@ -563,7 +569,8 @@ func _build_temple() -> void:
 			_pillar(x, z)
 			var bx: float = x * 1.45
 			_prop(I + "torch_lit.gltf.glb", bx, z, 0.0, 3.4)
-			_fire_light(bx, z, 3.2, Color(1.0, 0.55, 0.22), 1.7, 15.0)
+			if z != -162.0:                                           # the middle pair burns without a light (frame rate at night)
+				_fire_light(bx, z, 3.2, Color(1.0, 0.55, 0.22), 1.7, 15.0)
 	_build_flame()
 	# bones and skulls on the stones
 	var bones := [G + "bone_A.gltf", G + "bone_B.gltf", G + "bone_C.gltf", G + "skull.gltf", G + "ribcage.gltf"]

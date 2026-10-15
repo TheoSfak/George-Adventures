@@ -948,6 +948,18 @@ def _(rng, i):
     return loopable(out, 2.0)
 
 
+@sfx("amb_ash", 1, 0.5, True)
+def _(rng, i):
+    # The Ash Valley: a low hot wind, a slow rumble of the lava river (a steady low tone, no pulse faster than 0.1 Hz)
+    # and embers crackling far away. No tonal beeps (see check_ambience.py).
+    d = 22.0
+    out = wind(d + 2, rng, 0.8) * 0.8
+    out += S.sine(41, d + 2) * 0.07 * (0.65 + 0.35 * np.sin(2 * np.pi * 0.08 * S.t_axis(d + 2)))
+    out += S.lowpass(nz(d + 2, rng), 220, 2) * 0.10
+    out += crackle(d + 2, rng, 16, 3000) * 0.22
+    return loopable(out, 2.0)
+
+
 @sfx("fire_loop", 1, 0.5, True)
 def _(rng, i):
     d = 6.0

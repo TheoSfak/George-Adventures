@@ -5,9 +5,9 @@ render_mode cull_disabled;
 // origin (the valley stands at x = 6000), like the ground shaders.
 
 uniform vec3 hot_color : source_color = vec3(1.0, 0.66, 0.14);
-uniform vec3 cool_color : source_color = vec3(0.50, 0.07, 0.02);
+uniform vec3 cool_color : source_color = vec3(0.30, 0.035, 0.01);
 uniform float flow_speed = 0.10;
-uniform float scale = 0.11;
+uniform float scale = 0.2;
 uniform float energy = 2.0;
 uniform vec2 world_offset = vec2(0.0);
 
@@ -20,7 +20,7 @@ float hash(vec2 p) {
 float noise(vec2 p) {
 	vec2 i = floor(p);
 	vec2 f = fract(p);
-	vec2 u = f * f * (3.0 - 2.0 * f);
+	vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
 	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
 			mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
 }
@@ -30,7 +30,7 @@ float fbm(vec2 p) {
 	float amp = 0.5;
 	for (int i = 0; i < 4; i++) {
 		value += amp * noise(p);
-		p = p * 2.03 + vec2(7.3, 1.9);
+		p = mat2(vec2(0.80, -0.60), vec2(0.60, 0.80)) * p * 2.03 + vec2(7.3, 1.9);
 		amp *= 0.5;
 	}
 	return value;
@@ -45,9 +45,11 @@ void fragment() {
 	vec2 uv = flat_pos * scale;
 	float a = fbm(uv + vec2(t, t * 0.6));
 	float b = fbm(uv * 1.7 - vec2(t * 0.8, -t));
-	float heat = smoothstep(0.32, 0.78, a * 0.55 + b * 0.55);
+	float heat = smoothstep(0.36, 0.74, a * 0.55 + b * 0.55);
+	heat = heat * heat * (3.0 - 2.0 * heat);
 	vec3 col = mix(cool_color, hot_color, heat);
-	ALBEDO = col * 0.2;
-	EMISSION = col * energy * (0.55 + heat);
-	ROUGHNESS = 0.45;
+	ALBEDO = col * 0.15;
+	EMISSION = col * energy * (0.35 + 1.1 * heat);
+	ROUGHNESS = 1.0;
+	SPECULAR = 0.0;
 }

@@ -349,7 +349,7 @@ const KINDS := {
 	"magma_golem": {
 		"kind_id": "magma_golem", "static_mob": true, "dormant": true, "wake_range": 6.0, "sound_set": "stone",
 		"respawn_after": 60.0, "display_name": "Γίγαντας του Μάγματος", "wake_text": "Το μάγμα ξυπνά!",
-		"tint_color": Color(1.0, 0.30, 0.05, 0.40), "glow_color": Color(1.0, 0.40, 0.10, 0.5),
+		"tint_color": Color(0.22, 0.05, 0.02, 0.70), "glow_color": Color(1.0, 0.40, 0.10, 0.5),
 		"model_path": "", "model_scale": 2.0, "sway": 0.03,
 		"parts": [
 			{"path": ROCK + "rock_single_C.gltf", "pos": Vector3(0.0, 0.0, 0.0), "scale": Vector3(4.6, 8.5, 4.6)},

@@ -199,7 +199,7 @@ func _hook_player() -> void:
 
 
 func _on_player_respawned(player: Player) -> void:
-	if _in_region:                    # died in the Frontier: he wakes in the village, nothing else to restore
+	if _in_region:                    # died in a region: he wakes in the village, nothing else to restore
 		_in_region = false
 		current_kind = ""
 		return
@@ -216,7 +216,7 @@ func is_inside() -> bool:
 	return _inside
 
 
-## True while George is in the Frontier. It is outdoors (sun, sky and clock keep running),
+## True while George is in an outdoor region (the Frontier or the Ash Valley; current_kind says which). It is outdoors (sun, sky and clock keep running),
 ## so is_inside() stays false there; ask in_region() for the few things that differ.
 func in_region() -> bool:
 	return _in_region

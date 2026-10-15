@@ -88,7 +88,7 @@ func _ready() -> void:
 		m.volume_db = -60.0
 		add_child(m)
 		_music.append(m)
-	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain", "amb_rain", "amb_rain_roof"]:
+	for id in ["amb_day", "amb_night", "wind_loop", "amb_tavern", "amb_church", "amb_crypt", "amb_mountain", "amb_ash", "amb_rain", "amb_rain_roof"]:
 		var a := AudioStreamPlayer.new()
 		a.bus = "Ambient"
 		a.stream = _loop_stream(SFX_DIR + id + ".wav")
@@ -318,6 +318,7 @@ func _update_ambience(delta: float) -> void:
 	var kind := String(_interiors.current_kind) if inside else ""
 	var flat := Vector2(_player.global_position.x, _player.global_position.z)
 	var region: bool = _interiors != null and _interiors.in_region()
+	var ash: bool = region and String(_interiors.current_kind) == "ashvalley"
 	var near_crypt := not inside and not region and flat.distance_to(CRYPT) < 55.0
 	var out := 0.0 if (inside or not sfx_on) else 1.0
 	var target := {
@@ -327,7 +328,8 @@ func _update_ambience(delta: float) -> void:
 		"amb_tavern": -3.0 if inside and kind == "tavern" and sfx_on else -60.0,
 		"amb_church": -6.0 if inside and kind == "church" and sfx_on else -60.0,
 		"amb_crypt": -2.0 if (near_crypt or kind == "catacombs") and sfx_on else -60.0,
-		"amb_mountain": -3.0 if region and sfx_on else -60.0,
+		"amb_mountain": -3.0 if region and not ash and sfx_on else -60.0,
+		"amb_ash": -3.0 if ash and sfx_on else -60.0,
 		"amb_rain": -60.0,
 		"amb_rain_roof": -60.0,
 	}

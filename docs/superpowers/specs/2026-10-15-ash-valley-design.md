@@ -1,6 +1,6 @@
 # Story part 4: the Ash Valley (a first slice for levels 20 to 40) — design
 
-Date: 2026-10-15. Status: approved by Theodore in chat (queue "3, then 5, then 4"; answers: **Part 4: a new region + story**, theme **Burning valley**, scope **a solid first slice**). No plan file (he works with spec only, then straight to implementation).
+Date: 2026-10-15. Status: **implemented on branch `dodge-bash`** (see "As built" at the end); approved by Theodore in chat (queue "3, then 5, then 4"; answers: **Part 4: a new region + story**, theme **Burning valley**, scope **a solid first slice**). No plan file (he works with spec only, then straight to implementation).
 
 ## Goal
 Real content for levels 21 to 40 (today those levels only make the old world tougher): a third outdoor region like the Frontier, with a camp, creatures, four quests and a boss, all scaled by `LevelScaling` on top of base stats tuned for a strong level-20 hero.
@@ -43,3 +43,12 @@ More quests and NPCs, shop, gear from the valley, a second boss, music of its ow
 
 ## Guesses
 All numbers (stats, rewards, distances), the layout, the look of the lava and the colours.
+
+## As built (2026-10-15)
+- The region registry is `Interiors.REGION_IDS` + `_regions` + `_new_region(id)` + the static `region_gate(id)` (not a `REGIONS` dictionary of classes: the classes are referenced in two small `match` blocks); `current_kind` is the region id; `SaveGame` writes `player.region` and still reads `in_frontier`.
+- The gate stands at `AshValley.VILLAGE_GATE` (178, 64), 189 m from the well, found with `tools/gate_site_probe.gd`; the arch faces the well (`Village._build_ash_gate`).
+- Layout: `BOUNDS` 180 x 350 m (z from -210 to 140), camp at (0, 30), lava river along z = -60 with a 6 m wave and one bridge at x = 0, temple walls from z = -200 to -130 with the gate at z = -130. 32 spawns (19 ember skeletons, 8 ash casters, 3 magma golems, the boss), 4 chests, 3 shards.
+- Lava is a spatial shader (`shaders/lava.gdshader`: two layers of drifting noise, `world_offset` like the ground shaders), the river has invisible wall colliders so nobody walks into it (only the bridge is open), the nav grid knows both.
+- Sound: ambience loop `amb_ash` (new recipe) instead of the planned reuse; music `crypt`; footsteps `footstep_stone`.
+- Measured: about 28 lights in the region, 60 fps everywhere by day and night except 49 fps at the Flame during a night fight before two braziers lost their light (not re-measured after that change).
+- Not done (as planned): everything under "Not in this slice". Also: by day the sky and fog are the village's, so the valley only looks "burning" thanks to the lava, the lights and the night.

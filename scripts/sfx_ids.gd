@@ -3,6 +3,7 @@ class_name SfxIds
 ## Sound-effect name -> number of variants (files name_1.wav ... name_N.wav, or name.wav for 1).
 
 const VARIANTS := {
+	"amb_ash": 1,
 	"amb_church": 1,
 	"amb_crypt": 1,
 	"amb_day": 1,
@@ -104,6 +105,7 @@ const VARIANTS := {
 }
 
 const LOOPS := [
+	"amb_ash",
 	"amb_church",
 	"amb_crypt",
 	"amb_day",
