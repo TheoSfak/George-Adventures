@@ -1115,3 +1115,33 @@ def _(rng, i):
     return out
 
 
+@sfx("jump_pad_boing", 1, 0.80)
+def _(rng, i):
+    # Bouncy spring trampoline launch sound
+    d = 0.48
+    t = S.t_axis(d)
+    wobble = 1.0 + 0.08 * np.sin(2 * np.pi * 16.0 * t) * np.exp(-t * 4.0)
+    f = S.pitch_curve(160, 560, d, 2.8) * wobble
+    spring = S.sine(f, d) * S.adsr(int(d * S.SR), 0.015, 0.08, 0.75, 0.22)
+    snap = click(0.04, 1600, rng) * 0.6
+    out = spring * 0.85
+    S.place(out, snap, 0.0)
+    return out
+
+
+@sfx("checkpoint_chime", 1, 0.75)
+def _(rng, i):
+    # Bright 4-tone celestial ascending chime for Obby checkpoint
+    d = 0.75
+    out = np.zeros(int(d * S.SR))
+    notes = [1046.5, 1318.5, 1568.0, 2093.0]  # C6, E6, G6, C7
+    for step, freq in enumerate(notes):
+        t0 = step * 0.09
+        bell = S.glock(freq, 0.35) * 0.75
+        S.place(out, bell, t0)
+    spark = shimmer(0.4, 2400, rng, 8, True) * 0.3
+    S.place(out, spark, 0.25)
+    return out
+
+
+
