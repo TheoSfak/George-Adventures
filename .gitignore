@@ -8,3 +8,5 @@ tools/_voice/
 __pycache__/
 /nav_*.png
 /nav_*.png.import
+/ctl_*.png
+/ctl_*.png.import

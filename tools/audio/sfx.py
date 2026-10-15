@@ -898,13 +898,11 @@ def _(rng, i):
 
 @sfx("amb_night", 1, 0.5, True)
 def _(rng, i):
+    # Night is only a soft wind. The "crickets" that used to be here were a steady train of 4.3 to 5 kHz beeps,
+    # 9.5 times a second, all night long: it sounded like an alarm (checked in the file with an FFT: a 5 kHz tone
+    # 3800 times the median, pulsing at 9.5 Hz; no other ambience loop pulses).
     d = 24.0
     out = wind(d + 2, rng) * 0.45
-    t = S.t_axis(d + 2)
-    for cf in [4300, 4600, 5000]:
-        chirp = (np.sin(2 * np.pi * 9.5 * t + cf) > 0.55).astype(float)
-        chirp = S.lowpass(chirp, 60, 1)
-        out += chirp * S.sine(cf, d + 2) * 0.03
     return loopable(out, 2.0)
 
 
