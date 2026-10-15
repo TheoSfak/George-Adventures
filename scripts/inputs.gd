@@ -58,9 +58,16 @@ func _register_defaults() -> void:
 	_key("mount", KEY_G)              # ride the horse (once it is bought at the stable)
 	_key("potion", KEY_H)
 	_button("potion", JOY_BUTTON_Y)
-	# Action bar: keys 1-8 (physical keys, so they work on the Greek layout too)
-	for i in 8:
-		_key("slot_%d" % (i + 1), KEY_1 + i)
+	# Action bar: keys 1-8, 9, 0, -, = (physical keys, so they work on the Greek layout too)
+	const ACTION_BAR_KEYS: Array[Key] = [
+		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8,
+		KEY_9, KEY_0, KEY_MINUS, KEY_EQUAL
+	]
+	for i in ACTION_BAR_KEYS.size():
+		_key("slot_%d" % (i + 1), ACTION_BAR_KEYS[i])
+	_key("slot_9", KEY_KP_9)
+	_key("slot_10", KEY_KP_0)
+	_key("slot_11", KEY_KP_SUBTRACT)
 	_key("skillbook", KEY_P)
 	_key("talents", KEY_T)
 	_key("equipment", KEY_I)

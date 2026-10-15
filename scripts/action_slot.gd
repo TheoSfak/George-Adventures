@@ -9,7 +9,7 @@ const SIZE := 62.0
 var player: Player
 var slot_index := -1          # >= 0: a slot of the action bar; -1: a fixed entry (skill book)
 var fixed_entry := ""         # the entry shown when slot_index == -1
-var key_label := ""           # "1".."8"
+var key_label := ""           # "1".."9", "0", "-", "="
 
 var _style := StyleBoxFlat.new()
 var _gloss := StyleBoxFlat.new()

@@ -194,6 +194,8 @@ static func apply(d: Dictionary) -> void:
 	for id in pd.get("talents", {}):
 		player.talents[id] = int(pd["talents"][id])
 	player.bar.assign(pd.get("bar", []))
+	while player.bar.size() < SkillData.DEFAULT_BAR.size():
+		player.bar.append("")
 	player.fish_seen.assign(pd.get("fish_seen", []))
 	player.dismount(false)
 	player.horse_owned = bool(pd.get("horse_owned", false))

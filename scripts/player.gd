@@ -133,7 +133,7 @@ var potions: int:                # health potions (kept for older code)
 		return consumables["health"]
 	set(v):
 		consumables["health"] = v
-var bar: Array[String] = []      # the 8 action-bar slots, see skill_data.gd
+var bar: Array[String] = []      # the 12 action-bar slots, see skill_data.gd
 var _cooldowns := {}             # skill id -> seconds left
 var _potion_cooldown := 0.0
 var _guard_time := 0.0

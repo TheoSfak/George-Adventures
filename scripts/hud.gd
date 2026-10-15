@@ -639,12 +639,13 @@ func _build_action_bar() -> void:
 	row.add_theme_constant_override("separation", 6)
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dock.add_child(row)
-	for i in 8:
+	const ACTION_BAR_LABELS: Array[String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="]
+	for i in ACTION_BAR_LABELS.size():
 		var slot := ActionSlot.new()
 		slot.custom_minimum_size = Vector2(COMPACT_SLOT, COMPACT_SLOT)     # a compact action bar leaves the view free
 		slot.player = _player
 		slot.slot_index = i
-		slot.key_label = str(i + 1)
+		slot.key_label = ACTION_BAR_LABELS[i]
 		row.add_child(slot)
 		_bar_slots.append(slot)
 
