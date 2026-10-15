@@ -33,6 +33,8 @@ const NPC_PROFILES := {
 	"andreas": "man_quick",
 	"ilarion": "man_slow",
 	"elpida": "woman",
+	"theofilos": "man_slow",
+	"damianos": "man",
 	"elena": "woman",
 	"nikitas_forge": "man",
 }

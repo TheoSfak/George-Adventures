@@ -325,10 +325,62 @@ const KINDS := {
 		"enrage_below": 0.5, "enrage_summon": "shadow_knight", "summon_interval": 12.0, "summon_max": 3,
 		"xp_reward": 1800, "gold_min": 300, "gold_max": 380, "potion_chance": 1.0,
 	},
+	# --- the Ash Valley (placed by ash_valley.gd): base stats for a strong level-20 hero, LevelScaling adds the rest
+	"ember_skeleton": {
+		"kind_id": "ember_skeleton", "tint_color": Color(1.0, 0.38, 0.05, 0.36), "display_name": "Φλογοσκελετός",
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Small_A.gltf",
+		"max_health": 300.0, "attack_damage": 34.0, "chase_speed": 5.0, "attack_cooldown": 1.5,
+		"aggro_range": 16.0, "leash_range": 32.0,
+		"xp_reward": 150, "gold_min": 15, "gold_max": 32, "potion_chance": 0.5,
+	},
+	# Ash caster: stays back and throws burning orbs
+	"ash_caster": {
+		"kind_id": "ash_caster", "tint_color": Color(1.0, 0.50, 0.10, 0.34), "display_name": "Στάχτινος Μάγος",
+		"model_path": CHAR + "Skeleton_Mage.glb",
+		"weapon_path": WEAPONS + "Skeleton_Staff.gltf",
+		"ranged": true, "projectile_kind": "fire", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 12.0,
+		"ranged_min": 8.0, "ranged_max": 16.0, "aggro_range": 20.0, "leash_range": 34.0,
+		"max_health": 160.0, "attack_damage": 30.0, "chase_speed": 3.9, "attack_cooldown": 2.4,
+		"xp_reward": 140, "gold_min": 15, "gold_max": 32, "potion_chance": 0.5,
+	},
+	# A lump of cooled lava that stands up when George comes within 6 m (or when it is hit): slow, hits like a hammer and slows him
+	"magma_golem": {
+		"kind_id": "magma_golem", "static_mob": true, "dormant": true, "wake_range": 6.0, "sound_set": "stone",
+		"respawn_after": 60.0, "display_name": "Γίγαντας του Μάγματος", "wake_text": "Το μάγμα ξυπνά!",
+		"tint_color": Color(1.0, 0.30, 0.05, 0.40), "glow_color": Color(1.0, 0.40, 0.10, 0.5),
+		"model_path": "", "model_scale": 2.0, "sway": 0.03,
+		"parts": [
+			{"path": ROCK + "rock_single_C.gltf", "pos": Vector3(0.0, 0.0, 0.0), "scale": Vector3(4.6, 8.5, 4.6)},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(0.0, 1.55, 0.1), "scale": Vector3(3.0, 4.2, 3.0), "yaw": 30.0},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(-0.95, 0.15, 0.1), "scale": Vector3(2.6, 6.0, 2.6), "yaw": 70.0},
+			{"path": ROCK + "rock_single_D.gltf", "pos": Vector3(0.95, 0.15, 0.1), "scale": Vector3(2.6, 6.0, 2.6), "yaw": -70.0},
+			{"eye": 0.09, "pos": Vector3(-0.2, 1.72, 0.42), "color": Color(1.0, 0.55, 0.05)},
+			{"eye": 0.09, "pos": Vector3(0.2, 1.72, 0.42), "color": Color(1.0, 0.55, 0.05)},
+		],
+		"max_health": 900.0, "attack_damage": 52.0, "chase_speed": 2.8, "patrol_speed": 0.0,
+		"attack_range": 3.4, "attack_hit_time": 0.8, "static_attack_time": 1.5, "attack_cooldown": 2.4, "stomp_slow": 2.0,
+		"aggro_range": 12.0, "leash_range": 30.0,
+		"xp_reward": 420, "gold_min": 40, "gold_max": 80, "potion_chance": 0.7,
+	},
+	# The boss of the Temple of the Flame: below half health he calls burning skeletons and speeds up
+	"pyrforos": {
+		"kind_id": "pyrforos", "respawn_after": 60.0, "quest": "a_boss", "tint_color": Color(1.0, 0.30, 0.04, 0.46),
+		"display_name": "Πυρφόρος, ο Φύλακας της Φλόγας", "model_scale": 2.8, "glow_color": Color(1.0, 0.45, 0.10, 0.8),
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 6000.0, "attack_damage": 55.0, "chase_speed": 4.2, "attack_range": 4.6,
+		"attack_hit_time": 0.85, "attack_cooldown": 2.2, "attack_anim": "1H_Melee_Attack_Chop",
+		"aggro_range": 26.0, "leash_range": 46.0, "patrol_radius": 3.0, "need_los": true,
+		"enrage_below": 0.5, "enrage_summon": "ember_skeleton", "summon_interval": 12.0, "summon_max": 4,
+		"xp_reward": 4000, "gold_min": 500, "gold_max": 650, "potion_chance": 1.0,
+	},
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord"]
+const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [

@@ -125,7 +125,7 @@ const BUILDING_NAMES := {
 	"market": "Παζάρι",
 	"home": "Σπίτι",
 	"catacombs": "Κατακόμβη",
-	"frontier": "Βουνίσιο Πέρασμα",
+	"frontier": "Βουνίσιο Πέρασμα", "ashvalley": "Κοιλάδα της Στάχτης",
 }
 
 const CATACOMBS_SEALED := "Σφραγισμένη πύλη"
@@ -290,6 +290,14 @@ const MSG_FRONTIER_INVASION := "Το χωριό δέχεται επίθεση! �
 const INVASION_SKIPPED :="Ο Παπά-Σταύρος κράτησε το χωριό χωρίς εσένα."
 const MSG_SLOWED := "Η ψυχή σε βαραίνει!"
 const MALAKAR_ENRAGE := "Ο Μαλάκαρ καλεί τη Σκιά!"
+const PYRFOROS_ENRAGE := "Ο Πυρφόρος καλεί τη Φλόγα!"
+# Part 4: the Ash Valley
+const ASH_SEALED := "Σφραγισμένη Πύλη της Στάχτης"
+const MSG_ASH_SEALED := "Η Πύλη της Στάχτης είναι σφραγισμένη. Μίλησε πρώτα με τον Παπά-Σταύρο."
+const PROMPT_ASH_BACK := "[R] Επιστροφή στον Άγιο Βλάση"
+const PROMPT_TEMPLE_GATE := "Η Πύλη του Ναού της Φλόγας"
+const MSG_TEMPLE_SEALED := "Ο ναός είναι σφραγισμένος. Βρες τα τρία Θραύσματα της Φλόγας."
+const MSG_TEMPLE_OPEN := "Τα Θραύσματα έσπασαν τη σφραγίδα. Ο ναός της Φλόγας άνοιξε!"
 const MSG_NO_MAP := "Ο χάρτης του χωριού δεν δείχνει αυτά τα βουνά."
 
 # --- fishing and the kitchen

@@ -288,7 +288,7 @@ func _pick_music() -> String:
 		if d <= 24.0:
 			fighting = true
 		var kind: String = e.get("kind_id")
-		if d <= 45.0 and (kind in ["captain", "king", "warlord", "night_lord", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar"]):
+		if d <= 45.0 and (kind in ["captain", "king", "warlord", "night_lord", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "pyrforos"]):
 			boss = true
 	if fighting:
 		_combat_until = now + COMBAT_HOLD
@@ -300,7 +300,7 @@ func _pick_music() -> String:
 		return "combat"
 	var flat := Vector2(_player.global_position.x, _player.global_position.z)
 	if _interiors != null and _interiors.in_region():
-		return "mountain"
+		return "crypt" if _interiors.current_kind == "ashvalley" else "mountain"
 	if flat.distance_to(CRYPT) < 62.0 or (_interiors != null and _interiors.is_inside()):
 		return "crypt"
 	if flat.length() > 105.0:

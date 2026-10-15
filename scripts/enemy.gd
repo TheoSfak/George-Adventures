@@ -446,7 +446,7 @@ func _aggro_sound() -> void:
 	match kind_id:
 		"brute":
 			Sfx.play("brute_roar", global_position)
-		"captain", "king", "giant_skeleton", "malakar", "night_lord", "bandit_chief":
+		"captain", "king", "giant_skeleton", "malakar", "night_lord", "bandit_chief", "pyrforos":
 			Sfx.play("boss_roar", global_position)
 		"warlord":
 			Sfx.play("warlord_roar", global_position)
@@ -693,6 +693,8 @@ func _enrage() -> void:
 				player.message.emit(Strings.NIGHT_LORD_ENRAGE)
 			"bandit_chief":
 				player.message.emit(Strings.BANDIT_CHIEF_ENRAGE)
+			"pyrforos":
+				player.message.emit(Strings.PYRFOROS_ENRAGE)
 			_:
 				player.message.emit(Strings.MALAKAR_ENRAGE)
 

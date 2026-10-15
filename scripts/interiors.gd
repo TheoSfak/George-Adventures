@@ -180,9 +180,10 @@ var _inside := false
 var current_door := ""         # id of the door George went through, "" outside
 var current_kind := ""        # kind of the room George is in ("tavern", "church"...), "" outside
 var _saved_zoom := 7.0
-var _in_region := false            # George is in the Frontier (outdoors, far away from the village)
+const REGION_IDS: Array[String] = ["frontier", "ashvalley"]
+var _in_region := false            # George is in a region (the Frontier or the Ash Valley: outdoors, far away from the village)
 var _region_outside := {}          # {"pos": Vector3, "heading": float} where the way back leads
-var _frontier: Frontier
+var _regions := {}                 # region id -> the region node, built on the first visit
 
 
 func _ready() -> void:
@@ -255,29 +256,51 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 		Quests.report_reach("catacombs")
 
 
-## Teleports George to a far-away outdoor region (only "frontier" for now) with a fade. Unlike
+## The node of a region that is built on the first visit ("frontier", "ashvalley").
+func _new_region(region_id: String) -> Node3D:
+	match region_id:
+		"frontier":
+			return Frontier.new()
+		"ashvalley":
+			return AshValley.new()
+	return null
+
+
+## Where the stone arch of a region stands in Agios Vlasis (the save game puts George back there).
+static func region_gate(region_id: String) -> Vector3:
+	match region_id:
+		"frontier":
+			return Frontier.VILLAGE_GATE
+		"ashvalley":
+			return AshValley.VILLAGE_GATE
+	return Vector3.ZERO
+
+
+## Teleports George to a far-away outdoor region ("frontier" or "ashvalley") with a fade. Unlike
 ## enter() it leaves the light alone. outside_pos / outside_heading is where he stands again when
 ## he comes back; spawn_override / spawn_heading place him somewhere else than the entry (loading a save).
 func enter_region(region_id: String, outside_pos: Vector3, outside_heading: float, player: Player, spawn_override: Vector3 = Vector3.INF, spawn_heading: float = PI) -> void:
-	if player.busy or region_id != "frontier":
+	if player.busy or not region_id in REGION_IDS:
 		return
 	player.busy = true
 	var hud := get_tree().get_first_node_in_group("hud")
 	Sfx.ui("door_open")
 	await hud.fade_out(0.3)
-	if _frontier == null:
-		_frontier = Frontier.new()
-		_frontier.name = "Frontier"
-		_frontier.exit_action = func(p): exit_region(p)
-		add_child(_frontier)
-		await _frontier.build()
+	if not _regions.has(region_id):
+		var region := _new_region(region_id)
+		region.name = "Frontier" if region_id == "frontier" else "AshValley"
+		region.exit_action = func(p): exit_region(p)
+		add_child(region)
+		_regions[region_id] = region
+		await region.build()
+	var built: Node3D = _regions[region_id]
 	_region_outside = {"pos": outside_pos, "heading": outside_heading}
-	player.teleport(_frontier.spawn_point() if spawn_override == Vector3.INF else spawn_override, spawn_heading)
+	player.teleport(built.spawn_point() if spawn_override == Vector3.INF else spawn_override, spawn_heading)
 	_in_region = true
-	current_kind = "frontier"
+	current_kind = region_id
 	await hud.fade_in(0.3)
 	player.busy = false
-	Quests.report_reach("frontier")
+	Quests.report_reach(region_id)
 
 
 func exit_region(player: Player) -> void:

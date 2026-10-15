@@ -6,7 +6,7 @@ class_name SaveGame
 ## the quests, the rescue event of Andreas, the time of day, opened chests and collected quest items.
 ## Also saved: which village spawns are defeated (and when they come back) and how hurt the living ones are,
 ## a night invasion in progress (it comes back from the wave that was running), the chests inside the houses.
-## Not saved: where ordinary skeletons stand, the creatures of the catacombs and the Frontier. In the Frontier the real position is saved ("in_frontier": true)
+## Not saved: where ordinary skeletons stand, the creatures of the catacombs and the Frontier. In a region (the Frontier, the Ash Valley) the real position is saved ("in_frontier": true)
 ## and loading rebuilds the region.
 ##
 ## SaveGame.start_action tells the next scene load what to do ("continue", "new", or "" for
@@ -86,11 +86,13 @@ static func save() -> bool:
 		return false
 	var position := player.global_position
 	var in_frontier := false
+	var region_id := ""
 	var interiors := tree.get_first_node_in_group("interiors")
 	if interiors != null and interiors.is_inside():
 		position = interiors.exit_position()        # inside a building: save the doorstep
 	elif interiors != null and interiors.in_region():
-		in_frontier = true                          # in the Frontier: save the real position, load rebuilds the region
+		region_id = String(interiors.current_kind)  # in a region: save the real position, load rebuilds the region
+		in_frontier = region_id == "frontier"
 	var daynight := tree.get_first_node_in_group("daynight") as DayNight
 	var rescue := tree.get_first_node_in_group("rescue")
 	var spawner := tree.get_first_node_in_group("enemy_spawner")
@@ -106,6 +108,7 @@ static func save() -> bool:
 			"talents": player.talents, "bar": player.bar,
 			"position": [position.x, position.y, position.z], "heading": player._heading,
 			"in_frontier": in_frontier,
+			"region": region_id,
 			"fish_seen": player.fish_seen,
 			"horse_owned": player.horse_owned,
 		},
@@ -202,9 +205,10 @@ static func apply(d: Dictionary) -> void:
 	var saved_pos := Vector3(float(pos[0]), float(pos[1]) + 0.05, float(pos[2]))
 	var saved_heading := float(pd.get("heading", PI))
 	var region_host := tree.get_first_node_in_group("interiors")
-	if bool(pd.get("in_frontier", false)) and region_host != null:
-		# the Frontier is built on demand: this fades, builds it and places George there a moment later
-		region_host.enter_region("frontier", Frontier.VILLAGE_GATE + Vector3(0, 0.05, 5.0), 0.0, player, saved_pos, saved_heading)
+	var saved_region := String(pd.get("region", "frontier" if bool(pd.get("in_frontier", false)) else ""))
+	if saved_region != "" and region_host != null:
+		# a region is built on demand: this fades, builds it and places George there a moment later
+		region_host.enter_region(saved_region, region_host.region_gate(saved_region) + Vector3(0, 0.05, 5.0), 0.0, player, saved_pos, saved_heading)
 	else:
 		player.teleport(saved_pos, saved_heading)
 	player.bar_changed.emit()

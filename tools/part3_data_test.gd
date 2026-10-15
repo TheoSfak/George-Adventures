@@ -41,7 +41,7 @@ func _run() -> void:
 	for id in QuestData.QUESTS:
 		if QuestData.QUESTS[id].get("ends_game", false):
 			enders.append(id)
-	check("only f_return ends the game (found %s)" % str(enders), enders == ["f_return"])
+	check("only f_return and a_boss (part 4) end the game (found %s)" % str(enders), enders == ["f_return", "a_boss"])
 	check("Strings has the frontier name", Strings.BUILDING_NAMES.has("frontier"))
 
 	# --- availability chain

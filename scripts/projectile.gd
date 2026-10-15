@@ -1,6 +1,6 @@
 class_name Projectile
 extends Node3D
-## An arrow (skeleton archers) or a magic orb (skeleton mages). Flies straight, stops at
+## An arrow (skeleton archers) or a magic orb (skeleton mages; blue souls, orange fire). Flies straight, stops at
 ## walls, and hurts George when it reaches him. Blocking works against it like any hit.
 
 const ARROW := "res://assets/characters/skeleton_weapons/Skeleton_Arrow.gltf"
@@ -37,12 +37,12 @@ func _ready() -> void:
 		orb.mesh = sphere
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(0.45, 0.72, 1.0) if kind == "soul" else Color(0.65, 1.0, 0.45)
+		mat.albedo_color = Color(0.45, 0.72, 1.0) if kind == "soul" else (Color(1.0, 0.55, 0.12) if kind == "fire" else Color(0.65, 1.0, 0.45))
 		orb.material_override = mat
 		orb.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(orb)
 		var glow := OmniLight3D.new()
-		glow.light_color = Color(0.40, 0.65, 1.0) if kind == "soul" else Color(0.55, 1.0, 0.4)
+		glow.light_color = Color(0.40, 0.65, 1.0) if kind == "soul" else (Color(1.0, 0.5, 0.15) if kind == "fire" else Color(0.55, 1.0, 0.4))
 		glow.light_energy = 1.8
 		glow.omni_range = 6.0
 		add_child(glow)

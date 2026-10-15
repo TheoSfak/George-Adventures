@@ -1,5 +1,5 @@
 extends SceneTree
-## The navigation grids of the catacombs and the Frontier: godot --path . --headless --script tools/nav_regions_test.gd -- catacombs|frontier [outdir]
+## The navigation grids of the catacombs, the Frontier and the Ash Valley: godot --path . --headless --script tools/nav_regions_test.gd -- catacombs|frontier|ashvalley [outdir]
 ## Every creature spawn must reach the entry; a picture of the grid is saved.
 var failed := false
 var which := "catacombs"
@@ -48,6 +48,15 @@ func _run() -> void:
 			if n is InteractSpot and n.global_position.distance_to(Vector3(0, 0, -188)) < 4.0:
 				spot = n
 		entry = level.wp(level.ENTRY_SPAWN.x, level.ENTRY_SPAWN.y, 0.05)
+		spawns = level.SPAWNS
+		wp = func(s): return level.wp(float(s[1]), float(s[2]), 0.0)
+	elif which == "ashvalley":
+		level = load("res://scripts/ash_valley.gd")
+		q.state["a_gate"] = q.S.ACTIVE
+		for n in get_nodes_in_group("interactables"):
+			if n is InteractSpot and n.global_position.distance_to(level.VILLAGE_GATE) < 4.5:
+				spot = n
+		entry = level.wp(level.ENTRY.x, level.ENTRY.y, 0.05)
 		spawns = level.SPAWNS
 		wp = func(s): return level.wp(float(s[1]), float(s[2]), 0.0)
 	else:
