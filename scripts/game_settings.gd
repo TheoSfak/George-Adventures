@@ -15,7 +15,7 @@ const REBINDABLE := [
 	["attack", "Επίθεση"], ["block", "Άμυνα"], ["interact", "Δράση / Συνομιλία"], ["potion", "Φίλτρο υγείας"],
 	["slot_1", "Δεξιότητα 1"], ["slot_2", "Δεξιότητα 2"], ["slot_3", "Δεξιότητα 3"], ["slot_4", "Δεξιότητα 4"],
 	["slot_5", "Δεξιότητα 5"], ["slot_6", "Δεξιότητα 6"], ["slot_7", "Δεξιότητα 7"], ["slot_8", "Δεξιότητα 8"],
-	["skillbook", "Ικανότητες"], ["talents", "Ταλέντα"], ["equipment", "Εξοπλισμός"], ["map", "Χάρτης"], ["mount", "Άλογο"],
+	["skillbook", "Ικανότητες"], ["talents", "Ταλέντα"], ["equipment", "Εξοπλισμός"], ["map", "Χάρτης"], ["mount", "Άλογο"], ["dodge", "Αποφυγή (κύλιση)"],
 ]
 const BUS_NAMES := {"master": "Master", "music": "Music", "sfx": "SFX", "ambient": "Ambient", "voice": "Voice"}
 const DEFAULT_VOLUMES := {"master": 1.0, "music": 0.8, "sfx": 0.9, "ambient": 0.8, "voice": 1.0}

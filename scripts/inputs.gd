@@ -51,6 +51,8 @@ func _register_defaults() -> void:
 	_key("attack", KEY_F)
 	_key("attack", KEY_J)
 	_button("attack", JOY_BUTTON_X)
+	_key("dodge", KEY_V)              # the dodge roll
+	_button("dodge", JOY_BUTTON_RIGHT_SHOULDER)
 	_key("mount", KEY_G)              # ride the horse (once it is bought at the stable)
 	_key("potion", KEY_H)
 	_button("potion", JOY_BUTTON_Y)

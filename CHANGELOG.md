@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+**New in this version**
+- **Dodge roll.** Press **V** (rebindable in the settings, listed on the controls page) to roll in the direction you are moving, or hop back when you stand still. For a moment (about 0.4 s) nothing can hurt you, then there is a short cooldown. It also cancels a sword swing.
+- **Shield bash.** Attack while you block (K / Ctrl) and George hits with the shield: a little damage, a strong knockback and a stun for the enemies in front of him (bosses are only stunned for a moment). It has a cooldown of a couple of seconds.
+- New test: `dodge_bash_test` (headless).
+
 ## 1.6.1 (2026-10-15) — click while steering, horse in the panel, quiet nights
 **Fixed**
 - **No more alarm in the night ambience.** The night "crickets" were a steady train of high beeps, nine and a half a second, all night long, which sounded like an alarm going off. The night layer is now only a soft wind. A new check (`tools/check_ambience.py`) fails when any ambience loop has such a repeating tone.

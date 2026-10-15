@@ -162,6 +162,13 @@ var _free_swing := false        # the current swing is a normal combo hit: Georg
 var _lunge_time := 0.0          # the stab steps forward
 var _lunge_dir := Vector3.ZERO
 var _lunge_speed := 0.0
+var _dodging := false           # the dodge roll is going on (invulnerable, rooted in its animation)
+var _dodge_time := 0.0          # seconds he is still pushed along
+var _dodge_dir := Vector3.ZERO
+var _dodge_speed := 0.0
+var _dodge_cd := 0.0
+var _dodge_serial := 0
+var _bash_cd := 0.0             # the shield bash can be used again when this is 0
 var _invulnerable := 0.0
 var _step_dist := 0.0
 
@@ -290,7 +297,10 @@ func _physics_process(delta: float) -> void:
 	_slow_time = maxf(_slow_time - delta, 0.0)
 	_invulnerable = maxf(_invulnerable - delta, 0.0)
 	var can_act := not is_dead and _stun <= 0.0 and not busy
-	_blocking = can_act and on_floor and not _attacking and Input.is_action_pressed("block")
+	if Input.is_action_just_pressed("dodge") and can_act and on_floor and not mounted and not _dodging and _dodge_cd <= 0.0 \
+			and _special_time <= 0.0 and _dash_time <= 0.0 and not _leaping:
+		_start_dodge()
+	_blocking = can_act and on_floor and not _attacking and not _dodging and Input.is_action_pressed("block")
 	_attack_queued = maxf(_attack_queued - delta, 0.0)
 	if Input.is_action_just_pressed("attack"):
 		_attack_queued = 0.25
@@ -299,15 +309,22 @@ func _physics_process(delta: float) -> void:
 	_combo_timer -= delta
 	if _combo_timer <= 0.0 and not _attacking:
 		_combo_index = 0
+	if _dodging and (_stun > 0.0 or is_dead):
+		_dodging = false
+		_dodge_time = 0.0
 	if not _attacking:
 		_free_swing = false
 		if _swing_layer:
 			_swing_layer = false
 			if _upper != null:
 				_upper.stop()
-	if can_act and on_floor and not _blocking and _attack_queued > 0.0 and not _attacking:
-		_attack_queued = 0.0
-		_start_attack()
+	if can_act and on_floor and _attack_queued > 0.0 and not _attacking and not _dodging:
+		if not _blocking:
+			_attack_queued = 0.0
+			_start_attack()
+		elif _bash_cd <= 0.0:                # attacking while blocking is a shield bash
+			_attack_queued = 0.0
+			_start_bash()
 
 	# --- Steering ---
 	# Right mouse: George always faces where the camera looks, A/D strafe.
@@ -368,6 +385,10 @@ func _physics_process(delta: float) -> void:
 	var accel := acceleration if _stun <= 0.0 else 6.0
 	velocity.x = move_toward(velocity.x, target.x, accel * delta)
 	velocity.z = move_toward(velocity.z, target.z, accel * delta)
+	if _dodge_time > 0.0:                    # the dodge roll
+		_dodge_time -= delta
+		velocity.x = _dodge_dir.x * _dodge_speed
+		velocity.z = _dodge_dir.z * _dodge_speed
 	if _lunge_time > 0.0:                    # the step of the stab
 		_lunge_time -= delta
 		velocity.x = _lunge_dir.x * _lunge_speed
@@ -528,6 +549,80 @@ func _swing(step: Dictionary, swing_speed: float, moving: bool, damage: float) -
 		# the speed that carries him `lunge` metres in all, counting the slide while he slows down again
 		var reach := float(step["lunge"])
 		_lunge_speed = acceleration * (sqrt(CombatTiming.LUNGE_TIME * CombatTiming.LUNGE_TIME + 2.0 * reach / acceleration) - CombatTiming.LUNGE_TIME)
+
+
+## The dodge roll (key V): a quick roll in the direction he moves (backwards when he stands still), invulnerable for
+## a moment, in the animation Dodge_Forward / Backward / Left / Right. It cancels a swing in progress.
+func _start_dodge() -> void:
+	var facing := Vector3(sin(_heading), 0.0, cos(_heading))
+	var right := Vector3(-cos(_heading), 0.0, sin(_heading))
+	var dir := Vector3.ZERO
+	var pad := Input.get_vector("pad_left", "pad_right", "pad_forward", "pad_back")
+	if pad.length() > 0.3:
+		dir = Basis(Vector3.UP, _yaw) * Vector3(pad.x, 0.0, pad.y)
+	else:
+		var strafe := Input.get_axis("strafe_left", "strafe_right")
+		if _game_rmb:
+			strafe = clampf(strafe + Input.get_axis("turn_left", "turn_right"), -1.0, 1.0)
+		dir = facing * Input.get_axis("move_back", "move_forward") + right * strafe
+	dir.y = 0.0
+	if dir.length() < 0.1:
+		dir = -facing                         # no direction: a hop backwards
+	dir = dir.normalized()
+	_dodge_dir = dir
+	_dodge_speed = CombatExtras.dodge_speed(acceleration)
+	_dodge_time = CombatExtras.DODGE_MOVE_TIME
+	_dodging = true
+	_dodge_cd = CombatExtras.DODGE_COOLDOWN
+	_invulnerable = maxf(_invulnerable, CombatExtras.DODGE_INVULN)
+	_attacking = false                        # a roll cancels a swing that has not landed
+	_attack_serial += 1
+	_attack_queued = 0.0
+	_dodge_serial += 1
+	_play(CombatExtras.dodge_anim(Vector2(dir.dot(right), dir.dot(facing))), 0.04, true)
+	Sfx.play("jump", global_position, -2.0)
+	_ring_effect(Color(0.85, 0.85, 0.8), 1.6, 0.3, 0.1)
+	get_tree().create_timer(CombatExtras.DODGE_ANIM_TIME).timeout.connect(_end_dodge.bind(_dodge_serial))
+
+
+func _end_dodge(serial: int) -> void:
+	if serial == _dodge_serial:
+		_dodging = false
+
+
+## The shield bash (attack while blocking): the shield hits what is in front, a little damage, a knockback and a stun.
+func _start_bash() -> void:
+	_attacking = true
+	_free_swing = false
+	_assist_aim(false)
+	_bash_cd = CombatExtras.BASH_COOLDOWN
+	var swing_speed := CombatTiming.speed(stats.total("attack_speed"))
+	_play(CombatExtras.BASH_ANIM, 0.05, true, swing_speed)
+	Sfx.play("block_hit", global_position, -1.0)
+	var serial := _attack_serial_next()
+	get_tree().create_timer(CombatExtras.BASH_HIT / swing_speed).timeout.connect(_bash_hits.bind(serial))
+	get_tree().create_timer(CombatExtras.BASH_COMMIT / swing_speed).timeout.connect(_end_skill_attack.bind(serial))
+
+
+func _bash_hits(serial: int) -> void:
+	if serial != _attack_serial or not _attacking or is_dead:
+		return
+	var forward := _facing()
+	var landed := false
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var enemy := e as Enemy
+		var to_enemy := enemy.global_position - global_position
+		to_enemy.y = 0.0
+		var dist := to_enemy.length()
+		if dist > CombatExtras.BASH_REACH:
+			continue
+		if dist > 0.8 and forward.dot(to_enemy / dist) < CombatExtras.BASH_ARC:
+			continue
+		_hit(enemy, sword_damage * CombatExtras.BASH_DAMAGE, CombatExtras.BASH_KNOCK, CombatExtras.bash_stun(enemy.display_name != ""))
+		landed = true
+	_hit_breakables(sword_damage * CombatExtras.BASH_DAMAGE, CombatExtras.BASH_REACH, true)
+	if landed:
+		_ring_effect(Color(0.6, 0.8, 1.0), 2.2, 0.25, 0.8)
 
 
 ## Swinging at something close but not quite in front turns George toward it.
@@ -1067,6 +1162,8 @@ func _tick_timers(delta: float) -> void:
 		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)
 	_guard_time = maxf(_guard_time - delta, 0.0)
 	_guard_hit_cd = maxf(_guard_hit_cd - delta, 0.0)
+	_dodge_cd = maxf(_dodge_cd - delta, 0.0)
+	_bash_cd = maxf(_bash_cd - delta, 0.0)
 	_power_time = maxf(_power_time - delta, 0.0)
 	_speed_time = maxf(_speed_time - delta, 0.0)
 	_special_time = maxf(_special_time - delta, 0.0)
@@ -1494,7 +1591,7 @@ func _respawn() -> void:
 
 
 func _update_animation() -> void:
-	if _anim == null or (_attacking and not _swing_layer) or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
+	if _anim == null or (_attacking and not _swing_layer) or _dodging or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
 		return
 	if mounted:
 		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
