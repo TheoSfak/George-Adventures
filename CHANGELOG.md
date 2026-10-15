@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8.0 (2026-10-15) — Ash Valley expansion, new creatures, kick and plunge combat
+**New in this version**
+- **Ash Valley expansion & Tier 10 gear:** Tier 10 equipment ("της Αιώνιας Φλόγας", sword, armor, shield at level 40, 60,000 gold) available at Damianos' forge shop (`ash_forge`) in the Shelter camp. Ash Valley now features drifting ember particles that swirl around the player, a smoky reddish volcanic atmosphere tinting the sky and horizon fog, and a second roaming elite boss, **Ιγνάτιος ο Σταχτοφόρος** (`ash_lord`), guarding the eastern lava ridge.
+- **5 new world creatures:** Added five distinct mob types to diversify the island's encounters: **Σκοτεινός Ιππότης** (`dark_knight`), **Σκοτεινή Μάγισσα** (`witch`), **Άπληστος Κλέφτης** (`thief`, who snatches 8 gold per strike), **Άγριος Επιδρομέας** (`raider`), and **Καταραμένο Φέρετρο** (`cursed_coffin`, dormant static tomb mob).
+- **Combat extensions:**
+  - **Front kick:** Press **C** (rebindable, controller left stick click) to execute a front kick dealing knockback and interrupting/stunning enemies (brief stagger on named bosses).
+  - **Air / plunge attack:** Attacking while mid-air plunges George downwards with his blade drawn, triggering a ground-slam shockwave that damages, knocks back, and briefly staggers nearby enemies upon landing.
+  - **Attack speed scaling:** Skill animations and execution timers (such as Whirlwind) now properly scale with George's `attack_speed` stat.
+- New test: `v18_features_test` (headless).
+
 ## 1.7.0 (2026-10-15) — the Ash Valley, dodge roll and a better memory
 **Fixed**
 - **The game remembers more when you save and load.** The chests inside the houses stay opened (before, they could be opened again after every load). The skeletons you defeated stay defeated until their respawn time is up, and the ones you hurt stay hurt. If you save in the middle of a night invasion, loading brings it back (the wave that was running marches in again and the village safety is as it was). Old saves load as before; their house chests can be opened one more time.

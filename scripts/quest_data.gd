@@ -14,7 +14,7 @@ class_name QuestData
 
 ## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
 ## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
-const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem"]
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord"]
 
 
 static func is_skeleton(kind: String) -> bool:
@@ -169,6 +169,7 @@ const NPCS := {
 		"name": "Δαμιανός ο Σιδεράς",
 		"model": "res://assets/characters/Barbarian.glb",
 		"show": ["1H_Axe"],
+		"shop": "ash_forge",
 		"idle": [
 			"Σίδερο και φωτιά είναι παλιοί φίλοι. Δυστυχώς, αυτή η φωτιά δεν είναι φίλη κανενός.",
 			"Αν σπάσει ο οπλισμός σου, φέρ' τον εδώ. Έχω ακόμα κάρβουνο για ένα καλό σφυρί.",

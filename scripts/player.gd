@@ -169,6 +169,9 @@ var _dodge_speed := 0.0
 var _dodge_cd := 0.0
 var _dodge_serial := 0
 var _bash_cd := 0.0             # the shield bash can be used again when this is 0
+var _kicking := false           # the front kick animation is playing
+var _kick_cd := 0.0             # cooldown until George can kick again
+var _air_attacking := false     # mid-air plunge attack is falling
 var _invulnerable := 0.0
 var _step_dist := 0.0
 
@@ -284,7 +287,10 @@ func _physics_process(delta: float) -> void:
 	# --- Gravity and jumping ---
 	var on_floor := is_on_floor()
 	if not on_floor:
-		velocity.y -= gravity * delta
+		if _air_attacking:
+			velocity.y = minf(velocity.y - gravity * 2.0 * delta, -12.0)
+		else:
+			velocity.y -= gravity * delta
 	elif Input.is_action_just_pressed("jump") and not _attacking and not is_dead and _stun <= 0.0 and not busy:
 		velocity.y = jump_velocity
 		Sfx.play("jump", global_position, -4.0)
@@ -300,7 +306,10 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("dodge") and can_act and on_floor and not mounted and not _dodging and _dodge_cd <= 0.0 \
 			and _special_time <= 0.0 and _dash_time <= 0.0 and not _leaping:
 		_start_dodge()
-	_blocking = can_act and on_floor and not _attacking and not _dodging and Input.is_action_pressed("block")
+	if Input.is_action_just_pressed("kick") and can_act and on_floor and not mounted and not _dodging and not _kicking and _kick_cd <= 0.0 \
+			and _special_time <= 0.0 and _dash_time <= 0.0 and not _leaping:
+		_start_kick()
+	_blocking = can_act and on_floor and not _attacking and not _dodging and not _kicking and Input.is_action_pressed("block")
 	_attack_queued = maxf(_attack_queued - delta, 0.0)
 	if Input.is_action_just_pressed("attack"):
 		_attack_queued = 0.25
@@ -312,19 +321,26 @@ func _physics_process(delta: float) -> void:
 	if _dodging and (_stun > 0.0 or is_dead):
 		_dodging = false
 		_dodge_time = 0.0
+	if _kicking and (_stun > 0.0 or is_dead):
+		_kicking = false
+	if _air_attacking and (_stun > 0.0 or is_dead):
+		_air_attacking = false
 	if not _attacking:
 		_free_swing = false
 		if _swing_layer:
 			_swing_layer = false
 			if _upper != null:
 				_upper.stop()
-	if can_act and on_floor and _attack_queued > 0.0 and not _attacking and not _dodging:
+	if can_act and on_floor and _attack_queued > 0.0 and not _attacking and not _dodging and not _kicking:
 		if not _blocking:
 			_attack_queued = 0.0
 			_start_attack()
 		elif _bash_cd <= 0.0:                # attacking while blocking is a shield bash
 			_attack_queued = 0.0
 			_start_bash()
+	elif can_act and not on_floor and _attack_queued > 0.0 and not _attacking and not _dodging and not _air_attacking and not mounted:
+		_attack_queued = 0.0
+		_start_air_attack()
 
 	# --- Steering ---
 	# Right mouse: George always faces where the camera looks, A/D strafe.
@@ -413,7 +429,9 @@ func _physics_process(delta: float) -> void:
 			_leap_slam()
 
 	# --- Landing ---
-	if is_on_floor() and not _was_on_floor and not _attacking and not mounted:
+	if is_on_floor() and _air_attacking:
+		_air_slam()
+	elif is_on_floor() and not _was_on_floor and not _attacking and not mounted:
 		_landing = true
 		_play("Jump_Land", 0.05)
 		if fall_speed < -6.0:
@@ -623,6 +641,77 @@ func _bash_hits(serial: int) -> void:
 	_hit_breakables(sword_damage * CombatExtras.BASH_DAMAGE, CombatExtras.BASH_REACH, true)
 	if landed:
 		_ring_effect(Color(0.6, 0.8, 1.0), 2.2, 0.25, 0.8)
+
+
+## The front kick (key C): George kicks forward, dealing damage with high knockback and stun.
+func _start_kick() -> void:
+	_kicking = true
+	_attacking = true
+	_free_swing = false
+	_assist_aim(false)
+	_kick_cd = CombatExtras.KICK_COOLDOWN
+	var kick_speed := CombatTiming.speed(stats.total("attack_speed"))
+	_play(CombatExtras.KICK_ANIM, 0.05, true, kick_speed)
+	Sfx.play("sword_swing", global_position, 2.0)
+	var serial := _attack_serial_next()
+	get_tree().create_timer(CombatExtras.KICK_HIT / kick_speed).timeout.connect(_kick_hits.bind(serial))
+	get_tree().create_timer(CombatExtras.KICK_COMMIT / kick_speed).timeout.connect(_end_kick.bind(serial))
+
+
+func _kick_hits(serial: int) -> void:
+	if serial != _attack_serial or not _kicking or is_dead or _stun > 0.0:
+		return
+	var forward := _facing()
+	var landed := false
+	var kick_dmg := sword_damage * CombatExtras.KICK_DAMAGE
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var enemy := e as Enemy
+		var to_enemy := enemy.global_position - global_position
+		to_enemy.y = 0.0
+		var dist := to_enemy.length()
+		if dist > CombatExtras.KICK_REACH:
+			continue
+		if dist > 0.8 and forward.dot(to_enemy / dist) < CombatExtras.KICK_ARC:
+			continue
+		_hit(enemy, kick_dmg, CombatExtras.KICK_KNOCK, CombatExtras.kick_stun(enemy.display_name != ""))
+		landed = true
+	_hit_breakables(kick_dmg, CombatExtras.KICK_REACH, true)
+	if landed:
+		Sfx.play("heavy_hit", global_position, 0.0)
+		_ring_effect(Color(1.0, 0.8, 0.4), 2.2, 0.25, 0.8)
+
+
+func _end_kick(serial: int) -> void:
+	if serial == _attack_serial:
+		_kicking = false
+		_attacking = false
+
+
+## Air / Plunge attack: attacking while airborne plunges down, landing with a ground-slam shockwave.
+func _start_air_attack() -> void:
+	_air_attacking = true
+	_attacking = true
+	_assist_aim(false)
+	velocity.y = minf(velocity.y, -10.0)
+	_play(CombatExtras.AIR_ATTACK_ANIM, 0.05, true)
+	Sfx.play("sword_swing", global_position, 0.0)
+
+
+func _air_slam() -> void:
+	_air_attacking = false
+	var serial := _attack_serial_next()
+	_attacking = true
+	Sfx.play("land", global_position, 0.0)
+	Sfx.play("skill_lightning", global_position, -3.0)
+	_ring_effect(Color(1.0, 0.7, 0.2), CombatExtras.AIR_ATTACK_RADIUS, 0.4, 0.1)
+	var plunge_dmg := sword_damage * CombatExtras.AIR_ATTACK_DAMAGE
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var enemy := e as Enemy
+		var d := global_position.distance_to(enemy.global_position)
+		if d <= CombatExtras.AIR_ATTACK_RADIUS:
+			_hit(enemy, plunge_dmg, CombatExtras.AIR_ATTACK_KNOCK, 0.6)
+	_hit_breakables(plunge_dmg, CombatExtras.AIR_ATTACK_RADIUS)
+	get_tree().create_timer(0.35).timeout.connect(_end_skill_attack.bind(serial))
 
 
 ## Swinging at something close but not quite in front turns George toward it.
@@ -1164,6 +1253,7 @@ func _tick_timers(delta: float) -> void:
 	_guard_hit_cd = maxf(_guard_hit_cd - delta, 0.0)
 	_dodge_cd = maxf(_dodge_cd - delta, 0.0)
 	_bash_cd = maxf(_bash_cd - delta, 0.0)
+	_kick_cd = maxf(_kick_cd - delta, 0.0)
 	_power_time = maxf(_power_time - delta, 0.0)
 	_speed_time = maxf(_speed_time - delta, 0.0)
 	_special_time = maxf(_special_time - delta, 0.0)
@@ -1325,10 +1415,11 @@ func use_skill(id: String) -> bool:
 			_start_attack("power_strike")
 		"whirlwind":
 			_attacking = true
-			_play("2H_Melee_Attack_Spin" if _anim and _anim.has_animation("2H_Melee_Attack_Spin") else "1H_Melee_Attack_Slice_Horizontal", 0.05, true)
+			var speed := CombatTiming.speed(stats.total("attack_speed"))
+			_play("2H_Melee_Attack_Spin" if _anim and _anim.has_animation("2H_Melee_Attack_Spin") else "1H_Melee_Attack_Slice_Horizontal", 0.05, true, speed)
 			var serial := _attack_serial_next()
-			get_tree().create_timer(0.4).timeout.connect(_whirl_hits.bind(serial, sword_damage * 1.4))
-			get_tree().create_timer(0.95).timeout.connect(_end_skill_attack.bind(serial))
+			get_tree().create_timer(0.4 / speed).timeout.connect(_whirl_hits.bind(serial, sword_damage * 1.4))
+			get_tree().create_timer(0.95 / speed).timeout.connect(_end_skill_attack.bind(serial))
 			_ring_effect(Color(0.85, 0.92, 1.0), 4.6 + stats.total("whirl_radius"), 0.45, 0.5)
 		"guard":
 			_guard_time = 5.0 + stats.total("guard_time_add")
@@ -1584,6 +1675,8 @@ func _respawn() -> void:
 	is_dead = false
 	_stun = 0.0
 	_invulnerable = 2.0
+	_kicking = false
+	_air_attacking = false
 	_play("Idle", 0.2, true)
 	Sfx.ui("heal")
 	health_changed.emit(health, max_health)
@@ -1591,7 +1684,7 @@ func _respawn() -> void:
 
 
 func _update_animation() -> void:
-	if _anim == null or (_attacking and not _swing_layer) or _dodging or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
+	if _anim == null or (_attacking and not _swing_layer) or _dodging or _kicking or _air_attacking or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
 		return
 	if mounted:
 		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
@@ -1623,7 +1716,8 @@ func _play(anim_name: String, blend: float = 0.15, restart: bool = false, speed:
 
 
 func _on_animation_finished(anim_name: StringName) -> void:
-	if String(anim_name) in CombatTiming.animations() or anim_name == &"2H_Melee_Attack_Spin":
+	if not _air_attacking and (String(anim_name) in CombatTiming.animations() or anim_name == &"2H_Melee_Attack_Spin" or anim_name == &"Unarmed_Melee_Attack_Kick" or anim_name == &"Block_Attack" or anim_name == &"1H_Melee_Attack_Chop"):
 		_attacking = false
+		_kicking = false
 	elif anim_name == &"Jump_Land":
 		_landing = false

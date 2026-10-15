@@ -37,9 +37,10 @@ The mouse cursor is free. Hold a mouse button to move the camera.
 | Strafe | Q / E | |
 | Run | Shift | Left stick click |
 | Jump | Space | A |
-| Attack (5-hit combo, also while moving) | Quick left click (no drag) / F / J | X |
+| Attack (5-hit combo, air plunge while airborne) | Quick left click (no drag) / F / J | X |
 | Block (attack while blocking = shield bash) | K / Ctrl | Left bumper |
 | Dodge roll | V | Right bumper |
+| Front kick (knockback and stun) | C | Left stick click |
 | Mount / dismount the horse | G | |
 | Talk / open / enter | R | B |
 | Action bar (skills, potions) | 1 – 8, or click | |

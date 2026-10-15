@@ -6,7 +6,7 @@ extends Node
 var _diag_layer: CanvasLayer
 var _diag: Label
 var _last_key := "-"
-const WATCHED := ["move_forward", "move_back", "turn_left", "turn_right", "strafe_left", "strafe_right", "jump", "attack", "interact"]
+const WATCHED := ["move_forward", "move_back", "turn_left", "turn_right", "strafe_left", "strafe_right", "jump", "attack", "kick", "dodge", "interact"]
 
 
 func _ready() -> void:
@@ -53,6 +53,8 @@ func _register_defaults() -> void:
 	_button("attack", JOY_BUTTON_X)
 	_key("dodge", KEY_V)              # the dodge roll
 	_button("dodge", JOY_BUTTON_RIGHT_SHOULDER)
+	_key("kick", KEY_C)               # front kick
+	_button("kick", JOY_BUTTON_LEFT_STICK)
 	_key("mount", KEY_G)              # ride the horse (once it is bought at the stable)
 	_key("potion", KEY_H)
 	_button("potion", JOY_BUTTON_Y)

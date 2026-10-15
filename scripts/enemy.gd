@@ -32,6 +32,7 @@ signal died(enemy: Enemy)
 @export var sound_set := "bone"       # bone / stone / wood / squish / mimic: which sounds it makes (see SOUND_SETS)
 @export var glow_color := Color(0, 0, 0, 0)   # alpha 0 = no light; otherwise a small light on the creature (pumpkins)
 @export var stomp_slow := 0.0         # seconds a landed blow slows George down (the golem's stomp)
+@export var steals_gold := 0          # gold stolen from George on a melee hit
 @export_group("Stats")
 @export var max_health := 45.0
 @export var attack_damage := 12.0
@@ -547,6 +548,12 @@ func _attack(delta: float) -> void:
 				_player.take_damage(scaled_damage(), global_position)
 				if stomp_slow > 0.0:
 					_player.slow(stomp_slow)
+				if steals_gold > 0 and _player.gold > 0:
+					var stolen: int = mini(steals_gold, _player.gold)
+					_player.gold -= stolen
+					_player.inventory_changed.emit(_player.gold, _player.potions)
+					_player.message.emit(Strings.MSG_GOLD_STOLEN % stolen)
+					Sfx.ui("gold_pickup")
 	if _rig != null and _attack_timer >= static_attack_time:      # nothing animated ends the swing of a prop: a timer does
 		_rig.end_attack()
 		_cooldown = attack_cooldown

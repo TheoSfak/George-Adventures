@@ -22,6 +22,25 @@ const BASH_STUN_BOSS := 0.5        # named bosses are stunned for much less
 const BASH_COOLDOWN := 2.5
 
 
+# --- the front kick (key C, gamepad left stick click; rebindable)
+const KICK_ANIM := "Unarmed_Melee_Attack_Kick"
+const KICK_HIT := 0.20             # animation seconds until the kick lands
+const KICK_COMMIT := 0.45          # animation seconds until George can act again
+const KICK_REACH := 2.6            # metres in front of George
+const KICK_ARC := 0.35             # forward cone
+const KICK_DAMAGE := 0.70          # share of sword damage
+const KICK_KNOCK := 12.0           # strong knockback
+const KICK_STUN := 1.2             # stuns and interrupts enemies
+const KICK_STUN_BOSS := 0.4        # bosses get brief stagger
+const KICK_COOLDOWN := 2.0         # seconds cooldown
+
+# --- the air / plunge attack (attack while in the air)
+const AIR_ATTACK_ANIM := "1H_Melee_Attack_Chop"
+const AIR_ATTACK_RADIUS := 4.0
+const AIR_ATTACK_DAMAGE := 1.5
+const AIR_ATTACK_KNOCK := 8.0
+
+
 ## The push speed that carries him `DODGE_DISTANCE` metres in all: he is pushed for DODGE_MOVE_TIME at this
 ## speed and then slows down with `acceleration` (the same rate that stops him when he lets go of the keys).
 static func dodge_speed(acceleration: float) -> float:
@@ -39,3 +58,8 @@ static func dodge_anim(local_dir: Vector2) -> String:
 ## How long a bash stuns: bosses (they have a name over their head) much less.
 static func bash_stun(is_boss: bool) -> float:
 	return BASH_STUN_BOSS if is_boss else BASH_STUN
+
+
+## How long a kick stuns: bosses much less.
+static func kick_stun(is_boss: bool) -> float:
+	return KICK_STUN_BOSS if is_boss else KICK_STUN

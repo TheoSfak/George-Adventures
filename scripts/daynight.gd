@@ -225,7 +225,12 @@ func _apply(_force: bool) -> void:
 	var top: Color = _sample(1, time_of_day)
 	var horizon: Color = _sample(2, time_of_day)
 	var fog: Color = _sample(3, time_of_day)
-	if overcast > 0.0:                      # clouds: the sky and the fog lose their colour
+	var in_ash: bool = bool(_interiors != null and _interiors.in_region() and _interiors.current_kind == "ashvalley")
+	if in_ash:
+		top = top.lerp(Color(0.24, 0.10, 0.06), 0.70)
+		horizon = horizon.lerp(Color(0.72, 0.28, 0.10), 0.75)
+		fog = fog.lerp(Color(0.50, 0.20, 0.10), 0.80)
+	elif overcast > 0.0:                      # clouds: the sky and the fog lose their colour
 		top = _greyed(top, overcast * 0.8)
 		horizon = _greyed(horizon, overcast * 0.8)
 		fog = _greyed(fog, overcast * 0.8)
@@ -242,9 +247,9 @@ func _apply(_force: bool) -> void:
 	# overcast days keep a little of the light the hidden sun loses; a lightning flash lights everything
 	_env.ambient_light_energy = _sample(4, time_of_day) + lerpf(0.0, 0.25, overcast) * (1.0 - darkness()) + flash * 1.5
 	_env.ambient_light_sky_contribution = _sample(5, time_of_day)
-	_env.ambient_light_color = AMBIENT_COLOR
+	_env.ambient_light_color = AMBIENT_COLOR.lerp(Color(0.85, 0.40, 0.22), 0.45) if in_ash else AMBIENT_COLOR
 	_env.fog_light_color = fog
-	_env.fog_density = lerpf(0.0006, 0.0011, darkness()) + fog_amount * 0.0045
+	_env.fog_density = lerpf(0.0006, 0.0011, darkness()) + fog_amount * 0.0045 + (0.0018 if in_ash else 0.0)
 
 
 ## Outdoor villagers go home at dusk (one by one) and come back at dawn.

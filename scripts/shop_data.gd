@@ -10,6 +10,7 @@ const SLOT_ICONS := {"weapon": "sword", "armor": "armor", "shield": "shield"}
 const TIER_COLORS: Array[Color] = [
 	Color(0.78, 0.80, 0.84), Color(0.45, 0.68, 1.0), Color(1.0, 0.85, 0.35), Color(0.78, 0.45, 1.0),
 	Color(0.40, 0.95, 0.80), Color(0.35, 0.55, 1.0), Color(1.0, 0.62, 0.20), Color(0.95, 0.40, 0.55), Color(1.0, 1.0, 0.85),
+	Color(1.0, 0.32, 0.08),
 ]
 
 const GEAR := {
@@ -81,6 +82,11 @@ const GEAR := {
 		"name": "Σπαθί των Αρχαγγέλων", "slot": "weapon", "tier": 9, "level": 40, "price": 45000,
 		"mods": {"damage_add": 100, "crit": 0.18, "lifesteal": 0.08, "attack_speed": 0.24}, "desc": "Το όπλο που κρατούσαν οι φύλακες του ουρανού.",
 	},
+	"weapon_10": {
+		"name": "Σπαθί της Αιώνιας Φλόγας", "slot": "weapon", "tier": 10, "level": 40, "price": 60000,
+		"mods": {"damage_add": 125, "crit": 0.20, "lifesteal": 0.10, "attack_speed": 0.28},
+		"desc": "Σφυρηλατημένο από τον Δαμιανό στη λάβα του Καταφυγίου. Καίει ό,τι αγγίζει.",
+	},
 	"armor_5": {
 		"name": "Πανοπλία της Αυγής", "slot": "armor", "tier": 5, "level": 20, "price": 3500,
 		"mods": {"hp_add": 240, "defense": 0.28, "regen": 1.5}, "desc": "Ελαφριά σαν πρωινή ομίχλη, σκληρή σαν βράχος.",
@@ -101,6 +107,11 @@ const GEAR := {
 		"name": "Πανοπλία των Αρχαγγέλων", "slot": "armor", "tier": 9, "level": 40, "price": 45000,
 		"mods": {"hp_add": 580, "defense": 0.44, "regen": 3.5}, "desc": "Δεν τη φόρεσε ποτέ θνητός. Μέχρι τώρα.",
 	},
+	"armor_10": {
+		"name": "Πανοπλία της Αιώνιας Φλόγας", "slot": "armor", "tier": 10, "level": 40, "price": 60000,
+		"mods": {"hp_add": 700, "defense": 0.48, "regen": 4.5},
+		"desc": "Ηφαιστειακό μέταλλο με φλέβες λάβας που αποκρούει τη φωτιά και το σίδερο.",
+	},
 	"shield_5": {
 		"name": "Ασπίδα της Αυγής", "slot": "shield", "tier": 5, "level": 20, "price": 3500,
 		"mods": {"block_add": 0.10, "defense": 0.10, "hp_add": 80}, "desc": "Στέκει ακλόνητη στο πρώτο φως.",
@@ -120,6 +131,11 @@ const GEAR := {
 	"shield_9": {
 		"name": "Ασπίδα των Αρχαγγέλων", "slot": "shield", "tier": 9, "level": 40, "price": 45000,
 		"mods": {"block_add": 0.14, "defense": 0.18, "hp_add": 200}, "desc": "Μια ασπίδα που φυλάει όλο το χωριό.",
+	},
+	"shield_10": {
+		"name": "Ασπίδα της Αιώνιας Φλόγας", "slot": "shield", "tier": 10, "level": 40, "price": 60000,
+		"mods": {"block_add": 0.16, "defense": 0.20, "hp_add": 250},
+		"desc": "Βαριά ασπίδα από βασάλτη και μάγμα· αντέχει ακόμη και το χτύπημα του Πυρφόρου.",
 	},
 }
 
@@ -259,6 +275,23 @@ const SHOPS := {
 		],
 		"stock": [],
 		"buys": "",
+	},
+	# Damianos' forge at the Shelter in the Ash Valley
+	"ash_forge": {
+		"title": "Σιδηρουργείο της Στάχτης",
+		"keeper": "Δαμιανός ο Σιδεράς",
+		"greeting": [
+			"Αν σπάσει ο οπλισμός σου, φέρ' τον εδώ. Έχω ακόμα κάρβουνο για ένα καλό σφυρί.",
+		],
+		"stock": [
+			{"type": "gear", "id": "weapon_10"},
+			{"type": "gear", "id": "armor_10"},
+			{"type": "gear", "id": "shield_10"},
+			{"type": "item", "id": "health_big", "price": 85},
+			{"type": "item", "id": "power", "price": 75},
+			{"type": "item", "id": "speed", "price": 60},
+		],
+		"buys": "gear",
 	},
 }
 

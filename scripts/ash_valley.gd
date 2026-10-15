@@ -50,6 +50,7 @@ const SPAWNS := [
 	["ember_skeleton", 0.0, -98.0], ["ash_caster", 18.0, -104.0], ["ember_skeleton", -36.0, -108.0],
 	["ember_skeleton", 38.0, -112.0], ["ash_caster", -30.0, -122.0], ["ash_caster", 32.0, -124.0],
 	["magma_golem", -46.0, -84.0], ["magma_golem", 48.0, -100.0], ["magma_golem", -14.0, -114.0],
+	["ash_lord", 52.0, -82.0],
 	# the temple
 	["ember_skeleton", -20.0, -146.0], ["ember_skeleton", 20.0, -146.0], ["ash_caster", -30.0, -160.0],
 	["ash_caster", 30.0, -160.0], ["ember_skeleton", -20.0, -180.0], ["ember_skeleton", 20.0, -180.0],
@@ -72,6 +73,8 @@ var _gate: Node3D
 var _gate_open := false
 var _bosses := {}                           # boss kind -> Enemy
 var _flickers: Array = []                   # [OmniLight3D, base energy, phase] of the fires that breathe
+var _embers: GPUParticles3D
+var _player: Player
 var _time := 0.0
 
 
@@ -100,6 +103,11 @@ func _process(delta: float) -> void:
 		var light: OmniLight3D = f[0]
 		if is_instance_valid(light):
 			light.light_energy = float(f[1]) * (1.0 + 0.12 * sin(_time * 7.0 + float(f[2])) + 0.07 * sin(_time * 13.0 + float(f[2]) * 2.0))
+	if _embers != null:
+		if _player == null:
+			_player = get_tree().get_first_node_in_group("player") as Player
+		if _player != null:
+			_embers.global_position = _player.global_position + Vector3(0.0, 3.0, 0.0)
 
 
 # --------------------------------------------------------------------- building ----
@@ -127,6 +135,7 @@ func build() -> void:
 	_build_gate()
 	_build_pickups()
 	_build_nav()
+	_build_embers()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_spawn_creatures()
@@ -684,6 +693,39 @@ func _open_gate() -> void:
 		tween.tween_callback(g.queue_free)
 
 
+func _build_embers() -> void:
+	_embers = GPUParticles3D.new()
+	_embers.name = "Embers"
+	_embers.amount = 180
+	_embers.lifetime = 3.5
+	_embers.preprocess = 1.5
+	_embers.randomness = 0.4
+	var mat := ParticleProcessMaterial.new()
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	mat.emission_box_extents = Vector3(18.0, 4.0, 18.0)
+	mat.direction = Vector3(0.15, 1.0, 0.05).normalized()
+	mat.spread = 30.0
+	mat.initial_velocity_min = 1.2
+	mat.initial_velocity_max = 2.6
+	mat.gravity = Vector3(0.0, 0.25, 0.0)
+	mat.scale_min = 0.04
+	mat.scale_max = 0.12
+	mat.color = Color(1.0, 0.58, 0.15, 0.85)
+	_embers.process_material = mat
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.12, 0.12)
+	var draw_mat := StandardMaterial3D.new()
+	draw_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	draw_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	draw_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	draw_mat.albedo_color = Color(1.0, 0.55, 0.15, 0.9)
+	draw_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad.material = draw_mat
+	_embers.draw_pass_1 = quad
+	_embers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_root.add_child(_embers)
+
+
 # ------------------------------------------------------- pickups, people, enemies ----
 
 func _build_pickups() -> void:
@@ -731,7 +773,7 @@ func _spawn_creatures() -> void:
 
 
 func _boss_kinds() -> Array:
-	return ["pyrforos"]
+	return ["pyrforos", "ash_lord"]
 
 
 ## A boss that was killed before his quest began comes back when the quest is taken.
@@ -743,8 +785,8 @@ func _check_bosses() -> void:
 		var kind: String = s[0]
 		if not kind in _boss_kinds():
 			continue
-		var quest: String = spawner.KINDS[kind]["quest"]
-		if Quests.state[quest] != Quests.S.ACTIVE:
+		var quest: String = spawner.KINDS[kind].get("quest", "")
+		if quest == "" or Quests.state[quest] != Quests.S.ACTIVE:
 			continue
 		var alive: bool = _bosses.has(kind) and is_instance_valid(_bosses[kind]) and not _bosses[kind].is_dead()
 		var wanted := false

@@ -112,6 +112,8 @@ func fall() -> void:
 
 func interact_prompt() -> String:
 	if QuestData.NPCS[npc_id].has("shop"):
+		if Quests.marker_for(npc_id) != "":
+			return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
 		return Strings.PROMPT_TRADE % QuestData.NPCS[npc_id]["name"]
 	return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
 
@@ -125,9 +127,13 @@ func interact(player: Player) -> void:
 	if hud == null or hud.is_dialogue_open():
 		return
 	var shop_id: String = QuestData.NPCS[npc_id].get("shop", "")
-	if shop_id != "":
+	if shop_id != "" and Quests.marker_for(npc_id) == "":
 		var shop: Dictionary = ShopData.SHOPS[shop_id]
 		hud.show_dialogue(QuestData.NPCS[npc_id]["name"], shop["greeting"], func(): hud.open_shop(shop_id, player))
 		return
 	var plan := Quests.dialogue_for(npc_id)
-	hud.show_dialogue(plan["speaker"], plan["lines"], func(): Quests.finish_dialogue(plan))
+	hud.show_dialogue(plan["speaker"], plan["lines"], func():
+		Quests.finish_dialogue(plan)
+		if shop_id != "" and Quests.marker_for(npc_id) == "":
+			hud.open_shop(shop_id, player)
+	)

@@ -219,6 +219,55 @@ const KINDS := {
 		"enrage_below": 0.5, "enrage_summon": "minion",
 		"xp_reward": 360, "gold_min": 120, "gold_max": 200, "potion_chance": 1.0,
 	},
+	# --- new wanderers and threats of the island (Dark Knights, Witches, Thieves, Raiders, Cursed Coffins)
+	"dark_knight": {
+		"kind_id": "dark_knight", "human": true, "walk_anim": "Walking_A",
+		"display_name": "Σκοτεινός Ιππότης", "model_scale": 1.25,
+		"model_path": CHAR + "Knight.glb", "show_nodes": ["2H_Sword", "Knight_Helmet", "Knight_Cape"],
+		"tint_color": Color(0.15, 0.08, 0.22, 0.80),
+		"max_health": 170.0, "attack_damage": 25.0, "chase_speed": 3.8, "attack_range": 3.0,
+		"attack_hit_time": 0.65, "attack_cooldown": 1.9, "attack_anim": "2H_Melee_Attack_Slice",
+		"aggro_range": 18.0, "leash_range": 35.0, "patrol_radius": 4.0,
+		"xp_reward": 75, "gold_min": 18, "gold_max": 40, "potion_chance": 0.5,
+	},
+	"witch": {
+		"kind_id": "witch", "human": true, "walk_anim": "Walking_A",
+		"display_name": "Μάγισσα των Σκιών", "model_scale": 1.0,
+		"model_path": CHAR + "Mage.glb", "show_nodes": ["Spellbook", "Mage_Hat", "Mage_Cape"],
+		"tint_color": Color(0.28, 0.05, 0.42, 0.72),
+		"ranged": true, "projectile_kind": "orb", "shoot_anim": "Spellcast_Shoot", "projectile_speed": 12.0,
+		"ranged_min": 7.0, "ranged_max": 16.0, "aggro_range": 19.0, "leash_range": 32.0,
+		"max_health": 80.0, "attack_damage": 18.0, "chase_speed": 4.0, "attack_cooldown": 2.2, "projectile_slows": true,
+		"xp_reward": 60, "gold_min": 14, "gold_max": 30, "potion_chance": 0.45,
+	},
+	"thief": {
+		"kind_id": "thief", "human": true, "walk_anim": "Walking_A",
+		"display_name": "Άπληστος Κλέφτης", "model_scale": 1.0,
+		"model_path": CHAR + "Rogue_Hooded.glb", "show_nodes": ["Knife", "Knife_Offhand", "Rogue_Cape"],
+		"tint_color": Color(0.18, 0.26, 0.18, 0.65),
+		"max_health": 55.0, "attack_damage": 11.0, "chase_speed": 5.4, "attack_cooldown": 1.1,
+		"aggro_range": 22.0, "leash_range": 36.0, "steals_gold": 8,
+		"xp_reward": 45, "gold_min": 20, "gold_max": 45, "potion_chance": 0.35,
+	},
+	"raider": {
+		"kind_id": "raider", "human": true, "walk_anim": "Walking_A",
+		"display_name": "Άγριος Επιδρομέας", "model_scale": 1.2,
+		"model_path": CHAR + "Barbarian.glb", "show_nodes": ["2H_Axe", "Barbarian_Hat", "Barbarian_Cape"],
+		"tint_color": Color(0.50, 0.15, 0.08, 0.58),
+		"max_health": 135.0, "attack_damage": 22.0, "chase_speed": 4.5, "attack_range": 2.8,
+		"attack_hit_time": 0.55, "attack_cooldown": 1.6, "attack_anim": "2H_Melee_Attack_Chop",
+		"aggro_range": 18.0, "leash_range": 32.0,
+		"xp_reward": 65, "gold_min": 14, "gold_max": 28, "potion_chance": 0.45,
+	},
+	"cursed_coffin": {
+		"kind_id": "cursed_coffin", "static_mob": true, "dormant": true, "wake_range": 6.0, "sound_set": "wood",
+		"display_name": "Καταραμένο Φέρετρο", "wake_text": "Το φέρετρο τρίζει και σηκώνεται!",
+		"model_path": GRAVE + "coffin.gltf", "model_scale": 1.25, "sway": 0.04,
+		"max_health": 120.0, "attack_damage": 16.0, "chase_speed": 3.8, "patrol_speed": 0.0,
+		"attack_range": 2.8, "attack_hit_time": 0.4, "static_attack_time": 0.9, "attack_cooldown": 1.5,
+		"aggro_range": 14.0, "leash_range": 28.0,
+		"xp_reward": 50, "gold_min": 10, "gold_max": 25, "potion_chance": 0.4,
+	},
 	# --- the catacombs below the old crypt (placed by catacombs.gd; "quest" = the quest that needs the boss)
 	"cguard": {
 		"kind_id": "cguard", "tint_color": Color(0.30, 0.70, 0.85, 0.26), "model_scale": 1.15,
@@ -364,6 +413,19 @@ const KINDS := {
 		"aggro_range": 12.0, "leash_range": 30.0,
 		"xp_reward": 420, "gold_min": 40, "gold_max": 80, "potion_chance": 0.7,
 	},
+	# Ancient burning warlord of the eastern lava ridge
+	"ash_lord": {
+		"kind_id": "ash_lord", "respawn_after": 60.0, "tint_color": Color(1.0, 0.28, 0.05, 0.55),
+		"display_name": "Ιγνάτιος ο Σταχτοφόρος", "model_scale": 1.9, "glow_color": Color(1.0, 0.40, 0.08, 0.7),
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Blade.gltf",
+		"max_health": 2400.0, "attack_damage": 38.0, "chase_speed": 4.5, "attack_range": 3.2,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.7, "attack_anim": "1H_Melee_Attack_Slice_Horizontal",
+		"aggro_range": 22.0, "leash_range": 42.0, "patrol_radius": 3.0, "need_los": true,
+		"enrage_below": 0.4, "enrage_summon": "ember_skeleton", "summon_interval": 14.0, "summon_max": 3,
+		"xp_reward": 2200, "gold_min": 350, "gold_max": 600, "potion_chance": 1.0,
+	},
 	# The boss of the Temple of the Flame: below half health he calls burning skeletons and speeds up
 	"pyrforos": {
 		"kind_id": "pyrforos", "respawn_after": 60.0, "quest": "a_boss", "tint_color": Color(1.0, 0.30, 0.04, 0.46),
@@ -380,7 +442,7 @@ const KINDS := {
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos"]
+const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -426,6 +488,12 @@ const SPAWNS := [
 	# --- the cult's ritual circle (cult_site.gd, centre (-80, -140)): five followers and the high priest
 	["cult_priest", -80.0, -147.0],
 	["cultist", -87.0, -135.0], ["cultist", -73.0, -135.0], ["cultist", -90.0, -143.0], ["cultist", -70.0, -144.0], ["cultist", -80.0, -130.0],
+	# --- new roamers: Dark Knights, Witches, Thieves, Raiders, Cursed Coffins
+	["dark_knight", -110.0, 150.0], ["dark_knight", 130.0, -120.0],
+	["witch", -45.0, -180.0], ["witch", 45.0, -180.0],
+	["thief", -60.0, 40.0], ["thief", 80.0, 20.0],
+	["raider", -70.0, 140.0], ["raider", 90.0, 130.0],
+	["cursed_coffin", -50.0, -195.0], ["cursed_coffin", 50.0, -195.0],
 ]
 
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns
