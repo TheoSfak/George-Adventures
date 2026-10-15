@@ -1,6 +1,9 @@
 # Changelog
 
 ## Unreleased
+**Fixed**
+- **No more alarm in the night ambience.** The night "crickets" were a steady train of high beeps, nine and a half a second, all night long, which sounded like an alarm going off. The night layer is now only a soft wind. A new check (`tools/check_ambience.py`) fails when any ambience loop has such a repeating tone.
+
 **Improved**
 - **You can swing the sword with the right mouse button held.** A quick left click (less than 0.3 s) is now a sword swing also while you hold the right button to steer, and while you run, with or without moving the mouse. Holding both buttons for longer than a third of a second still runs forward. The controls help says so.
 - **The horse shows in the corner panel.** Once you own the horse, a small pill next to the potions says `[G] Άλογο` (`[G] Κατέβα` while you ride). The key shown follows your key settings. The controls page (the "i" button, F1) lists G for the horse and its first lines (the mouse buttons) are shorter, so nothing overlaps.
