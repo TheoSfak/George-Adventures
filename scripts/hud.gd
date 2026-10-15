@@ -45,6 +45,7 @@ var _player: Player
 
 # action bar, buffs, skill book
 var _bar_slots: Array[ActionSlot] = []
+var _second_bar_row: HBoxContainer
 var _buff_box: HBoxContainer
 var _buff_labels := {}
 var _hero: HeroWindow
@@ -635,10 +636,18 @@ func _build_action_bar() -> void:
 	dock.offset_bottom = -14.0
 	dock.name = "ActionBar"
 	add_child(dock)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(row)
+	var col := VBoxContainer.new()
+	col.name = "ActionBarCol"
+	col.add_theme_constant_override("separation", 6)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dock.add_child(col)
+
+	var row1 := HBoxContainer.new()
+	row1.name = "Row1"
+	row1.add_theme_constant_override("separation", 6)
+	row1.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(row1)
+
 	const ACTION_BAR_LABELS: Array[String] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="]
 	for i in ACTION_BAR_LABELS.size():
 		var slot := ActionSlot.new()
@@ -646,7 +655,23 @@ func _build_action_bar() -> void:
 		slot.player = _player
 		slot.slot_index = i
 		slot.key_label = ACTION_BAR_LABELS[i]
-		row.add_child(slot)
+		row1.add_child(slot)
+		_bar_slots.append(slot)
+
+	var row2 := HBoxContainer.new()
+	row2.name = "Row2"
+	row2.add_theme_constant_override("separation", 6)
+	row2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(row2)
+	_second_bar_row = row2
+
+	for i in range(12, 24):
+		var slot := ActionSlot.new()
+		slot.custom_minimum_size = Vector2(COMPACT_SLOT, COMPACT_SLOT)
+		slot.player = _player
+		slot.slot_index = i
+		slot.key_label = ""
+		row2.add_child(slot)
 		_bar_slots.append(slot)
 
 	var hint := _plain_label(Strings.SKILLBOOK_KEY, 14, Color(0.80, 0.80, 0.84))
@@ -674,7 +699,25 @@ func _build_action_bar() -> void:
 		_buff_box.add_child(l)
 		_buff_labels[id] = l
 
+	refresh_action_bars()
 	_build_windows()
+
+
+## Updates visibility and badge labels of the second action bar, adjusting hint and buff heights.
+func refresh_action_bars() -> void:
+	var show_second: bool = GameSettings.second_action_bar
+	if _second_bar_row != null:
+		_second_bar_row.visible = show_second
+		for s in _second_bar_row.get_children():
+			var slot := s as ActionSlot
+			if slot != null:
+				var action := "slot_%d" % (slot.slot_index + 1)
+				var kn := GameSettings.key_name(action)
+				slot.key_label = kn if kn != "—" else ""
+	if _hint != null:
+		_hint.offset_bottom = -130.0 if show_second else -78.0
+	if _buff_box != null:
+		_buff_box.offset_bottom = -162.0 if show_second else -110.0
 
 
 func _process(_delta: float) -> void:

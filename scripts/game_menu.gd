@@ -421,6 +421,16 @@ func _build_settings() -> void:
 	updates.add_theme_icon_override("unchecked", _check_icon(false))
 	updates.toggled.connect(func(on: bool): GameSettings.set_check_updates(on))
 	_box.add_child(updates)
+	var second_bar := CheckBox.new()
+	second_bar.text = Strings.SET_SECOND_ACTION_BAR
+	second_bar.button_pressed = GameSettings.second_action_bar
+	second_bar.focus_mode = Control.FOCUS_NONE
+	second_bar.add_theme_font_size_override("font_size", 18)
+	second_bar.add_theme_color_override("font_color", UiKit.CREAM)
+	second_bar.add_theme_icon_override("checked", _check_icon(true))
+	second_bar.add_theme_icon_override("unchecked", _check_icon(false))
+	second_bar.toggled.connect(func(on: bool): GameSettings.set_second_action_bar(on))
+	_box.add_child(second_bar)
 	_box.add_child(_graphics_row())
 	_box.add_child(UiKit.label(Strings.SET_KEYS, 19, UiKit.GOLD_TEXT))
 	_box.add_child(_key_list())

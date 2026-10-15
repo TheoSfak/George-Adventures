@@ -35,7 +35,7 @@ func _run() -> void:
 	await process_frame
 
 	# 1. SkillData.DEFAULT_BAR size
-	check("SkillData.DEFAULT_BAR has 12 slots", SkillData.DEFAULT_BAR.size() == 12)
+	check("SkillData.DEFAULT_BAR has at least 12 slots", SkillData.DEFAULT_BAR.size() >= 12)
 
 	# 2. InputMap actions for slot_1 .. slot_12
 	for i in 12:
@@ -60,7 +60,7 @@ func _run() -> void:
 	root.add_child(player)
 	await process_frame
 
-	check("Player bar has 12 slots", player.bar.size() == 12)
+	check("Player bar has at least 12 slots", player.bar.size() >= 12)
 
 	# 5. Drag/assign into high slots
 	player.assign_slot(8, "thunder_strike")

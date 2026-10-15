@@ -79,10 +79,11 @@ const ITEMS := {
 	},
 }
 
-## The bar when the game starts: 12 slots.
+## The bar when the game starts: 24 slots (12 primary, 12 secondary).
 const DEFAULT_BAR: Array[String] = [
 	"power_strike", "guard", "whirlwind", "prayer", "charge", "item:health", "item:power", "item:speed",
 	"", "", "", "",
+	"", "", "", "", "", "", "", "", "", "", "", "",
 ]
 
 

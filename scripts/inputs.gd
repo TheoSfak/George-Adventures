@@ -68,6 +68,10 @@ func _register_defaults() -> void:
 	_key("slot_9", KEY_KP_9)
 	_key("slot_10", KEY_KP_0)
 	_key("slot_11", KEY_KP_SUBTRACT)
+	for i in range(12, 24):
+		var act := "slot_%d" % (i + 1)
+		if not InputMap.has_action(act):
+			InputMap.add_action(act, 0.2)
 	_key("skillbook", KEY_P)
 	_key("talents", KEY_T)
 	_key("equipment", KEY_I)
