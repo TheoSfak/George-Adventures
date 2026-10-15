@@ -28,7 +28,7 @@ const FLAME := Vector2(0.0, -192.0)                   # the Flame of the Keeper 
 # Where the three Shards of the Flame (quest "Τα Θραύσματα της Φλόγας") lie
 const SHARDS := [Vector2(-56.0, 76.0), Vector2(54.0, -24.0), Vector2(-48.0, -98.0)]
 # Where the four Crystals of Lava (quest "Οι Κρύσταλλοι της Λάβας") lie along the banks
-const CRYSTALS := [Vector2(-28.0, -52.0), Vector2(26.0, -50.0), Vector2(-12.0, -70.0), Vector2(32.0, -68.0)]
+const CRYSTALS := [Vector2(-28.0, -52.0), Vector2(24.0, -42.0), Vector2(-16.0, -76.0), Vector2(32.0, -68.0)]
 
 # [x, z, rotation in degrees, golden, gold_min, gold_max, potions]
 const CHESTS := [
@@ -400,6 +400,9 @@ func _blocked(p: Vector2) -> bool:
 		return true
 	for s in SHARDS:
 		if s.distance_to(p) < 7.0:
+			return true
+	for c in CRYSTALS:
+		if c.distance_to(p) < 6.0:
 			return true
 	for c in CHESTS:
 		if Vector2(c[0], c[1]).distance_to(p) < 6.0:
@@ -782,6 +785,10 @@ func _build_pickups() -> void:
 	for c in CRYSTALS:
 		var pos := wp(c.x, c.y)
 		if SaveGame.collected_items.has("crystal@" + SaveGame.key_for(pos)):
+			continue
+		if c == Vector2(-16.0, -76.0) and SaveGame.collected_items.has("crystal@" + SaveGame.key_for(wp(-12.0, -70.0))):
+			continue
+		if c == Vector2(24.0, -42.0) and SaveGame.collected_items.has("crystal@" + SaveGame.key_for(wp(26.0, -50.0))):
 			continue
 		var item := QuestItem.new()
 		item.item_id = "crystal"

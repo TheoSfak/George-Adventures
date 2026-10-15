@@ -117,7 +117,15 @@ func _run() -> void:
 	var ac = QuestData.QUESTS.get("a_crystals", {})
 	check("a_crystals item is crystal", ac["objectives"][0]["item"] == "crystal")
 	check("QuestItem has crystal model", QuestItem.MODELS.has("crystal"))
-	check("AshValley defines 4 crystals", AshValley.CRYSTALS.size() == 4)
+	var av = load("res://scripts/ash_valley.gd")
+	check("AshValley defines 4 crystals", av.CRYSTALS.size() == 4)
+	var all_outside_lava := true
+	for c in av.CRYSTALS:
+		var dist_to_center: float = absf(c.y - av.stream_z(c.x))
+		if dist_to_center <= av.STREAM_WIDTH * 0.5 + 1.5:
+			all_outside_lava = false
+			break
+	check("All 4 lava crystals are placed safely outside the lava river and rim", all_outside_lava)
 
 	var has_raider_spawns := false
 	for s in Frontier.SPAWNS:
