@@ -47,36 +47,66 @@ func _build_ocean() -> void:
 	water_mat.set_shader_parameter("shallow_color", Color(0.16, 0.62, 0.68))
 	water_mat.set_shader_parameter("sky_color", Color(0.72, 0.88, 1.0))
 
-	# Ocean water plane starting at the shoreline (Z = 108.0) out to open ocean (Z = 610.0)
-	var sea_mesh := PlaneMesh.new()
-	sea_mesh.size = Vector2(800.0, 500.0)
-	var sea := MeshInstance3D.new()
-	sea.mesh = sea_mesh
-	sea.material_override = water_mat
-	sea.position = Vector3(0.0, 0.0, 360.0)
-	ocean_holder.add_child(sea)
+	# 1. South Sea Bay Water: Strictly confined inside the bay opening (X in [-165, 55], Z in [106, 220]).
+	# Placed at Y = -0.01 so water is just below the dry shore/meadow (Y = 0.0), completely preventing z-fighting.
+	# It CANNOT enter the south-east forest (X > 55) or mountain (X < -165).
+	var bay_sea_mesh := PlaneMesh.new()
+	bay_sea_mesh.size = Vector2(220.0, 114.0)
+	var bay_sea := MeshInstance3D.new()
+	bay_sea.mesh = bay_sea_mesh
+	bay_sea.material_override = water_mat
+	bay_sea.position = Vector3(-55.0, -0.01, 163.0)
+	ocean_holder.add_child(bay_sea)
+
+	# 2. Open South Ocean Water: Extends across the southern horizon for Z >= 220.0.
+	# At Z >= 220.0, all island terrain is discarded by ground.gdshader, so water spreads wide to infinity with zero overlap.
+	var open_sea_mesh := PlaneMesh.new()
+	open_sea_mesh.size = Vector2(900.0, 500.0)
+	var open_sea := MeshInstance3D.new()
+	open_sea.mesh = open_sea_mesh
+	open_sea.material_override = water_mat
+	open_sea.position = Vector3(0.0, -0.01, 470.0)
+	ocean_holder.add_child(open_sea)
 
 	# Continuous Sandy Seabed underneath the open ocean floor
 	var sand_mat := StandardMaterial3D.new()
 	sand_mat.albedo_color = Color(0.70, 0.61, 0.42)   # Mediterranean marine sand
 	sand_mat.roughness = 0.95
 
-	var seabed_mesh := PlaneMesh.new()
-	seabed_mesh.size = Vector2(800.0, 500.0)
-	var seabed := MeshInstance3D.new()
-	seabed.mesh = seabed_mesh
-	seabed.material_override = sand_mat
-	seabed.position = Vector3(0.0, -1.8, 410.0)
-	ocean_holder.add_child(seabed)
+	# Bay seabed under the water
+	var bay_seabed_mesh := PlaneMesh.new()
+	bay_seabed_mesh.size = Vector2(220.0, 64.0)
+	var bay_seabed := MeshInstance3D.new()
+	bay_seabed.mesh = bay_seabed_mesh
+	bay_seabed.material_override = sand_mat
+	bay_seabed.position = Vector3(-55.0, -1.8, 190.0)
+	ocean_holder.add_child(bay_seabed)
+
+	# Open ocean seabed
+	var open_seabed_mesh := PlaneMesh.new()
+	open_seabed_mesh.size = Vector2(900.0, 500.0)
+	var open_seabed := MeshInstance3D.new()
+	open_seabed.mesh = open_seabed_mesh
+	open_seabed.material_override = sand_mat
+	open_seabed.position = Vector3(0.0, -1.8, 470.0)
+	ocean_holder.add_child(open_seabed)
 
 	# Solid seabed floor collider for the deep ocean
 	var floor_body := StaticBody3D.new()
-	floor_body.position = Vector3(0.0, -2.8, 410.0)
-	var f_shape := CollisionShape3D.new()
-	var f_box := BoxShape3D.new()
-	f_box.size = Vector3(800.0, 2.0, 500.0)
-	f_shape.shape = f_box
-	floor_body.add_child(f_shape)
+	# Bay deep floor (Z in [160, 225], X in [-165, 55])
+	var f_shape_bay := CollisionShape3D.new()
+	var f_box_bay := BoxShape3D.new()
+	f_box_bay.size = Vector3(220.0, 2.0, 65.0)
+	f_shape_bay.shape = f_box_bay
+	f_shape_bay.position = Vector3(-55.0, -2.8, 192.5)
+	floor_body.add_child(f_shape_bay)
+	# Open ocean floor (Z in [220, 720], X in [-450, 450])
+	var f_shape_open := CollisionShape3D.new()
+	var f_box_open := BoxShape3D.new()
+	f_box_open.size = Vector3(900.0, 2.0, 500.0)
+	f_shape_open.shape = f_box_open
+	f_shape_open.position = Vector3(0.0, -2.8, 470.0)
+	floor_body.add_child(f_shape_open)
 	ocean_holder.add_child(floor_body)
 
 	# Ocean boundary barrier so player can wade in bay but not walk to infinity
@@ -84,7 +114,7 @@ func _build_ocean() -> void:
 	barrier.position = Vector3(0.0, 5.0, 240.0)
 	var b_shape := CollisionShape3D.new()
 	var b_box := BoxShape3D.new()
-	b_box.size = Vector3(800.0, 20.0, 6.0)
+	b_box.size = Vector3(900.0, 20.0, 6.0)
 	b_shape.shape = b_box
 	barrier.add_child(b_shape)
 	ocean_holder.add_child(barrier)
@@ -101,10 +131,10 @@ func _calc_beach_height(x: float, z: float) -> float:
 	# Base coastal slope from north dunes down to deep ocean
 	var base_y: float
 	if eff_z <= 88.0:
-		base_y = 0.06
+		base_y = 0.0
 	elif eff_z <= 112.0:
-		var t := (eff_z - 88.0) / 24.0
-		base_y = lerpf(0.06, 0.0, t)
+		# Flat dry beach sand at Y = 0.0 matching mainland elevation
+		base_y = 0.0
 	elif eff_z <= 136.0:
 		var t := (eff_z - 112.0) / 24.0
 		base_y = lerpf(0.0, -0.8, t)
@@ -112,13 +142,14 @@ func _calc_beach_height(x: float, z: float) -> float:
 		var t := clampf((eff_z - 136.0) / 28.0, 0.0, 1.0)
 		base_y = lerpf(-0.8, -1.8, t)
 
-	# Side bluff elevation: land rises on the west and east edges to frame the bay
+	# West bluff elevation: land rises on the west flank to support the cliffside lighthouse
 	if x < -135.0:
 		var side_t := clampf((-135.0 - x) / 50.0, 0.0, 1.0)
 		base_y += side_t * 3.5
 	elif x > 35.0:
-		var side_t := clampf((x - 35.0) / 30.0, 0.0, 1.0)
-		base_y += side_t * 2.8
+		# East side: smoothly blend any underwater slope to 0.0 at X = 55.0, perfectly flush with mainland ground
+		var east_t := clampf((x - 35.0) / 20.0, 0.0, 1.0)
+		base_y = lerpf(base_y, 0.0, east_t)
 
 	return base_y
 
@@ -139,7 +170,7 @@ func _build_beach() -> void:
 	var x_steps := 36
 	var z_steps := 30
 	var x_min := -190.0
-	var x_max := 65.0
+	var x_max := 55.0
 	var z_min := 84.0
 	var z_max := 165.0
 
@@ -185,25 +216,25 @@ func _build_beach() -> void:
 	# 1. Upper dunes & transition zone: Z in [82, 114], overlaps village ground (ends at Z=86)
 	var col_dunes := CollisionShape3D.new()
 	var box_dunes := BoxShape3D.new()
-	box_dunes.size = Vector3(265.0, 2.0, 32.0)
+	box_dunes.size = Vector3(245.0, 2.0, 32.0)
 	col_dunes.shape = box_dunes
-	col_dunes.position = Vector3(-62.5, -1.0, 98.0) # top at Y = 0.0
+	col_dunes.position = Vector3(-67.5, -1.0, 98.0) # top at Y = 0.0
 	sb.add_child(col_dunes)
 
 	# 2. Shallow wading surf & pier approach: Z in [110, 142]
 	var col_surf := CollisionShape3D.new()
 	var box_surf := BoxShape3D.new()
-	box_surf.size = Vector3(265.0, 2.0, 32.0)
+	box_surf.size = Vector3(245.0, 2.0, 32.0)
 	col_surf.shape = box_surf
-	col_surf.position = Vector3(-62.5, -1.45, 126.0) # top at Y = -0.45
+	col_surf.position = Vector3(-67.5, -1.45, 126.0) # top at Y = -0.45
 	sb.add_child(col_surf)
 
 	# 3. Bay seabed floor & pier end / shipwreck approach: Z in [138, 172], overlaps ocean floor (starts at Z=160)
 	var col_bay := CollisionShape3D.new()
 	var box_bay := BoxShape3D.new()
-	box_bay.size = Vector3(265.0, 2.0, 34.0)
+	box_bay.size = Vector3(245.0, 2.0, 34.0)
 	col_bay.shape = box_bay
-	col_bay.position = Vector3(-62.5, -2.1, 155.0) # top at Y = -1.1
+	col_bay.position = Vector3(-67.5, -2.1, 155.0) # top at Y = -1.1
 	sb.add_child(col_bay)
 
 	beach_holder.add_child(sb)
@@ -214,14 +245,15 @@ func _build_beach() -> void:
 	rock_mat.roughness = 0.88
 
 	var beach_rocks: Array[Vector3] = [
-		Vector3(-14.0, 0.1, 102.0), Vector3(16.0, 0.08, 106.0), Vector3(-68.0, 0.05, 104.0),
-		Vector3(34.0, 0.1, 114.0), Vector3(-88.0, 0.15, 110.0), Vector3(-2.0, 0.05, 112.0),
-		Vector3(-138.0, 0.8, 120.0), Vector3(-144.0, 1.2, 134.0), Vector3(-132.0, 0.5, 148.0),
-		Vector3(42.0, 0.6, 118.0), Vector3(48.0, 0.9, 132.0), Vector3(52.0, 0.7, 146.0),
+		Vector3(-14.0, 0.0, 102.0), Vector3(16.0, 0.0, 106.0), Vector3(-68.0, 0.0, 104.0),
+		Vector3(34.0, 0.0, 114.0), Vector3(-88.0, 0.0, 110.0), Vector3(-2.0, 0.0, 112.0),
+		Vector3(-138.0, 0.0, 120.0), Vector3(-144.0, 0.0, 134.0), Vector3(-132.0, 0.0, 148.0),
+		Vector3(42.0, 0.0, 118.0), Vector3(48.0, 0.0, 132.0), Vector3(52.0, 0.0, 146.0),
 	]
 	for r_pos in beach_rocks:
 		var r_node := Node3D.new()
-		r_node.position = r_pos
+		var surface_y := _calc_beach_height(r_pos.x, r_pos.z)
+		r_node.position = Vector3(r_pos.x, surface_y + 0.1, r_pos.z)
 		var r_mesh := MeshInstance3D.new()
 		var r_cyl := CylinderMesh.new()
 		r_cyl.top_radius = 0.75 + randf() * 0.5
