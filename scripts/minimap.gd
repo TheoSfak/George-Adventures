@@ -22,6 +22,8 @@ const PLACES := [
 	["mill", 95.1, 39.4], ["windmill", -100.0, -54.1], ["tower", 95.1, -78.7], ["well", 0.0, 0.0],
 	["camp", -175.0, 20.0, -24.0], ["quarry", 140.0, 125.0], ["crypt", 0.0, -178.0], ["bigtree", 172.0, -40.0],
 	["stable", 63.0, 53.0], ["bandits", -140.0, -90.0], ["cult", -80.0, -140.0],
+	["lighthouse", -115.0, 138.0], ["harbor", -35.0, 126.0], ["waterfall", 48.0, -132.0],
+	["bridge_meadow", 70.0, -66.0], ["highlands", 82.0, -155.0], ["shipwreck", -72.0, 168.0],
 ]
 const SHOPS := [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)]
 const BOSS_AREAS := {

@@ -56,7 +56,11 @@ func _run() -> void:
 		"Disc 4D": Vector3(-75.5, 11.8, -49.0),
 		"Jump Pad 2": Vector3(-82.5, 11.7, -48.0),
 		"Checkpoint 5": Vector3(-99.0, 11.8, -46.0),
-		"Ascending Beam 2": Vector3(-108.0, 14.5, -52.0),
+		"Step 5A": Vector3(-103.2, 12.3, -45.5),
+		"Step 5B": Vector3(-107.5, 13.0, -47.0),
+		"Ascending Beam 1": Vector3(-108.5, 13.9, -51.0),
+		"Ascending Beam 2": Vector3(-108.5, 14.9, -54.5),
+		"Ascending Beam 3": Vector3(-108.0, 15.9, -58.0),
 		"Finish Podium CP 6": Vector3(-108.0, 17.3, -62.0),
 		"Acrobat Trophy Chest": Vector3(-108.0, 17.5, -64.2),
 		"Return Pad": Vector3(-105.5, 17.3, -60.2),
@@ -163,7 +167,28 @@ func _run() -> void:
 	await create_timer(0.2).timeout
 	check("Reached Checkpoint 5", parkour.current_checkpoint == 5)
 
-	player.global_position = Vector3(-108.0, 17.4, -62.0) # CP 6
+	# Traverse Stage 6 Platforms from Checkpoint 5 to Finish
+	player.global_position = Vector3(-103.2, 12.6, -45.5) # Step 5A (South Mid)
+	await create_timer(0.08).timeout
+	check("Jumped to Step 5A (South Mid)", player.global_position.y >= 12.2)
+
+	player.global_position = Vector3(-107.5, 13.3, -47.0) # Step 5B (SW Corner)
+	await create_timer(0.08).timeout
+	check("Jumped to Step 5B (SW Corner)", player.global_position.y >= 12.9)
+
+	player.global_position = Vector3(-108.5, 14.2, -51.0) # Beam 1
+	await create_timer(0.08).timeout
+	check("Jumped to Ascending Beam 1", player.global_position.y >= 13.8)
+
+	player.global_position = Vector3(-108.5, 15.2, -54.5) # Beam 2
+	await create_timer(0.08).timeout
+	check("Jumped to Ascending Beam 2", player.global_position.y >= 14.8)
+
+	player.global_position = Vector3(-108.0, 16.2, -58.0) # Beam 3
+	await create_timer(0.08).timeout
+	check("Jumped to Ascending Beam 3", player.global_position.y >= 15.8)
+
+	player.global_position = Vector3(-108.0, 17.4, -62.0) # CP 6 (Finish Podium)
 	await create_timer(0.2).timeout
 	check("Reached Checkpoint 6", parkour.current_checkpoint == 6)
 	check("Reaching CP 6 finishes course", parkour.state == ParkourCourse.State.FINISHED)

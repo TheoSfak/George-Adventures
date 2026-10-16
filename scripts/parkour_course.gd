@@ -505,10 +505,16 @@ func _build_stage_6_windmill() -> void:
 	# Checkpoint 5 on Windmill South Gallery
 	_add_checkpoint(Vector3(-99.0, 11.8, -46.0), 5, deg_to_rad(135.0))
 
-	# Ascending timber beams along West side (X = -108.0 clear west of windmill X = -105.74)
-	_make_box(Vector3(-108.0, 13.0, -48.0), Vector3(2.5, 0.35, 1.8), wood)
-	_make_box(Vector3(-108.0, 14.5, -52.0), Vector3(2.5, 0.35, 1.8), wood)
-	_make_box(Vector3(-108.0, 16.0, -56.0), Vector3(2.5, 0.35, 1.8), wood)
+	# Intermediate gallery platforms wrapping around the South & SW corner to the West beams
+	# Step 5A: South Mid timber platform
+	_make_box(Vector3(-103.2, 12.2, -45.5), Vector3(2.6, 0.35, 2.4), wood)
+	# Step 5B: South-West Corner timber landing
+	_make_box(Vector3(-107.5, 12.9, -47.0), Vector3(2.6, 0.35, 2.4), wood)
+
+	# Ascending timber beams along West side (X = -108.5 clear west of windmill)
+	_make_box(Vector3(-108.5, 13.8, -51.0), Vector3(2.5, 0.35, 2.0), wood)
+	_make_box(Vector3(-108.5, 14.8, -54.5), Vector3(2.5, 0.35, 2.0), wood)
+	_make_box(Vector3(-108.0, 15.8, -58.0), Vector3(2.5, 0.35, 2.0), wood)
 
 
 # Stage 7: Finish Sky Podium, Trophy Chest & Return Launcher

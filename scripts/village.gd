@@ -97,6 +97,9 @@ const SIGNPOSTS := [
 	["Παλιά Κρύπτη  ↑\nΚίνδυνος!", 14.0, -118.0, 0],
 	["Κρησφύγετο Ληστών  ↖\nΚίνδυνος!", -118.0, -74.0, 42],
 	["Ξέφωτο της Σέκτας  ↖\nΚίνδυνος!", CultSite.SIGN.x, CultSite.SIGN.y, 20],
+	["Προς τη Θάλασσα & το Φάρο  ↓", -18.0, 72.0, 0],
+	["Ποταμός & Καταρράκτης  ↗", 42.0, -52.0, 315],
+	["Βίγλα των Αετών (Οροπέδιο 14μ)  ↗", 38.0, -96.0, 330],
 ]
 
 const CAMP := Vector2(-175.0, 20.0)
@@ -158,6 +161,13 @@ func _ready() -> void:
 	_build_pumpkin_patch()
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
+	# ------------------------------------------------------------- Island Overhaul ----
+	add_child(IslandSouthSea.new())
+	add_child(IslandRiver.new())
+	add_child(IslandHighlands.new())
+	_build_rolling_hills()
+	_occupy_island_features()
+	# ----------------------------------------------------------------------------------
 	_build_terrain_details()
 	_build_scatter()
 	_finish_terrain()
@@ -234,6 +244,9 @@ func _build_border() -> void:
 	for h in _all_hexes():
 		var d := _hex_dist(h.x, h.y)
 		var pos := _hex_to_world(h.x, h.y)
+		# Skip south border mountains/forests so the coast opens up to the sea!
+		if pos.z > 95.0 and pos.x >= -145.0 and pos.x <= 45.0:
+			continue
 		if d == radius:
 			var model: String = BORDER[_rng.randi() % BORDER.size()]
 			var node := _place(model, pos, _rng.randi_range(0, 5) * 60.0, ST * 1.45, holder)
@@ -242,6 +255,50 @@ func _build_border() -> void:
 			var model: String = FORESTS[_rng.randi() % FORESTS.size()]
 			var node := _place(model, pos, _rng.randi_range(0, 5) * 60.0, ST, holder)
 			_add_cylinder_collider(node, ST * 0.85, 20.0, Vector3.ZERO)
+
+
+## Natural undulating hills in the lowland meadows to break up terrain flatness.
+func _build_rolling_hills() -> void:
+	var holder := Node3D.new()
+	holder.name = "RollingHills"
+	add_child(holder)
+
+	var hill_data: Array[Dictionary] = [
+		{"model": "decoration/nature/hills_A.gltf", "pos": Vector3(-118.0, 0.0, -18.0), "rot": 45.0, "scale": 11.0},
+		{"model": "decoration/nature/hill_single_A.gltf", "pos": Vector3(-88.0, 0.0, 6.0), "rot": 120.0, "scale": 9.0},
+		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-18.0, 0.0, 84.0), "rot": 20.0, "scale": 10.5},
+		{"model": "decoration/nature/hill_single_B.gltf", "pos": Vector3(32.0, 0.0, 88.0), "rot": 210.0, "scale": 8.5},
+		{"model": "decoration/nature/hills_C.gltf", "pos": Vector3(88.0, 0.0, 74.0), "rot": 85.0, "scale": 10.0},
+		{"model": "decoration/nature/hill_single_C.gltf", "pos": Vector3(105.0, 0.0, 8.0), "rot": 160.0, "scale": 8.0},
+	]
+
+	for hd in hill_data:
+		var node = _place(hd["model"], hd["pos"], hd["rot"], hd["scale"], holder)
+		_add_cylinder_collider(node, hd["scale"] * 0.45, 8.0, Vector3.ZERO)
+
+
+## Clear space in scatter grid so procedural trees/rocks do not overlap the ocean, river or highlands.
+func _occupy_island_features() -> void:
+	# 1. South Sea Coast & Sandy Beach
+	_occupy(-115.0, 138.0, 16.0) # Lighthouse promontory
+	_occupy(-35.0, 126.0, 16.0)  # Fishing pier
+	for bx in range(-140, 45, 18):
+		_occupy(float(bx), 118.0, 14.0)
+		_occupy(float(bx), 142.0, 16.0)
+		_occupy(float(bx), 170.0, 18.0)
+
+	# 2. Waterfall & River channel
+	_occupy(48.0, -132.0, 16.0) # Waterfall & plunge pool
+	_occupy(70.0, -66.0, 12.0)  # Arched Bridge 1
+	_occupy(114.0, -22.0, 12.0) # Arched Bridge 2
+	for wp in IslandRiver.RIVER_WAYPOINTS:
+		_occupy(wp.x, wp.y, 8.0)
+
+	# 3. North Highlands
+	_occupy(68.0, -132.0, 14.0)
+	_occupy(76.0, -145.0, 16.0)
+	_occupy(82.0, -155.0, 18.0) # Summit
+
 
 
 # --------------------------------------------------------------- village ----
@@ -713,8 +770,9 @@ func _build_totems() -> void:
 
 
 ## The Great Tree area in the east: a lake with rock islands, bridges and a giant tree (great_tree.gd).
-## The stable yard: a rustic wooden yard with shelter, hay sacks, barrels, water troughs,
-## companion horses (mare and foal) and Μανώλης at the gate. It faces the well.
+## The stable yard: an authentic medieval village horse stable with a covered 3-stall timber barn,
+## stone-and-timber floor, straw bedding, hay troughs, water buckets, warm hanging lanterns,
+## Manolis's tack lodge, clean post-and-rail paddock fences, and the horses (mount, mare, foal).
 func _build_stable() -> void:
 	var holder := Node3D.new()
 	holder.name = "Stable"
@@ -723,69 +781,269 @@ func _build_stable() -> void:
 	var center := Vector3(STABLE.x, 0.0, STABLE.y)
 	var forward := Vector3(sin(heading), 0.0, cos(heading))
 	var right := Vector3(-cos(heading), 0.0, sin(heading))
-	var half := Vector2(6.5, 4.8)                          # half width (right) and half depth (forward)
 	var rot := rad_to_deg(heading)
-	# wooden fence posts and rails around the perimeter with gate opening
-	var pieces := []
-	for x in range(-5, 6, 2):
-		pieces.append(Vector2(float(x), -half.y))                 # back
-	for z in range(-3, 4, 2):
-		pieces.append(Vector2(-half.x, float(z) * 1.3))           # left side
-		pieces.append(Vector2(half.x, float(z) * 1.3))            # right side
-	for x in [-5.0, -3.2, 3.2, 5.0]:
-		pieces.append(Vector2(x, half.y))                          # front, with gate gap
-	var fence_models := ["buildings/neutral/fence_wood_straight.gltf", "buildings/neutral/fence_wood_straight.gltf", "decoration/props/pallet.gltf"]
-	for i in pieces.size():
-		var v: Vector2 = pieces[i]
-		var pos := center + right * v.x + forward * v.y
-		var turn := rot + (90.0 if absf(v.x) > half.x - 0.2 else 0.0)
-		var node := _place(fence_models[i % fence_models.size()], pos, turn, PS * 0.95, holder)
-		_add_box_collider(node, 0.8)
-	# stable shelter structure at the back
-	var shelter := _place("buildings/neutral/building_scaffolding.gltf", center - forward * (half.y - 1.2), rot, PS * 0.9, holder)
-	_add_box_collider(shelter, 1.2)
-	# hay sacks, barrels, water buckets, lantern
+
+	# --- Materials for authentic timber barn ---
+	var wood_dark := StandardMaterial3D.new()
+	wood_dark.albedo_color = Color(0.28, 0.17, 0.09)     # dark oak pillars & beams
+	wood_dark.roughness = 0.85
+
+	var wood_plank := StandardMaterial3D.new()
+	wood_plank.albedo_color = Color(0.42, 0.28, 0.15)    # timber plank walls & partitions
+	wood_plank.roughness = 0.8
+
+	var roof_mat := StandardMaterial3D.new()
+	roof_mat.albedo_color = Color(0.35, 0.18, 0.10)      # medieval cedar shingle roof
+	roof_mat.roughness = 0.75
+
+	var straw_mat := StandardMaterial3D.new()
+	straw_mat.albedo_color = Color(0.84, 0.70, 0.35)     # golden dry straw bedding
+	straw_mat.roughness = 0.95
+
+	var stone_mat := StandardMaterial3D.new()
+	stone_mat.albedo_color = Color(0.45, 0.44, 0.42)     # foundation stone
+	stone_mat.roughness = 0.9
+
+	var fence_mat := StandardMaterial3D.new()
+	fence_mat.albedo_color = Color(0.45, 0.30, 0.16)     # paddock rail wood
+	fence_mat.roughness = 0.85
+
+	# Helper lambda to create a collidable box in local stable frame
+	var make_box := func(local_pos: Vector3, size: Vector3, mat: Material, has_col: bool = true) -> Node3D:
+		var pos := center + right * local_pos.x + Vector3(0.0, local_pos.y, 0.0) + forward * local_pos.z
+		var node := Node3D.new()
+		node.position = pos
+		node.rotation_degrees.y = rot
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = size
+		mi.mesh = bm
+		mi.material_override = mat
+		node.add_child(mi)
+		if has_col:
+			var sb := StaticBody3D.new()
+			var col := CollisionShape3D.new()
+			var bs := BoxShape3D.new()
+			bs.size = size
+			col.shape = bs
+			sb.add_child(col)
+			node.add_child(sb)
+		holder.add_child(node)
+		return node
+
+	# 1. MANOLIS'S TACK LODGE & OFFICE (Right Wing)
+	# Real medieval cottage for the stable keeper, storing saddles, bridles & veterinary medicine
+	var lodge := _place("buildings/yellow/building_home_A_yellow.gltf",
+		center + right * 7.8 - forward * 3.2,
+		rot - 18.0,
+		BS * 0.75,
+		holder)
+	_add_box_collider(lodge, 1.0)
+
+	# 2. COVERED 3-STALL TIMBER BARN (Rear / Left Wing)
+	var b_x := -1.8     # centered on the stalls
+	var b_z := -3.8     # set back in the rear of the paddock
+	var bw := 11.4      # total width
+	var bd := 5.2       # total depth
+	var bh := 3.8       # eaves height
+
+	# Foundation / Floor
+	make_box.call(Vector3(b_x, 0.1, b_z), Vector3(bw, 0.22, bd), stone_mat)
+
+	# Rear Wall (Solid timber back wall protecting horses from cold winds)
+	make_box.call(Vector3(b_x, bh * 0.5, b_z - bd * 0.5 + 0.12), Vector3(bw, bh, 0.25), wood_plank)
+
+	# Left Outer Wall
+	make_box.call(Vector3(b_x - bw * 0.5 + 0.12, bh * 0.5, b_z), Vector3(0.25, bh, bd), wood_plank)
+
+	# Right Outer Wall (separating stalls from lodge pathway)
+	make_box.call(Vector3(b_x + bw * 0.5 - 0.12, bh * 0.5, b_z), Vector3(0.25, bh, bd), wood_plank)
+
+	# Stall Dividers (waist-high timber partitions between stalls)
+	make_box.call(Vector3(b_x - 1.9, 0.85, b_z), Vector3(0.18, 1.5, bd - 0.8), wood_plank)
+	make_box.call(Vector3(b_x + 1.9, 0.85, b_z), Vector3(0.18, 1.5, bd - 0.8), wood_plank)
+
+	# Heavy Timber Columns (Front & Back)
+	var col_xs: Array[float] = [-bw * 0.5 + 0.18, -1.9, 1.9, bw * 0.5 - 0.18]
+	for cx: float in col_xs:
+		make_box.call(Vector3(b_x + cx, bh * 0.5, b_z + bd * 0.5 - 0.18), Vector3(0.38, bh, 0.38), wood_dark)
+		make_box.call(Vector3(b_x + cx, (bh + 0.6) * 0.5, b_z - bd * 0.5 + 0.18), Vector3(0.38, bh + 0.6, 0.38), wood_dark)
+
+	# Roof Header Beams
+	make_box.call(Vector3(b_x, bh - 0.1, b_z + bd * 0.5 - 0.18), Vector3(bw, 0.3, 0.38), wood_dark)
+	make_box.call(Vector3(b_x, bh + 0.6 - 0.1, b_z - bd * 0.5 + 0.18), Vector3(bw, 0.3, 0.38), wood_dark)
+
+	# Sloped Gabled Timber Roof with Overhang
+	var roof_node := Node3D.new()
+	var roof_pos: Vector3 = center + right * b_x + Vector3(0.0, bh + 0.45, 0.0) + forward * b_z
+	roof_node.position = roof_pos
+	roof_node.rotation_degrees.y = rot
+	roof_node.rotation.x = deg_to_rad(-8.5)
+	var r_mesh := MeshInstance3D.new()
+	var roof_box := BoxMesh.new()
+	roof_box.size = Vector3(bw + 1.2, 0.28, bd + 1.4)
+	r_mesh.mesh = roof_box
+	r_mesh.material_override = roof_mat
+	roof_node.add_child(r_mesh)
+	holder.add_child(roof_node)
+
+	# Golden Straw Bedding in each stall
+	make_box.call(Vector3(b_x - 3.8, 0.22, b_z + 0.2), Vector3(3.2, 0.08, 3.8), straw_mat, false)
+	make_box.call(Vector3(b_x, 0.22, b_z + 0.2), Vector3(3.2, 0.08, 3.8), straw_mat, false)
+	make_box.call(Vector3(b_x + 3.8, 0.22, b_z + 0.2), Vector3(3.2, 0.08, 3.8), straw_mat, false)
+
+	# Warm Hanging Lanterns under the front eaves of each stall
+	var lantern_xs: Array[float] = [-3.8, 0.0, 3.8]
+	for lx: float in lantern_xs:
+		var l_pos: Vector3 = center + right * (b_x + lx) + Vector3(0.0, bh - 0.25, 0.0) + forward * (b_z + bd * 0.5 - 0.2)
+		var lantern := _place("res://assets/graveyard/lantern_hanging.gltf", l_pos, rot, 1.1, holder)
+		var omni := OmniLight3D.new()
+		omni.light_color = Color(1.0, 0.82, 0.52)
+		omni.light_energy = 0.9
+		omni.omni_range = 6.5
+		omni.position = Vector3(0, -0.4, 0)
+		lantern.add_child(omni)
+
+	# 3. THE HORSES IN THEIR STALLS
+	# Center Stall: Player's ready-to-mount horse!
+	var horse := Horse.new()
+	horse.position = center + right * b_x + forward * (b_z + 0.4)
+	horse.rotation.y = heading + PI
+	holder.add_child(horse)
+	horse.stand()
+
+	# Left Stall: Companion chestnut mare
+	var mare := Horse.new()
+	mare.position = center + right * (b_x - 3.8) + forward * (b_z + 0.4)
+	mare.rotation.y = heading + PI - 0.2
+	holder.add_child(mare)
+	mare.stand()
+
+	# Right Stall: Companion young foal
+	var foal := Horse.new()
+	foal.position = center + right * (b_x + 3.8) + forward * (b_z + 0.4)
+	foal.rotation.y = heading + PI + 0.25
+	foal.scale = Vector3.ONE * 0.65
+	holder.add_child(foal)
+	foal.stand()
+
+	# 4. RUSTIC POST-AND-RAIL PADDOCK FENCE & OPEN GATE
+	var pw_half := 7.6
+	var p_front := 4.8
+
+	var add_rail_segment := func(p1: Vector2, p2: Vector2) -> void:
+		var world_p1 := center + right * p1.x + forward * p1.y
+		var world_p2 := center + right * p2.x + forward * p2.y
+		var seg_len := world_p1.distance_to(world_p2)
+		var seg_dir := (world_p2 - world_p1).normalized()
+		var seg_yaw := atan2(seg_dir.x, seg_dir.z)
+
+		var post := Node3D.new()
+		post.position = world_p1 + Vector3(0, 0.65, 0)
+		var pm := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.11
+		cyl.bottom_radius = 0.13
+		cyl.height = 1.3
+		pm.mesh = cyl
+		pm.material_override = fence_mat
+		post.add_child(pm)
+		var p_col := StaticBody3D.new()
+		var p_shape := CollisionShape3D.new()
+		var p_cyl := CylinderShape3D.new()
+		p_cyl.radius = 0.15
+		p_cyl.height = 1.3
+		p_shape.shape = p_cyl
+		p_col.add_child(p_shape)
+		post.add_child(p_col)
+		holder.add_child(post)
+
+		for rh in [0.45, 0.95]:
+			var rail := Node3D.new()
+			rail.position = (world_p1 + world_p2) * 0.5 + Vector3(0, rh, 0)
+			rail.rotation.y = seg_yaw
+			var rm := MeshInstance3D.new()
+			var rail_box := BoxMesh.new()
+			rail_box.size = Vector3(0.09, 0.14, seg_len)
+			rm.mesh = rail_box
+			rm.material_override = fence_mat
+			rail.add_child(rm)
+			var r_col := StaticBody3D.new()
+			var r_shape := CollisionShape3D.new()
+			var r_bshape := BoxShape3D.new()
+			r_bshape.size = Vector3(0.2, 0.3, seg_len)
+			r_shape.shape = r_bshape
+			r_col.add_child(r_shape)
+			rail.add_child(r_col)
+			holder.add_child(rail)
+
+	# Left Fence boundary
+	var left_x := b_x - bw * 0.5
+	var left_steps := 3
+	for i in left_steps:
+		var z1 := lerpf(b_z + bd * 0.5, p_front, float(i) / left_steps)
+		var z2 := lerpf(b_z + bd * 0.5, p_front, float(i + 1) / left_steps)
+		add_rail_segment.call(Vector2(left_x, z1), Vector2(left_x, z2))
+
+	# Right Fence boundary
+	var right_x := pw_half
+	var right_steps := 3
+	for i in right_steps:
+		var z1 := lerpf(0.0, p_front, float(i) / right_steps)
+		var z2 := lerpf(0.0, p_front, float(i + 1) / right_steps)
+		add_rail_segment.call(Vector2(right_x, z1), Vector2(right_x, z2))
+
+	# Front Fence: Left section
+	var gate_half := 2.5
+	var gate_center_x := 0.0
+	var f_left_steps := 2
+	for i in f_left_steps:
+		var x1 := lerpf(left_x, gate_center_x - gate_half, float(i) / f_left_steps)
+		var x2 := lerpf(left_x, gate_center_x - gate_half, float(i + 1) / f_left_steps)
+		add_rail_segment.call(Vector2(x1, p_front), Vector2(x2, p_front))
+
+	# Front Fence: Right section
+	var f_right_steps := 2
+	for i in f_right_steps:
+		var x1 := lerpf(gate_center_x + gate_half, right_x, float(i) / f_right_steps)
+		var x2 := lerpf(gate_center_x + gate_half, right_x, float(i + 1) / f_right_steps)
+		add_rail_segment.call(Vector2(x1, p_front), Vector2(x2, p_front))
+
+	# Grand Entrance Gate Posts
+	var gate_xs: Array[float] = [-gate_half, gate_half]
+	for gx: float in gate_xs:
+		var gp_pos: Vector3 = center + right * (gate_center_x + gx) + forward * p_front
+		var gp := _place("res://assets/graveyard/post_lantern.gltf", gp_pos, rot, 1.4, holder)
+		_add_box_collider(gp, 0.4)
+
+	# 5. DETAILS, PROPS & FEEDING TROUGHS
 	var extras := [
-		["decoration/props/sack.gltf", Vector2(-3.8, -3.2), 20.0],
-		["decoration/props/sack.gltf", Vector2(-3.0, -3.5), 75.0],
-		["decoration/props/barrel.gltf", Vector2(4.2, -3.2), 0.0],
-		["decoration/props/barrel.gltf", Vector2(3.4, -3.6), 35.0],
-		["decoration/props/bucket_water.gltf", Vector2(2.2, -3.4), 30.0],
-		["decoration/props/bucket_empty.gltf", Vector2(1.2, -3.6), 0.0],
-		["items/torch_mounted.gltf.glb", Vector2(2.5, half.y + 0.2), rot],
+		["decoration/props/sack.gltf", Vector2(b_x - 4.8, b_z - 1.8), 25.0],
+		["decoration/props/sack.gltf", Vector2(b_x + 2.2, b_z - 1.8), -35.0],
+		["decoration/props/sack.gltf", Vector2(5.2, -1.5), 15.0],
+		["decoration/props/sack.gltf", Vector2(5.8, -1.8), 70.0],
+		["decoration/props/barrel.gltf", Vector2(6.4, 0.8), 0.0],
+		["decoration/props/barrel.gltf", Vector2(5.6, 1.2), 40.0],
+		["decoration/props/bucket_water.gltf", Vector2(b_x - 2.4, b_z + 1.4), 20.0],
+		["decoration/props/bucket_water.gltf", Vector2(b_x + 1.4, b_z + 1.4), -15.0],
+		["decoration/props/bucket_empty.gltf", Vector2(b_x - 5.0, b_z + 1.4), 10.0],
+		["decoration/props/wheelbarrow.gltf", Vector2(4.2, 3.2), 115.0],
 	]
 	for e in extras:
 		var v: Vector2 = e[1]
 		var pos := center + right * v.x + forward * v.y
 		var node := _place(e[0], pos, rot + float(e[2]), PS, holder)
 		_add_box_collider(node, 0.8)
-	# the main horse that stands in the paddock ready to mount/buy
-	var horse := Horse.new()
-	horse.position = center + right * 1.0 - forward * 0.4
-	horse.rotation.y = heading + 2.2
-	holder.add_child(horse)
-	horse.stand()
-	# companion mare (chestnut coat)
-	var mare := Horse.new()
-	mare.position = center - right * 2.2 - forward * 1.5
-	mare.rotation.y = heading - 1.3
-	holder.add_child(mare)
-	mare.stand()
-	# companion young foal
-	var foal := Horse.new()
-	foal.position = center - right * 3.6 - forward * 0.9
-	foal.rotation.y = heading - 0.8
-	foal.scale = Vector3.ONE * 0.65
-	holder.add_child(foal)
-	foal.stand()
-	# the keeper at the gate
+
+	# 6. MANOLIS THE STABLE GROOM
 	var keeper := Npc.new()
 	keeper.npc_id = "manolis"
 	keeper.rest_yaw = heading
-	keeper.position = center + forward * (half.y + 1.8) + right * 2.2
+	keeper.position = center + forward * (p_front + 1.6) + right * (gate_center_x + gate_half + 0.8)
 	var npcs := get_node_or_null("Npcs")
 	(npcs if npcs else holder).add_child(keeper)
-	_occupy(center.x, center.z, 12.0)
+
+	_occupy(center.x, center.z, 14.0)
 
 
 ## Village animal life: Mourgos the village dog, farm sheep in their pasture pen, and roadside encounters.
