@@ -1762,10 +1762,10 @@ func _update_interaction() -> void:
 	if not busy and not is_dead:
 		for n in get_tree().get_nodes_in_group("interactables"):
 			var node := n as Node3D
-			if node == null or not node.is_visible_in_tree():
+			if node == null or not node.is_visible_in_tree() or not node.has_method("interact_range") or not node.has_method("interact_prompt"):
 				continue
 			var d := global_position.distance_to(node.global_position)
-			if d < node.call("interact_range") and d < best_dist and node.call("interact_prompt") != "":
+			if d < float(node.call("interact_range")) and d < best_dist and str(node.call("interact_prompt")) != "":
 				best = node
 				best_dist = d
 	_interactable = best

@@ -186,6 +186,7 @@ const MAP_PLACES := {
 	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών", "cult": "Ξέφωτο της Σέκτας",
 	"lighthouse": "Πέτρινος Φάρος", "harbor": "Ψαρολίμανο", "waterfall": "Καταρράκτης Νυμφών",
 	"bridge_meadow": "Πέτρινο Γεφύρι", "highlands": "Βίγλα των Αετών", "shipwreck": "Ναυάγιο της Γοργόνας",
+	"cliffs": "Νότιοι Γκρεμοί",
 	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
 	"frontier_road": "Δρόμος της Σκιάς", "frontier_fort": "Φρούριο της Σκιάς",
 	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",

@@ -571,13 +571,13 @@ func _build_quarry() -> void:
 		var d := _rng.randf_range(10.0, 34.0)
 		var p := QUARRY + Vector2(cos(a), sin(a)) * d
 		var node := _place("decoration/props/resource_stone.gltf", Vector3(p.x, 0, p.y), _rng.randf() * 360.0, PS * _rng.randf_range(2.2, 3.4), holder)
-		_add_box_collider(node, 0.8)
+		_add_rock_collider(node)
 	for i in 14:
 		var a := _rng.randf() * TAU
 		var d := _rng.randf_range(24.0, 40.0)
 		var p := QUARRY + Vector2(cos(a), sin(a)) * d
 		var node := _place(ROCKS[_rng.randi() % ROCKS.size()], Vector3(p.x, 0, p.y), _rng.randf() * 360.0, PS * _rng.randf_range(3.0, 5.0), holder)
-		_add_box_collider(node, 0.8)
+		_add_rock_collider(node)
 	for e in [["decoration/props/crate_A_big.gltf", -8.0, -4.0, 30, 1.4], ["decoration/props/crate_B_big.gltf", -6.0, -6.0, 80, 1.4],
 			["decoration/props/barrel.gltf", 7.0, -8.0, 0, 1.4], ["decoration/props/wheelbarrow.gltf", 9.0, -5.0, 150, 1.4],
 			["decoration/props/resource_lumber.gltf", -12.0, 8.0, 60, 1.2]]:
@@ -1449,7 +1449,7 @@ func _build_terrain_details() -> void:
 		if absf(angle_difference(a, deg_to_rad(DOCK_ANGLE))) < 0.45:     # the dock stands here
 			node.queue_free()
 			continue
-		_add_box_collider(node, 0.8)
+		_add_rock_collider(node)
 	_build_dock(pond, 11.0)
 
 
@@ -1546,7 +1546,7 @@ func _build_scatter() -> void:
 			var scale := _rng.randf_range(1.0, 2.2) * ST * 0.55
 			var node := _place(ROCKS[_rng.randi() % ROCKS.size()], Vector3(p.x, 0, p.y),
 					_rng.randf_range(0.0, 360.0), scale, holder)
-			_add_box_collider(node, 0.8)
+			_add_rock_collider(node)
 			_occupy(p.x, p.y, 3.0)
 			rocks += 1
 
@@ -1657,7 +1657,8 @@ func _instance(path: String) -> Node3D:
 ## visual, so colliders can be added at true world size.
 func _place(path: String, pos: Vector3, rot_deg: float, scale: float, parent: Node) -> Node3D:
 	var root := Node3D.new()
-	root.name = path.get_file().get_basename()
+	var base := path.get_file().get_basename()
+	root.name = base if not parent.has_node(base) else "%s_%d" % [base, parent.get_child_count()]
 	root.position = pos
 	root.rotation_degrees.y = rot_deg
 	var visual := _instance(path)
@@ -1673,18 +1674,51 @@ func _place_abs(path: String, pos: Vector3, rot_deg: float, scale: float, parent
 	return _place(path, pos, rot_deg, scale, parent)
 
 
+func _relative_transform(child: Node3D, ancestor: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var curr: Node = child
+	while curr and curr != ancestor and curr is Node3D:
+		t = (curr as Node3D).transform * t
+		curr = curr.get_parent()
+	return t
+
+
 func _local_aabb(root: Node3D) -> AABB:
-	var visual: Node3D = root.get_node("Visual")
-	var inv := visual.global_transform.affine_inverse()
+	var visual: Node3D = root.get_node_or_null("Visual")
+	if not visual:
+		return AABB()
 	var have := false
 	var box := AABB()
 	for mi in visual.find_children("*", "MeshInstance3D", true, false):
-		var a: AABB = (inv * (mi as MeshInstance3D).global_transform) * (mi as MeshInstance3D).get_aabb()
+		var mesh_inst := mi as MeshInstance3D
+		var t := _relative_transform(mesh_inst, visual)
+		var a: AABB = t * mesh_inst.get_aabb()
 		box = a if not have else box.merge(a)
 		have = true
 	# convert from the visual's local units to the root's (world-sized) space
 	var s := visual.scale
 	return AABB(box.position * s, box.size * s)
+
+
+## Dedicated rock collider with full un-shrunk boundaries and full height protection.
+## Prevents the player from penetrating, walking inside, or clipping through stone geometry.
+func _add_rock_collider(root: Node3D) -> void:
+	var a := _local_aabb(root)
+	if a.size == Vector3.ZERO:
+		return
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	var h := maxf(a.size.y, 2.2)
+	# 1.02 margin ensures zero penetration along irregular mesh contours
+	box.size = Vector3(a.size.x * 1.02, h, a.size.z * 1.02)
+	shape.shape = box
+	var center := a.get_center()
+	shape.position = Vector3(center.x, h * 0.5, center.z)
+	body.add_child(shape)
+	root.add_child(body)
 
 
 func _add_box_collider(root: Node3D, shrink: float = 0.9) -> void:

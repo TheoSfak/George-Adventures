@@ -323,16 +323,31 @@ func _build_tree() -> void:
 	add_child(body)
 
 
-## One box collider around a model (its meshes, in the local space of `node`).
-func _box_collider_for(node: Node3D, shrink := 0.9) -> void:
-	var inv := node.global_transform.affine_inverse()
+func _relative_transform(child: Node3D, ancestor: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var curr: Node = child
+	while curr and curr != ancestor and curr is Node3D:
+		t = (curr as Node3D).transform * t
+		curr = curr.get_parent()
+	return t
+
+
+func _local_node_aabb(node: Node3D) -> AABB:
 	var have := false
 	var box := AABB()
 	for mi in node.find_children("*", "MeshInstance3D", true, false):
-		var a: AABB = (inv * (mi as MeshInstance3D).global_transform) * (mi as MeshInstance3D).get_aabb()
+		var mesh_inst := mi as MeshInstance3D
+		var t := _relative_transform(mesh_inst, node)
+		var a: AABB = t * mesh_inst.get_aabb()
 		box = a if not have else box.merge(a)
 		have = true
-	if not have:
+	return box
+
+
+## One box collider around a model (its meshes, in the local space of `node`).
+func _box_collider_for(node: Node3D, shrink := 0.9) -> void:
+	var box := _local_node_aabb(node)
+	if box.size == Vector3.ZERO:
 		return
 	var body := StaticBody3D.new()
 	body.collision_layer = 1
@@ -346,17 +361,41 @@ func _box_collider_for(node: Node3D, shrink := 0.9) -> void:
 	node.add_child(body)
 
 
-## A KayKit model placed at `pos` (local) with a box collider.
+## Dedicated rock collider with full un-shrunk boundaries and full height protection.
+## Prevents the player from entering inside rock models on the shore and surrounding areas.
+func _add_rock_collider(node: Node3D) -> void:
+	var box := _local_node_aabb(node)
+	if box.size == Vector3.ZERO:
+		return
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	var h := maxf(box.size.y, 2.2)
+	bs.size = Vector3(box.size.x * 1.02, h, box.size.z * 1.02)
+	shape.shape = bs
+	var center := box.get_center()
+	shape.position = Vector3(center.x, h * 0.5, center.z)
+	body.add_child(shape)
+	node.add_child(body)
+
+
+## A KayKit model placed at `pos` (local) with appropriate collider.
 func _place_model(path: String, pos: Vector3, rot_deg: float, model_scale: float, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
-	root.name = path.get_file().get_basename()
+	var base := path.get_file().get_basename()
+	root.name = base if not parent.has_node(base) else "%s_%d" % [base, parent.get_child_count()]
 	root.position = pos
 	root.rotation_degrees.y = rot_deg
 	var model := (load(WORLD + path) as PackedScene).instantiate() as Node3D
 	model.scale = Vector3.ONE * model_scale
 	root.add_child(model)
 	parent.add_child(root)
-	_box_collider_for(root, 0.8)
+	if path.contains("rock") or path.contains("stone"):
+		_add_rock_collider(root)
+	else:
+		_box_collider_for(root, 0.8)
 	return root
 
 

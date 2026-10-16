@@ -21,6 +21,7 @@ func _ready() -> void:
 	_build_lighthouse()
 	_build_pier()
 	_build_shipwreck()
+	_build_southeast_cliffs()
 
 
 func _process(delta: float) -> void:
@@ -240,37 +241,27 @@ func _build_beach() -> void:
 	beach_holder.add_child(sb)
 
 	# Coastal headland rocks on the west (lighthouse flank) and east (quarry flank)
-	var rock_mat := StandardMaterial3D.new()
-	rock_mat.albedo_color = Color(0.48, 0.46, 0.42)
-	rock_mat.roughness = 0.88
-
+	var rock_models: Array[String] = [
+		"res://assets/world/decoration/nature/rock_single_A.gltf",
+		"res://assets/world/decoration/nature/rock_single_B.gltf",
+		"res://assets/world/decoration/nature/rock_single_C.gltf",
+		"res://assets/world/decoration/nature/rock_single_D.gltf",
+		"res://assets/world/decoration/nature/rock_single_E.gltf",
+	]
 	var beach_rocks: Array[Vector3] = [
 		Vector3(-14.0, 0.0, 102.0), Vector3(16.0, 0.0, 106.0), Vector3(-68.0, 0.0, 104.0),
 		Vector3(34.0, 0.0, 114.0), Vector3(-88.0, 0.0, 110.0), Vector3(-2.0, 0.0, 112.0),
 		Vector3(-138.0, 0.0, 120.0), Vector3(-144.0, 0.0, 134.0), Vector3(-132.0, 0.0, 148.0),
 		Vector3(42.0, 0.0, 118.0), Vector3(48.0, 0.0, 132.0), Vector3(52.0, 0.0, 146.0),
 	]
-	for r_pos in beach_rocks:
-		var r_node := Node3D.new()
+	for i in beach_rocks.size():
+		var r_pos := beach_rocks[i]
 		var surface_y := _calc_beach_height(r_pos.x, r_pos.z)
-		r_node.position = Vector3(r_pos.x, surface_y + 0.1, r_pos.z)
-		var r_mesh := MeshInstance3D.new()
-		var r_cyl := CylinderMesh.new()
-		r_cyl.top_radius = 0.75 + randf() * 0.5
-		r_cyl.bottom_radius = 1.1 + randf() * 0.6
-		r_cyl.height = 0.8 + randf() * 0.5
-		r_mesh.mesh = r_cyl
-		r_mesh.material_override = rock_mat
-		r_node.add_child(r_mesh)
-		var r_sb := StaticBody3D.new()
-		var r_col := CollisionShape3D.new()
-		var cs := CylinderShape3D.new()
-		cs.radius = r_cyl.bottom_radius
-		cs.height = r_cyl.height
-		r_col.shape = cs
-		r_sb.add_child(r_col)
-		r_node.add_child(r_sb)
-		beach_holder.add_child(r_node)
+		var model_path: String = rock_models[i % rock_models.size()]
+		var sc := randf_range(6.5, 10.5)
+		var rock_inst := _place_prop(model_path, Vector3(r_pos.x, surface_y, r_pos.z), randf() * 360.0, sc, beach_holder)
+		if rock_inst:
+			_add_rock_collider(rock_inst)
 
 
 # =========================================================================
@@ -666,15 +657,59 @@ func _build_shipwreck() -> void:
 
 
 # --- Helper Methods ---
+func _relative_transform(child: Node3D, ancestor: Node3D) -> Transform3D:
+	var t := Transform3D.IDENTITY
+	var curr: Node = child
+	while curr and curr != ancestor and curr is Node3D:
+		t = (curr as Node3D).transform * t
+		curr = curr.get_parent()
+	return t
+
+
+func _add_rock_collider(root: Node3D) -> void:
+	var visual: Node3D = root.get_node_or_null("Visual")
+	var node_to_scan := visual if visual else root
+	var have := false
+	var box := AABB()
+	for mi in node_to_scan.find_children("*", "MeshInstance3D", true, false):
+		var mesh_inst := mi as MeshInstance3D
+		var t := _relative_transform(mesh_inst, node_to_scan)
+		var a: AABB = t * mesh_inst.get_aabb()
+		box = a if not have else box.merge(a)
+		have = true
+	if box.size == Vector3.ZERO:
+		return
+	if visual:
+		var s := visual.scale
+		box = AABB(box.position * s, box.size * s)
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	var h := maxf(box.size.y, 2.2)
+	bs.size = Vector3(box.size.x * 1.02, h, box.size.z * 1.02)
+	shape.shape = bs
+	var center := box.get_center()
+	shape.position = Vector3(center.x, h * 0.5, center.z)
+	body.add_child(shape)
+	root.add_child(body)
+
+
 func _place_prop(path: String, pos: Vector3, rot_deg: float, sc: float, parent: Node) -> Node3D:
 	var res := load(path) as PackedScene
 	if res:
-		var inst := res.instantiate() as Node3D
-		inst.position = pos
-		inst.rotation_degrees.y = rot_deg
-		inst.scale = Vector3.ONE * sc
-		parent.add_child(inst)
-		return inst
+		var root := Node3D.new()
+		var base := path.get_file().get_basename()
+		root.name = base if not parent.has_node(base) else "%s_%d" % [base, parent.get_child_count()]
+		root.position = pos
+		root.rotation_degrees.y = rot_deg
+		var visual := res.instantiate() as Node3D
+		visual.name = "Visual"
+		visual.scale = Vector3.ONE * sc
+		root.add_child(visual)
+		parent.add_child(root)
+		return root
 	return null
 
 
@@ -751,3 +786,162 @@ func _add_signpost(text: String, pos: Vector3, rot_deg: float, parent: Node) -> 
 	sign_node.add_child(body)
 
 	parent.add_child(sign_node)
+
+
+# =========================================================================
+# 6. SOUTH-EAST SEA CLIFFS (Γκρεμοί στη συνάντηση θάλασσας - δάσους)
+# =========================================================================
+func _build_southeast_cliffs() -> void:
+	var cliff_holder := Node3D.new()
+	cliff_holder.name = "SoutheastCliffs"
+	add_child(cliff_holder)
+
+	var cliff_mat := StandardMaterial3D.new()
+	cliff_mat.albedo_color = Color(0.42, 0.40, 0.37)
+	cliff_mat.roughness = 0.92
+
+	var grass_mat := StandardMaterial3D.new()
+	grass_mat.albedo_color = Color(0.36, 0.58, 0.28)
+	grass_mat.roughness = 0.85
+
+	var stone_mat := StandardMaterial3D.new()
+	stone_mat.albedo_color = Color(0.55, 0.52, 0.48)
+	stone_mat.roughness = 0.88
+
+	# 1. Main Promontory Cliff Tiers running south along X in [52, 74], Z in [112, 208]
+	# Rising from seabed (Y = -2.0) up to high panoramic shelf (Y = 5.2 - 6.8m)
+	var cliff_sections: Array[Dictionary] = [
+		{"pos": Vector3(62.0, 1.8, 130.0), "size": Vector3(20.0, 7.6, 38.0), "grass": true},  # North promontory (Z: 111 - 149)
+		{"pos": Vector3(64.0, 2.3, 165.0), "size": Vector3(22.0, 8.6, 34.0), "grass": true},  # Mid lookout cape (Z: 148 - 182)
+		{"pos": Vector3(61.0, 1.9, 195.0), "size": Vector3(20.0, 7.8, 30.0), "grass": true},  # South cape bluff (Z: 180 - 210)
+		# Lower wave-cut rocky shelves along the water line (X ~ 53)
+		{"pos": Vector3(53.0, -0.3, 138.0), "size": Vector3(7.0, 3.4, 28.0), "grass": false}, # Low surf bench north
+		{"pos": Vector3(53.5, -0.2, 172.0), "size": Vector3(6.5, 3.6, 32.0), "grass": false}, # Low surf bench mid
+		{"pos": Vector3(52.5, -0.4, 198.0), "size": Vector3(6.0, 3.2, 22.0), "grass": false}, # Low surf bench south
+	]
+
+	for sec in cliff_sections:
+		var pos: Vector3 = sec["pos"]
+		var size: Vector3 = sec["size"]
+		var has_grass: bool = sec["grass"]
+
+		var body := StaticBody3D.new()
+		body.position = pos
+		body.collision_layer = 1
+		body.collision_mask = 0
+
+		# Granite rock cliff body
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = size
+		mi.mesh = bm
+		mi.material_override = cliff_mat
+		body.add_child(mi)
+
+		# Grass cap on top of elevated walking tiers
+		if has_grass:
+			var g_mi := MeshInstance3D.new()
+			var g_bm := BoxMesh.new()
+			g_bm.size = Vector3(size.x + 0.1, 0.4, size.z + 0.1)
+			g_mi.mesh = g_bm
+			g_mi.position = Vector3(0.0, size.y * 0.5 - 0.15, 0.0)
+			g_mi.material_override = grass_mat
+			body.add_child(g_mi)
+
+		# Solid collision box
+		var col := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = size
+		col.shape = bs
+		body.add_child(col)
+		cliff_holder.add_child(body)
+
+	# 2. Stepped Natural Stone Stair / Ramp from beach (Z = 106, Y = 0.0) up to cliff top (Z = 118, Y = 5.6)
+	var stair_steps := 10
+	for i in stair_steps:
+		var frac := float(i) / float(stair_steps)
+		var step_pos := Vector3(lerpf(53.0, 56.0, frac), lerpf(0.3, 5.4, frac), lerpf(108.0, 118.0, frac))
+		var step_body := StaticBody3D.new()
+		step_body.position = step_pos
+		step_body.collision_layer = 1
+		step_body.collision_mask = 0
+
+		var s_mi := MeshInstance3D.new()
+		var s_bm := BoxMesh.new()
+		s_bm.size = Vector3(5.5, 0.6, 2.0)
+		s_mi.mesh = s_bm
+		s_mi.material_override = stone_mat
+		step_body.add_child(s_mi)
+
+		var s_col := CollisionShape3D.new()
+		var s_bs := BoxShape3D.new()
+		s_bs.size = Vector3(5.5, 0.6, 2.0)
+		s_col.shape = s_bs
+		step_body.add_child(s_col)
+		cliff_holder.add_child(step_body)
+
+	# 3. Dramatic Sea Stacks & Boulders standing in the coastal waters at the cliff foot
+	var sea_stacks: Array[Dictionary] = [
+		{"model": "decoration/nature/mountain_B_grass.gltf", "pos": Vector3(48.0, -1.2, 128.0), "rot": 45.0, "sc": 12.0},
+		{"model": "decoration/nature/rock_single_E.gltf", "pos": Vector3(45.0, -1.0, 146.0), "rot": 120.0, "sc": 16.0},
+		{"model": "decoration/nature/rock_single_C.gltf", "pos": Vector3(47.0, -0.8, 162.0), "rot": 80.0, "sc": 15.0},
+		{"model": "decoration/nature/mountain_A_grass.gltf", "pos": Vector3(44.0, -1.2, 182.0), "rot": -35.0, "sc": 13.0},
+		{"model": "decoration/nature/rock_single_D.gltf", "pos": Vector3(46.0, -1.0, 202.0), "rot": 15.0, "sc": 14.0},
+		{"model": "decoration/nature/rock_single_B.gltf", "pos": Vector3(50.0, -0.6, 136.0), "rot": 210.0, "sc": 10.0},
+		{"model": "decoration/nature/rock_single_A.gltf", "pos": Vector3(48.5, -0.7, 172.0), "rot": 95.0, "sc": 11.0},
+	]
+
+	for stk in sea_stacks:
+		var p_node := _place_prop("res://assets/world/" + stk["model"], stk["pos"], stk["rot"], stk["sc"], cliff_holder)
+		if p_node:
+			_add_rock_collider(p_node)
+
+	# 4. Coastal Pines & Scenic Vista Lookout Bench
+	var cliff_trees: Array[Vector3] = [
+		Vector3(65.0, 5.6, 125.0),
+		Vector3(68.0, 5.6, 138.0),
+		Vector3(66.0, 6.5, 150.0),
+		Vector3(69.0, 6.5, 168.0),
+		Vector3(65.0, 6.5, 178.0),
+		Vector3(64.0, 5.8, 192.0),
+		Vector3(66.0, 5.8, 204.0),
+	]
+	var tree_models := [
+		"res://assets/world/decoration/nature/tree_single_A.gltf",
+		"res://assets/world/decoration/nature/tree_single_B.gltf",
+		"res://assets/world/decoration/nature/trees_A_small.gltf",
+	]
+	for i in cliff_trees.size():
+		var t_pos := cliff_trees[i]
+		var model_path: String = tree_models[i % tree_models.size()]
+		var t_node := _place_prop(model_path, t_pos, randf() * 360.0, randf_range(8.5, 12.0), cliff_holder)
+		if t_node:
+			var t_body := StaticBody3D.new()
+			t_body.collision_layer = 1
+			t_body.collision_mask = 0
+			var t_col := CollisionShape3D.new()
+			var t_cyl := CylinderShape3D.new()
+			t_cyl.radius = 0.75
+			t_cyl.height = 8.0
+			t_col.shape = t_cyl
+			t_col.position.y = 4.0
+			t_body.add_child(t_col)
+			t_node.add_child(t_body)
+
+	# Scenic Lookout Bench facing west toward the sunset and lighthouse
+	var bench := _place_prop("res://assets/graveyard/bench_decorated.gltf", Vector3(59.0, 6.5, 158.0), 90.0, 1.4, cliff_holder)
+	if bench:
+		var b_body := StaticBody3D.new()
+		b_body.collision_layer = 1
+		b_body.collision_mask = 0
+		var b_col := CollisionShape3D.new()
+		var b_box := BoxShape3D.new()
+		b_box.size = Vector3(2.5, 0.8, 1.2)
+		b_col.shape = b_box
+		b_col.position.y = 0.4
+		b_body.add_child(b_col)
+		bench.add_child(b_body)
+
+	# Coastal Signpost at the foot of the cliff trail
+	_add_signpost("Νότιοι Γκρεμοί", Vector3(51.0, 0.0, 107.0), 15.0, cliff_holder)
+
