@@ -50,8 +50,8 @@ signal mount_changed(mounted: bool)
 @export var pitch_max := 0.45   # camera low, looking up
 @export var camera_height := 1.7
 @export var camera_follow := 14.0
-@export var zoom_min := 2.5
-@export var zoom_max := 14.0
+@export var zoom_min := 2.0
+@export var zoom_max := 32.0
 @export var key_turn_speed := 3.0       # radians/second when turning with A/D
 @export var camera_recenter := 7.0      # how fast the camera swings back behind George
 
@@ -90,6 +90,7 @@ var _mouse_look := false      # a mouse button is held, so the cursor is hidden 
 var _saved_cursor := Vector2.ZERO
 var _lmb_travel := 0.0        # how far the mouse moved while the left button was down
 var _lmb_time := 0.0
+var _lmb_attack_queued := false
 var _attack_queued := 0.0     # seconds left on a buffered attack click
 var _pitch := -0.3
 var _attacking := false
@@ -236,17 +237,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_arm.spring_length = clampf(_arm.spring_length - 0.8, zoom_min, zoom_max)
+			_arm.spring_length = clampf(_arm.spring_length - 1.5, zoom_min, zoom_max)
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_arm.spring_length = clampf(_arm.spring_length + 0.8, zoom_min, zoom_max)
+			_arm.spring_length = clampf(_arm.spring_length + 1.5, zoom_min, zoom_max)
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
 				_game_lmb = true
 				_lmb_travel = 0.0
 				_lmb_time = 0.0
-			elif _game_lmb and _lmb_time < CLICK_MAX and (_lmb_travel < 8.0 or _game_rmb):
-				# a quick click is a sword swing; with the right button held the mouse steers, so it may move meanwhile
+				_lmb_attack_queued = false
+				if is_moving_intent():
+					_attack_queued = 0.25
+					_lmb_attack_queued = true
+			elif _game_lmb and not _lmb_attack_queued and _lmb_time < CLICK_MAX and (_lmb_travel < 8.0 or _game_rmb or is_moving_intent()):
+				# a quick click is a sword swing; with the right button held or while moving, mouse moves freely
 				_attack_queued = 0.25
+				_lmb_attack_queued = true
 		if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
 			_game_rmb = true
 
@@ -565,9 +571,27 @@ func attack_speed_stat() -> float:
 	return stats.total("attack_speed") + (0.15 if _battle_cry_time > 0.0 else 0.0)
 
 
+func is_moving_intent() -> bool:
+	if not is_inside_tree() or is_dead or busy or _stun > 0.0:
+		return false
+	if Vector2(velocity.x, velocity.z).length() > 0.5:
+		return true
+	if InputMap.has_action("move_forward") and InputMap.has_action("move_back") and Input.get_axis("move_back", "move_forward") != 0.0:
+		return true
+	if InputMap.has_action("strafe_left") and InputMap.has_action("strafe_right") and Input.get_axis("strafe_left", "strafe_right") != 0.0:
+		return true
+	if _game_rmb and InputMap.has_action("turn_left") and InputMap.has_action("turn_right") and Input.get_axis("turn_left", "turn_right") != 0.0:
+		return true
+	if _game_lmb and _game_rmb:
+		return true
+	if InputMap.has_action("pad_left") and Input.get_vector("pad_left", "pad_right", "pad_forward", "pad_back").length() > 0.1:
+		return true
+	return false
+
+
 func _start_attack(skill: String = "") -> void:
 	_attacking = true
-	var moving := Vector2(velocity.x, velocity.z).length() > 1.0
+	var moving := is_moving_intent()
 	_assist_aim(moving)
 	_combo_timer = CombatTiming.COMBO_WINDOW
 	var wtype := current_weapon_type()
@@ -597,7 +621,7 @@ func _swing(step: Dictionary, swing_speed: float, moving: bool, damage: float) -
 	var serial := _attack_serial_next()
 	get_tree().create_timer(CombatTiming.hit_delay(step, swing_speed)).timeout.connect(_swing_hits.bind(serial, damage, float(step["knock"]), bool(step["around"])))
 	get_tree().create_timer(CombatTiming.commit_delay(step, swing_speed)).timeout.connect(_end_skill_attack.bind(serial))
-	if float(step["lunge"]) > 0.0:
+	if not moving and float(step["lunge"]) > 0.0:
 		_lunge_dir = _facing()
 		_lunge_time = CombatTiming.LUNGE_TIME
 		# the speed that carries him `lunge` metres in all, counting the slide while he slows down again

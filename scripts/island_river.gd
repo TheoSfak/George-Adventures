@@ -204,12 +204,12 @@ func _build_bridges() -> void:
 	# Bridge 1: Arched Stone Bridge across the Church & Meadow crossing (X=70, Z=-66)
 	var b1 = _place_model("buildings/neutral/building_bridge_A.gltf", BRIDGE_1_POS, 65.0, 7.8, bridge_holder)
 	if b1:
-		_add_walkable_bridge_deck(b1, Vector3(3.6, 0.35, 9.5), Vector3(0.0, 0.65, 0.0))
+		_add_trimesh_collider(b1)
 
 	# Bridge 2: Eastern Timber Bridge across the Great Tree Lake trail (X=114, Z=-22)
 	var b2 = _place_model("buildings/neutral/building_bridge_B.gltf", BRIDGE_2_POS, 8.0, 7.8, bridge_holder)
 	if b2:
-		_add_walkable_bridge_deck(b2, Vector3(3.6, 0.35, 9.5), Vector3(0.0, 0.65, 0.0))
+		_add_trimesh_collider(b2)
 
 	# Directional signposts by the bridges
 	_add_signpost("Πέτρινο Γεφύρι  ←\nΠρος το Χωριό", BRIDGE_1_POS + Vector3(4.5, 0.1, -4.5), -45.0, bridge_holder)
@@ -261,15 +261,11 @@ func _build_river_flora() -> void:
 
 
 # --- Helpers ---
-func _add_walkable_bridge_deck(parent: Node3D, size: Vector3, offset: Vector3) -> void:
-	var sb := StaticBody3D.new()
-	sb.position = offset
-	var col := CollisionShape3D.new()
-	var bs := BoxShape3D.new()
-	bs.size = size
-	col.shape = bs
-	sb.add_child(col)
-	parent.add_child(sb)
+func _add_trimesh_collider(root: Node3D) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh_inst := mi as MeshInstance3D
+		if mesh_inst and mesh_inst.mesh:
+			mesh_inst.create_trimesh_collision()
 
 
 func _place_model(path: String, pos: Vector3, rot_deg: float, sc: float, parent: Node) -> Node3D:

@@ -40,7 +40,7 @@ const COMBO_DUAL: Array[Dictionary] = [
 # Δυνατό Χτύπημα: a heavy chop (its damage comes from the skill)
 const POWER_STRIKE := {"anim": "1H_Melee_Attack_Chop", "hit": 0.36, "commit": 0.70, "damage": 1.0, "lunge": 0.0, "knock": 11.0, "around": false, "sfx": "sword_swing"}
 
-const SWING_MOVE_FACTOR := 0.85    # George keeps 85% of his speed while he swings
+const SWING_MOVE_FACTOR := 1.0     # George keeps 100% of his speed while he swings
 const LUNGE_TIME := 0.15           # real seconds the stab's step lasts
 
 

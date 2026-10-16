@@ -208,6 +208,74 @@ func _build_summit_shrine() -> void:
 	# Summit Signpost
 	_add_signpost("Βίγλα των Αετών  ★\nΥψόμετρο: 14μ — Θέα σε όλο το Νησί", SUMMIT_POS + Vector3(-3.4, 0.2, 2.0), 35.0, shrine_holder)
 
+	# 5. Scenic Wooden Observation Perimeter Railings
+	# Protects the panoramic cliff edges while leaving the stairway approach (south-west) open
+	var rail_mat := StandardMaterial3D.new()
+	rail_mat.albedo_color = Color(0.42, 0.28, 0.15)
+	rail_mat.roughness = 0.85
+
+	var summit_y := 13.5
+	var rail_segments: Array[Array] = [
+		[Vector3(72.0, summit_y, -166.5), Vector3(92.0, summit_y, -166.5)],
+		[Vector3(92.0, summit_y, -166.5), Vector3(92.0, summit_y, -150.0)],
+		[Vector3(92.0, summit_y, -150.0), Vector3(82.0, summit_y, -150.0)],
+		[Vector3(72.0, summit_y, -166.5), Vector3(72.0, summit_y, -156.0)],
+	]
+
+	for seg in rail_segments:
+		var p1: Vector3 = seg[0]
+		var p2: Vector3 = seg[1]
+		var slen := p1.distance_to(p2)
+		var dir := (p2 - p1).normalized()
+		var yaw := atan2(dir.x, dir.z)
+
+		var post_count := maxi(2, int(round(slen / 2.5)) + 1)
+		for i in post_count:
+			var t := slen * float(i) / float(post_count - 1)
+			var post_pos := p1 + dir * t + Vector3(0.0, 0.65, 0.0)
+
+			var post := Node3D.new()
+			post.position = post_pos
+			var pm := MeshInstance3D.new()
+			var cyl := CylinderMesh.new()
+			cyl.top_radius = 0.10
+			cyl.bottom_radius = 0.12
+			cyl.height = 1.3
+			pm.mesh = cyl
+			pm.material_override = rail_mat
+			post.add_child(pm)
+
+			var post_body := StaticBody3D.new()
+			var post_shape := CollisionShape3D.new()
+			var post_cyl := CylinderShape3D.new()
+			post_cyl.radius = 0.15
+			post_cyl.height = 1.3
+			post_shape.shape = post_cyl
+			post_body.add_child(post_shape)
+			post.add_child(post_body)
+			shrine_holder.add_child(post)
+
+		for rh in [0.45, 0.95]:
+			var mid_pos := (p1 + p2) * 0.5 + Vector3(0.0, rh, 0.0)
+			var rail := Node3D.new()
+			rail.position = mid_pos
+			rail.rotation.y = yaw
+			var rm := MeshInstance3D.new()
+			var r_box := BoxMesh.new()
+			r_box.size = Vector3(0.09, 0.14, slen)
+			rm.mesh = r_box
+			rm.material_override = rail_mat
+			rail.add_child(rm)
+
+			var r_col := StaticBody3D.new()
+			var r_shape := CollisionShape3D.new()
+			var r_bshape := BoxShape3D.new()
+			r_bshape.size = Vector3(0.2, 0.3, slen)
+			r_shape.shape = r_bshape
+			r_col.add_child(r_shape)
+			rail.add_child(r_col)
+			shrine_holder.add_child(rail)
+
 
 # --- Helpers ---
 func _make_terrace(pos: Vector3, size: Vector3, top_mat: Material, side_mat: Material, parent: Node) -> void:

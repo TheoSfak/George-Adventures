@@ -70,9 +70,9 @@ func _init() -> void:
 	if cow_model:
 		var cow_sz = _calc_mesh_bounds(cow_model)
 		print("  Cow dimensions: Height=%.2fm, Length=%.2fm, Width=%.2fm" % [cow_sz.y, cow_sz.z, cow_sz.x])
-		check("Cow is not giant (height <= 1.8m, was 6.2m)", cow_sz.y <= 1.8)
-		check("Cow length fits in paddock (length <= 3.0m, was 10.9m)", cow_sz.z <= 3.0)
-		check("Cow has realistic height (>= 1.1m)", cow_sz.y >= 1.1)
+		check("Cow is scaled to 3x requested size (height <= 4.5m)", cow_sz.y <= 4.5)
+		check("Cow length fits in enlarged pasture (length <= 8.5m)", cow_sz.z <= 8.5)
+		check("Cow has substantial pasture height (>= 3.0m)", cow_sz.y >= 3.0)
 	check("VillageCow has interact_range", cow.has_method("interact_range"))
 	check("VillageCow has interact_prompt", cow.has_method("interact_prompt"))
 	cow.free()

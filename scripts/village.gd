@@ -776,11 +776,11 @@ func _build_crypt() -> void:
 	# Fence: front line with a gate in the middle, and both sides.
 	var front_z := CRYPT.y + 28.0
 	_place_abs(GRAVE + "arch_gate.gltf", Vector3(0, 0, front_z), 0.0, 3.0, holder)
-	for x in [-36.0, -28.0, -20.0, 20.0, 28.0, 36.0]:
+	for x in [-36.0, -28.0, -20.0, 20.0, 28.0]:
 		var f := _place_abs(GRAVE + ("fence_broken.gltf" if absf(x) == 28.0 else "fence.gltf"), Vector3(x, 0, front_z), 0.0, 2.0, holder)
 		_add_box_collider(f, 0.9)
 	for z in range(int(front_z) - 8, int(CRYPT.y) - 44, -8):
-		for x in [-40.0, 40.0]:
+		for x in [-36.0, 28.0]:
 			var f := _place_abs(GRAVE + "fence.gltf", Vector3(x, 0, float(z)), 90.0, 2.0, holder)
 			_add_box_collider(f, 0.9)
 	# the gate pillars block the sides of the opening so the arch reads as the entrance
@@ -1259,27 +1259,13 @@ func _build_animals() -> void:
 	dog.position = Vector3(VillageDog.REST_POS.x, 0.0, VillageDog.REST_POS.y)
 	holder.add_child(dog)
 
-	# 2. Sheep pen in the eastern farm meadow near (45.0, -84.0)
-	var pen_center := Vector3(45.0, 0.0, -84.0)
-	var pen_half := Vector2(4.5, 3.8)
-	# wooden post-and-rail fences
-	for x in range(-4, 5, 2):
-		var pos_back := pen_center + Vector3(float(x), 0.0, -pen_half.y)
-		var n_b := _place("buildings/neutral/fence_wood_straight.gltf", pos_back, 0.0, PS * 0.85, holder)
-		_add_box_collider(n_b, 0.6)
-	for z in range(-2, 3, 2):
-		var pos_left := pen_center + Vector3(-pen_half.x, 0.0, float(z) * 1.5)
-		var n_l := _place("buildings/neutral/fence_wood_straight.gltf", pos_left, 90.0, PS * 0.85, holder)
-		_add_box_collider(n_l, 0.6)
-		var pos_right := pen_center + Vector3(pen_half.x, 0.0, float(z) * 1.5)
-		var n_r := _place("buildings/neutral/fence_wood_straight.gltf", pos_right, 90.0, PS * 0.85, holder)
-		_add_box_collider(n_r, 0.6)
-	for x in [-3.5, 3.5]:
-		var pos_front := pen_center + Vector3(x, 0.0, pen_half.y)
-		var n_f := _place("buildings/neutral/fence_wood_straight.gltf", pos_front, 0.0, PS * 0.85, holder)
-		_add_box_collider(n_f, 0.6)
+	# 2. Sheep pen in the eastern farm meadow near (52.0, -80.0)
+	var pen_center := Vector3(52.0, 0.0, -80.0)
+	var pen_half := Vector2(5.5, 4.2)
+	_build_rustic_paddock(pen_center, pen_half, "-x", 2.8, holder)
+
 	# hay trough in sheep pen
-	var trough := _place("decoration/props/sack.gltf", pen_center + Vector3(-2.8, 0.0, -2.2), 30.0, PS * 0.9, holder)
+	var trough := _place("decoration/props/sack.gltf", pen_center + Vector3(2.5, 0.0, -2.0), 30.0, PS * 0.9, holder)
 	_add_box_collider(trough, 0.5)
 
 	# 3 gentle pasture sheep
@@ -1290,36 +1276,32 @@ func _build_animals() -> void:
 		sheep.rotation.y = randf() * TAU
 		holder.add_child(sheep)
 
-	_occupy(pen_center.x, pen_center.z, 7.5)
+	_occupy(pen_center.x, pen_center.z, 8.0)
 
-	# 4. Pasture Cows in a fenced paddock near (26.0, -82.0)
-	var cow_center := Vector3(26.0, 0.0, -82.0)
-	var cow_half := Vector2(4.8, 4.0)
-	for x in range(-4, 5, 2):
-		var n_b := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(float(x), 0.0, -cow_half.y), 0.0, PS * 0.85, holder)
-		_add_box_collider(n_b, 0.6)
-	for z in range(-2, 3, 2):
-		var n_l := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(-cow_half.x, 0.0, float(z) * 1.5), 90.0, PS * 0.85, holder)
-		_add_box_collider(n_l, 0.6)
-		var n_r := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(cow_half.x, 0.0, float(z) * 1.5), 90.0, PS * 0.85, holder)
-		_add_box_collider(n_r, 0.6)
-	for x in [-3.5, 3.5]:
-		var n_f := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(x, 0.0, cow_half.y), 0.0, PS * 0.85, holder)
-		_add_box_collider(n_f, 0.6)
+	# 4. Pasture Cows in a spacious lush western meadow paddock near (-18.0, -84.0)
+	# Relocated well away from the north road to Vigla ton Aeton, with 3x larger paddock area
+	var cow_center := Vector3(-18.0, 0.0, -84.0)
+	var cow_half := Vector2(8.5, 6.5)
+	_build_rustic_paddock(cow_center, cow_half, "+z", 3.6, holder)
+
+	var feed_sack1 := _place("decoration/props/sack.gltf", cow_center + Vector3(-5.0, 0.0, -3.5), 20.0, PS * 1.2, holder)
+	_add_box_collider(feed_sack1, 0.6)
+	var feed_sack2 := _place("decoration/props/barrel.gltf", cow_center + Vector3(5.2, 0.0, -3.5), 0.0, PS * 1.1, holder)
+	_add_box_collider(feed_sack2, 0.6)
 
 	var cow_script := load("res://scripts/village_cow.gd") as GDScript
 	if cow_script:
 		var cow1 = cow_script.new()
-		cow1.position = cow_center + Vector3(-1.4, 0.0, -0.5)
+		cow1.position = cow_center + Vector3(-3.0, 0.0, -0.5)
 		cow1.rotation.y = randf() * TAU
 		holder.add_child(cow1)
 
 		var cow2 = cow_script.new()
-		cow2.position = cow_center + Vector3(1.6, 0.0, 0.8)
+		cow2.position = cow_center + Vector3(2.8, 0.0, 1.0)
 		cow2.rotation.y = randf() * TAU
 		holder.add_child(cow2)
 
-	_occupy(cow_center.x, cow_center.z, 7.5)
+	_occupy(cow_center.x, cow_center.z, 11.0)
 
 	# 5. Wild Deer roaming the eastern meadows and forest margins
 	var deer_script := load("res://scripts/village_deer.gd") as GDScript
@@ -1338,6 +1320,97 @@ func _build_animals() -> void:
 	# 6. Dynamic Night Roadside Encounters
 	var ambush := RoadAmbush.new()
 	add_child(ambush)
+
+
+func _build_rustic_paddock(center: Vector3, half_size: Vector2, gate_side: String, gate_width: float, holder: Node) -> void:
+	var fence_mat := StandardMaterial3D.new()
+	fence_mat.albedo_color = Color(0.45, 0.30, 0.16)     # rustic paddock timber
+	fence_mat.roughness = 0.85
+
+	var hx := half_size.x
+	var hz := half_size.y
+
+	# 4 sides defined by start and end relative coordinates, and whether this side has the gate
+	var sides := [
+		[Vector2(-hx, -hz), Vector2(hx, -hz), gate_side == "-z"],
+		[Vector2(hx, -hz), Vector2(hx, hz), gate_side == "+x"],
+		[Vector2(hx, hz), Vector2(-hx, hz), gate_side == "+z"],
+		[Vector2(-hx, hz), Vector2(-hx, -hz), gate_side == "-x"],
+	]
+
+	for s in sides:
+		var p1: Vector2 = s[0]
+		var p2: Vector2 = s[1]
+		var has_gate: bool = s[2]
+		var seg_span := p1.distance_to(p2)
+		var dir := (p2 - p1).normalized()
+
+		var segments: Array[Array] = []
+		if has_gate:
+			var mid := seg_span * 0.5
+			var gw := minf(gate_width, seg_span * 0.6)
+			segments.append([0.0, mid - gw * 0.5])
+			segments.append([mid + gw * 0.5, seg_span])
+		else:
+			segments.append([0.0, seg_span])
+
+		for seg in segments:
+			var s0: float = seg[0]
+			var s1: float = seg[1]
+			var slen: float = s1 - s0
+			if slen <= 0.1:
+				continue
+			var post_count := maxi(2, int(round(slen / 2.5)) + 1)
+			for i in post_count:
+				var t := s0 + slen * float(i) / float(post_count - 1)
+				var pt := p1 + dir * t
+				var post_w := center + Vector3(pt.x, 0.65, pt.y)
+
+				var post := Node3D.new()
+				post.position = post_w
+				var pm := MeshInstance3D.new()
+				var cyl := CylinderMesh.new()
+				cyl.top_radius = 0.11
+				cyl.bottom_radius = 0.13
+				cyl.height = 1.3
+				pm.mesh = cyl
+				pm.material_override = fence_mat
+				post.add_child(pm)
+
+				var p_col := StaticBody3D.new()
+				var p_shape := CollisionShape3D.new()
+				var p_cyl := CylinderShape3D.new()
+				p_cyl.radius = 0.15
+				p_cyl.height = 1.3
+				p_shape.shape = p_cyl
+				p_col.add_child(p_shape)
+				post.add_child(p_col)
+				holder.add_child(post)
+
+			var mid_t := (s0 + s1) * 0.5
+			var mid_pt := p1 + dir * mid_t
+			var mid_w := center + Vector3(mid_pt.x, 0.0, mid_pt.y)
+			var yaw := atan2(dir.x, dir.y)
+
+			for rh in [0.45, 0.95]:
+				var rail := Node3D.new()
+				rail.position = mid_w + Vector3(0.0, rh, 0.0)
+				rail.rotation.y = yaw
+				var rm := MeshInstance3D.new()
+				var r_box := BoxMesh.new()
+				r_box.size = Vector3(0.09, 0.14, slen)
+				rm.mesh = r_box
+				rm.material_override = fence_mat
+				rail.add_child(rm)
+
+				var r_col := StaticBody3D.new()
+				var r_shape := CollisionShape3D.new()
+				var r_bshape := BoxShape3D.new()
+				r_bshape.size = Vector3(0.2, 0.3, slen)
+				r_shape.shape = r_bshape
+				r_col.add_child(r_shape)
+				rail.add_child(r_col)
+				holder.add_child(rail)
 
 
 func _build_great_tree() -> void:
