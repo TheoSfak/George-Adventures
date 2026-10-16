@@ -43,7 +43,14 @@ var _hud_best_label: Label
 var _hud_hint_label: Label
 
 var _trophy_chest: Chest
-var _return_pad: JumpPad
+var _return_pad: Node3D
+var _return_pad_disc: MeshInstance3D
+var _return_pad_arrow: MeshInstance3D
+var _return_pad_light: OmniLight3D
+var _return_pad_beam: MeshInstance3D
+var _return_trigger_area: Area3D
+var _return_portal_active: bool = false
+var _trophy_chest_opened: bool = false
 
 
 func _init() -> void:
@@ -81,6 +88,9 @@ func _process(delta: float) -> void:
 		# Manual respawn: press [R] / interact shortcut to respawn at current checkpoint
 		if Input.is_action_just_pressed("interact"):
 			_respawn_at_checkpoint()
+	elif state == State.FINISHED:
+		if not _return_portal_active and _trophy_chest != null and _trophy_chest.opened:
+			_check_return_portal_activation()
 
 
 func _load_best_time() -> void:
@@ -116,12 +126,20 @@ func start_course() -> void:
 	state = State.RUNNING
 	elapsed_time = 0.0
 	current_checkpoint = 0
+	_return_portal_active = false
+	_trophy_chest_opened = false
+	_update_return_pad_visuals(false)
+	if _trophy_chest != null and _trophy_chest.has_method("reset_chest"):
+		_trophy_chest.reset_chest()
 	for cp in _checkpoints:
 		if cp != null and cp.has_method("reset_state"):
 			cp.reset_state()
 
 	if _hud_panel != null:
 		_hud_panel.visible = true
+	if _hud_hint_label != null:
+		_hud_hint_label.text = Strings.PARKOUR_RESPAWN_PROMPT
+		_hud_hint_label.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45))
 	_update_hud()
 	if is_inside_tree():
 		Sfx.ui("buy")
@@ -141,6 +159,7 @@ func _on_checkpoint_reached(index: int, pos: Vector3, heading: float) -> void:
 
 		if current_checkpoint == TOTAL_CHECKPOINTS:
 			_complete_course()
+			_check_return_portal_activation()
 		else:
 			var msg := Strings.PARKOUR_CHECKPOINT_REACHED % [current_checkpoint, TOTAL_CHECKPOINTS]
 			if is_inside_tree():
@@ -164,6 +183,8 @@ func _on_time_expired() -> void:
 	state = State.IDLE
 	elapsed_time = 0.0
 	current_checkpoint = 0
+	_return_portal_active = false
+	_update_return_pad_visuals(false)
 	for cp in _checkpoints:
 		if cp != null and cp.has_method("reset_state"):
 			cp.reset_state()
@@ -190,7 +211,20 @@ func _complete_course() -> void:
 		get_tree().call_group("hud", "show_banner", win_msg, 5.0)
 
 	_update_hud()
+	if _hud_hint_label != null:
+		_hud_hint_label.text = Strings.PARKOUR_COMPLETED_STATUS
+		_hud_hint_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+
+	# Auto-close HUD panel after 8 seconds of finishing
+	var tw := create_tween()
+	tw.tween_interval(8.0)
+	tw.tween_callback(func():
+		if state == State.FINISHED and _hud_panel != null:
+			_hud_panel.visible = false
+	)
+
 	course_completed.emit(elapsed_time, is_rec)
+	_check_return_portal_activation()
 
 
 # ---------------------------------------------------------------- Start & Sign ----
@@ -568,39 +602,207 @@ func _build_stage_7_finish_podium() -> void:
 	_trophy_chest.potions = 3
 	_trophy_chest.position = finish_pos + Vector3(0.0, 0.5, -2.4)
 	_trophy_chest.rotation_degrees.y = 180.0
+	_trophy_chest.chest_opened.connect(_on_trophy_chest_opened)
 	add_child(_trophy_chest)
 
-	# Return Launch Pad (Teleports / Launches George straight back to the Village Well!)
+	# Return Teleport Pad (Teleports George back to the Village Square once trial & chest are complete)
 	var ret_pos := finish_pos + Vector3(2.4, 0.25, 1.5)
-	_return_pad = JumpPad.new()
+	_build_return_portal(ret_pos)
+
+
+func _build_return_portal(ret_pos: Vector3) -> void:
+	_return_pad = Node3D.new()
 	_return_pad.position = ret_pos
-	_return_pad.launch_power = 24.0
-	_return_pad.pad_color = Color(0.2, 1.0, 0.5)
 	add_child(_return_pad)
 
-	# Attach return teleport trigger to launch pad
-	var ret_area := Area3D.new()
-	ret_area.collision_mask = 1 | 2
-	ret_area.position = ret_pos
+	# Base rim (dark carved stone / iron rim)
+	var base := MeshInstance3D.new()
+	var base_cyl := CylinderMesh.new()
+	base_cyl.top_radius = 1.25
+	base_cyl.bottom_radius = 1.35
+	base_cyl.height = 0.2
+	base.mesh = base_cyl
+	base.position.y = 0.1
+	var base_mat := StandardMaterial3D.new()
+	base_mat.albedo_color = Color(0.2, 0.22, 0.26)
+	base_mat.metallic = 0.5
+	base_mat.roughness = 0.5
+	base.material_override = base_mat
+	_return_pad.add_child(base)
+
+	# Inner Rune Disc
+	_return_pad_disc = MeshInstance3D.new()
+	var pad_cyl := CylinderMesh.new()
+	pad_cyl.top_radius = 1.0
+	pad_cyl.bottom_radius = 1.05
+	pad_cyl.height = 0.14
+	_return_pad_disc.mesh = pad_cyl
+	_return_pad_disc.position.y = 0.18
+	var disc_mat := StandardMaterial3D.new()
+	disc_mat.albedo_color = Color(0.28, 0.26, 0.24)
+	disc_mat.roughness = 0.3
+	_return_pad_disc.material_override = disc_mat
+	_return_pad.add_child(_return_pad_disc)
+
+	# Arrow / Star Rune Glyph on top
+	_return_pad_arrow = MeshInstance3D.new()
+	var prism := BoxMesh.new()
+	prism.size = Vector3(0.55, 0.04, 0.55)
+	_return_pad_arrow.mesh = prism
+	_return_pad_arrow.position.y = 0.26
+	_return_pad_arrow.rotation_degrees.y = 45.0
+	var arrow_mat := StandardMaterial3D.new()
+	arrow_mat.albedo_color = Color(0.35, 0.35, 0.38)
+	_return_pad_arrow.material_override = arrow_mat
+	_return_pad.add_child(_return_pad_arrow)
+
+	# OmniLight beacon
+	_return_pad_light = OmniLight3D.new()
+	_return_pad_light.light_color = Color(0.2, 1.0, 0.6)
+	_return_pad_light.light_energy = 0.0
+	_return_pad_light.omni_range = 5.0
+	_return_pad_light.position.y = 0.6
+	_return_pad.add_child(_return_pad_light)
+
+	# Vertical Light Beam (active only when conditions are fulfilled)
+	_return_pad_beam = MeshInstance3D.new()
+	var beam_cyl := CylinderMesh.new()
+	beam_cyl.top_radius = 0.95
+	beam_cyl.bottom_radius = 0.95
+	beam_cyl.height = 8.0
+	_return_pad_beam.mesh = beam_cyl
+	_return_pad_beam.position.y = 4.1
+	var beam_mat := StandardMaterial3D.new()
+	beam_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	beam_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	beam_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	beam_mat.albedo_color = Color(0.2, 1.0, 0.6, 0.3)
+	beam_mat.emission_enabled = true
+	beam_mat.emission = Color(0.2, 1.0, 0.6)
+	beam_mat.emission_energy_multiplier = 1.8
+	_return_pad_beam.material_override = beam_mat
+	_return_pad_beam.visible = false
+	_return_pad.add_child(_return_pad_beam)
+
+	# Solid base collider so players can stand on the pad
+	var static_body := StaticBody3D.new()
+	var col_shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.4, 0.2, 2.4)
+	col_shape.shape = box
+	col_shape.position.y = 0.1
+	static_body.add_child(col_shape)
+	_return_pad.add_child(static_body)
+
+	# Return Teleport Trigger Area
+	_return_trigger_area = Area3D.new()
+	_return_trigger_area.collision_mask = 1 | 2
 	var shape := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
 	cyl.radius = 1.2
 	cyl.height = 1.0
 	shape.shape = cyl
 	shape.position.y = 0.5
-	ret_area.add_child(shape)
-	ret_area.body_entered.connect(func(b):
-		if b is Player:
-			_teleport_home_safely(b as Player)
-	)
-	add_child(ret_area)
+	_return_trigger_area.add_child(shape)
+	_return_trigger_area.body_entered.connect(_on_return_pad_entered)
+	_return_pad.add_child(_return_trigger_area)
+
+
+func _update_return_pad_visuals(active: bool) -> void:
+	if _return_pad_disc != null and _return_pad_disc.material_override is StandardMaterial3D:
+		var mat := _return_pad_disc.material_override as StandardMaterial3D
+		if active:
+			mat.albedo_color = Color(0.15, 0.95, 0.65)
+			mat.emission_enabled = true
+			mat.emission = Color(0.15, 0.95, 0.65)
+			mat.emission_energy_multiplier = 2.2
+		else:
+			mat.albedo_color = Color(0.28, 0.26, 0.24)
+			mat.emission_enabled = false
+
+	if _return_pad_arrow != null and _return_pad_arrow.material_override is StandardMaterial3D:
+		var a_mat := _return_pad_arrow.material_override as StandardMaterial3D
+		if active:
+			a_mat.albedo_color = Color.WHITE
+			a_mat.emission_enabled = true
+			a_mat.emission = Color.WHITE
+			a_mat.emission_energy_multiplier = 2.5
+		else:
+			a_mat.albedo_color = Color(0.35, 0.35, 0.38)
+			a_mat.emission_enabled = false
+
+	if _return_pad_light != null:
+		_return_pad_light.light_energy = 2.5 if active else 0.0
+
+	if _return_pad_beam != null:
+		_return_pad_beam.visible = active
+
+
+func _on_trophy_chest_opened() -> void:
+	_trophy_chest_opened = true
+	_check_return_portal_activation()
+
+
+func _check_return_portal_activation() -> void:
+	if _return_portal_active:
+		return
+	var time_registered := (state == State.FINISHED or current_checkpoint >= TOTAL_CHECKPOINTS)
+	var chest_done := (_trophy_chest != null and (_trophy_chest.opened or _trophy_chest_opened))
+	if time_registered and chest_done:
+		_activate_return_portal()
+
+
+func _activate_return_portal() -> void:
+	if _return_portal_active:
+		return
+	_return_portal_active = true
+	_update_return_pad_visuals(true)
+	if is_inside_tree():
+		Sfx.ui("checkpoint_chime")
+		get_tree().call_group("hud", "show_banner", Strings.PARKOUR_PORTAL_ACTIVE, 3.5)
+
+	if _return_trigger_area != null:
+		for b in _return_trigger_area.get_overlapping_bodies():
+			if b is Player and not (b as Player).is_dead:
+				get_tree().create_timer(0.3).timeout.connect(func():
+					if _return_portal_active and is_instance_valid(b):
+						_teleport_home_safely(b as Player)
+				)
+				break
+
+
+func _on_return_pad_entered(body: Node3D) -> void:
+	if not (body is Player):
+		return
+	var p: Player = body
+	if p.is_dead:
+		return
+
+	var time_registered := (state == State.FINISHED or current_checkpoint >= TOTAL_CHECKPOINTS)
+	var chest_done := (_trophy_chest != null and (_trophy_chest.opened or _trophy_chest_opened))
+
+	if not time_registered:
+		if is_inside_tree():
+			Sfx.ui("error")
+			get_tree().call_group("hud", "show_banner", Strings.PARKOUR_NEED_FINISH, 2.5)
+		return
+
+	if not chest_done:
+		if is_inside_tree():
+			Sfx.ui("error")
+			get_tree().call_group("hud", "show_banner", Strings.PARKOUR_NEED_CHEST, 2.5)
+		return
+
+	_teleport_home_safely(p)
 
 
 func _teleport_home_safely(p: Player) -> void:
-	Sfx.play("crowd_cheer", p.global_position, 3.5)
-	# Safely teleport George down to village square near the well
+	if _hud_panel != null:
+		_hud_panel.visible = false
+	if is_inside_tree():
+		Sfx.play("crowd_cheer", p.global_position, 3.5)
+		get_tree().call_group("hud", "show_banner", Strings.PARKOUR_RETURN_SUCCESS, 3.0)
 	p.teleport(Vector3(0.0, 0.5, 5.0), PI)
-	get_tree().call_group("hud", "show_banner", "Επέστρεψες στην Πλατεία του Αγίου Βλάση!", 3.0)
 
 
 func _connect_checkpoints() -> void:
@@ -618,13 +820,13 @@ func _build_ui() -> void:
 	_hud_panel.visible = false
 	_hud_panel.anchor_left = 0.5
 	_hud_panel.anchor_right = 0.5
-	_hud_panel.offset_left = -160.0
-	_hud_panel.offset_right = 160.0
-	_hud_panel.offset_top = 22.0
-	_hud_panel.offset_bottom = 98.0
+	_hud_panel.offset_left = -170.0
+	_hud_panel.offset_right = 170.0
+	_hud_panel.offset_top = 18.0
+	_hud_panel.offset_bottom = 114.0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.10, 0.14, 0.88)
+	style.bg_color = Color(0.08, 0.10, 0.14, 0.90)
 	style.border_color = Color(0.9, 0.75, 0.2, 0.9)
 	style.border_width_bottom = 2
 	style.border_width_top = 2
@@ -636,19 +838,57 @@ func _build_ui() -> void:
 	style.corner_radius_top_right = 12
 	style.content_margin_left = 16.0
 	style.content_margin_right = 16.0
-	style.content_margin_top = 8.0
+	style.content_margin_top = 6.0
 	style.content_margin_bottom = 8.0
 	_hud_panel.add_theme_stylebox_override("panel", style)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 
+	# Header: Title & Close Button
+	var top_bar := HBoxContainer.new()
+	top_bar.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var title_lbl := Label.new()
+	title_lbl.text = Strings.PARKOUR_TITLE
+	title_lbl.add_theme_font_size_override("font_size", 13)
+	title_lbl.add_theme_color_override("font_color", Color(0.95, 0.82, 0.35))
+	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_bar.add_child(title_lbl)
+
+	var close_btn := Button.new()
+	close_btn.text = "✕"
+	close_btn.focus_mode = Control.FOCUS_NONE
+	close_btn.custom_minimum_size = Vector2(24, 22)
+	close_btn.tooltip_text = Strings.PARKOUR_HUD_CLOSE_TOOLTIP
+	close_btn.add_theme_font_size_override("font_size", 13)
+	close_btn.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+	close_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.35, 0.35))
+	var btn_style := StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.18, 0.20, 0.26, 0.8)
+	btn_style.set_corner_radius_all(6)
+	btn_style.content_margin_left = 4
+	btn_style.content_margin_right = 4
+	btn_style.content_margin_top = 1
+	btn_style.content_margin_bottom = 1
+	close_btn.add_theme_stylebox_override("normal", btn_style)
+	var btn_hov := btn_style.duplicate() as StyleBoxFlat
+	btn_hov.bg_color = Color(0.35, 0.15, 0.15, 0.95)
+	btn_hov.border_color = Color(1.0, 0.4, 0.4, 0.8)
+	btn_hov.set_border_width_all(1)
+	close_btn.add_theme_stylebox_override("hover", btn_hov)
+	close_btn.pressed.connect(func():
+		_hud_panel.visible = false
+	)
+	top_bar.add_child(close_btn)
+	vbox.add_child(top_bar)
+
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	_hud_time_label = Label.new()
 	_hud_time_label.text = Strings.PARKOUR_HUD_TIME % "03:00.0"
-	_hud_time_label.add_theme_font_size_override("font_size", 22)
+	_hud_time_label.add_theme_font_size_override("font_size", 20)
 	_hud_time_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.4))
 	hbox.add_child(_hud_time_label)
 
@@ -658,7 +898,7 @@ func _build_ui() -> void:
 
 	_hud_cp_label = Label.new()
 	_hud_cp_label.text = Strings.PARKOUR_HUD_CP % [0, TOTAL_CHECKPOINTS]
-	_hud_cp_label.add_theme_font_size_override("font_size", 20)
+	_hud_cp_label.add_theme_font_size_override("font_size", 19)
 	_hud_cp_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 	hbox.add_child(_hud_cp_label)
 
@@ -669,7 +909,7 @@ func _build_ui() -> void:
 
 	_hud_best_label = Label.new()
 	_hud_best_label.text = Strings.PARKOUR_HUD_BEST % _format_time(best_time)
-	_hud_best_label.add_theme_font_size_override("font_size", 14)
+	_hud_best_label.add_theme_font_size_override("font_size", 13)
 	_hud_best_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	hbox2.add_child(_hud_best_label)
 

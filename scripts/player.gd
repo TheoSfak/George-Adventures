@@ -1782,9 +1782,12 @@ func teleport(pos: Vector3, heading: float) -> void:
 	global_position = pos
 	velocity = Vector3.ZERO
 	_heading = heading
-	_model_root.rotation.y = heading
+	if _model_root != null:
+		_model_root.rotation.y = heading
 	_yaw = heading + PI
-	_rig.global_position = pos + Vector3.UP * camera_height
+	if _rig != null:
+		_rig.global_position = pos + Vector3.UP * camera_height
+
 
 
 ## Launches George upward (jump pads/trampolines) with optional forward directional impulse.

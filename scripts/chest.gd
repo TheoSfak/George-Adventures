@@ -3,7 +3,10 @@ extends Node3D
 ## A treasure chest. Press R next to it: the lid opens and gold (maybe a potion) pops out.
 ## Set the contents before adding it to the scene.
 
+signal chest_opened
+
 const WOOD := "res://assets/items/chest.glb"
+
 const GOLDEN := "res://assets/items/chest_gold.glb"
 
 var golden := false
@@ -47,6 +50,13 @@ func mark_opened() -> void:
 		_lid.rotation.x = deg_to_rad(-115.0)
 
 
+## Closes the chest lid and resets opened state (used for repeatable challenges like parkour).
+func reset_chest() -> void:
+	opened = false
+	if _lid:
+		_lid.rotation.x = 0.0
+
+
 func interact_prompt() -> String:
 	return "" if opened else Strings.PROMPT_OPEN
 
@@ -59,6 +69,7 @@ func interact(_player: Player) -> void:
 	if opened:
 		return
 	opened = true
+	chest_opened.emit()
 	var beam := find_child("VictoryBeam", true, false)
 	if beam:
 		beam.queue_free()

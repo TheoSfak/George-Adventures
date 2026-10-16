@@ -387,5 +387,12 @@ const PARKOUR_WIN_MSG := "Ολοκλήρωσες το Πάρκουρ των Στ
 const PARKOUR_NEW_RECORD := "ΝΕΟ ΠΡΟΣΩΠΙΚΟ ΡΕΚΟΡ!"
 const PARKOUR_SIGN_TEXT := "=== ΠΑΡΚΟΥΡ ΤΩΝ ΣΤΕΓΩΝ ===\nΑνέβα τις σκάλες έξω από την Ταβέρνα!\nΠέρασε τα δοκάρια, πάτα τα τραμπολίνα\nκαι φτάσε στον Ανεμόμυλο πριν λήξουν τα 3 λεπτά!\n\nΚαλύτερος Χρόνος: %s"
 const PARKOUR_CHEST_TITLE := "Σεντούκι του Ακροβάτη"
+const PARKOUR_NEED_FINISH := "Πάτησε πρώτα στο κέντρο του βάθρου για καταγραφή του χρόνου!"
+const PARKOUR_NEED_CHEST := "Άνοιξε πρώτα το Σεντούκι του Ακροβάτη!"
+const PARKOUR_PORTAL_ACTIVE := "Η πύλη επιστροφής ενεργοποιήθηκε! Πάτα στον φωτεινό κύκλο."
+const PARKOUR_RETURN_SUCCESS := "Επέστρεψες στην Πλατεία του Αγίου Βλάση!"
+const PARKOUR_HUD_CLOSE_TOOLTIP := "Κλείσιμο καρτέλας"
+const PARKOUR_COMPLETED_STATUS := "Ολοκληρώθηκε!"
+
 
 
