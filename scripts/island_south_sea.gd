@@ -549,8 +549,8 @@ func _build_pier() -> void:
 	boat.add_child(b_hull)
 	pier_holder.add_child(boat)
 
-	# Fishing spot interaction sign on pier head
-	_add_signpost("Ψαρολίμανο Αγίου Βλάση  ⚓\nΑποβάθρα Ψαρέματος", PIER_POS + Vector3(2.4, 0.75, 6.0), 180.0, pier_holder)
+	# Fishing spot interaction sign on dry sand at pier entrance
+	_add_signpost("Ψαρολίμανο Αγίου Βλάση  ⚓\nΑποβάθρα Ψαρέματος", PIER_POS + Vector3(2.8, 0.05, -2.0), -20.0, pier_holder)
 
 
 # =========================================================================
@@ -624,28 +624,72 @@ func _add_signpost(text: String, pos: Vector3, rot_deg: float, parent: Node) -> 
 	var sign_node := Node3D.new()
 	sign_node.position = pos
 	sign_node.rotation_degrees.y = rot_deg
+
 	var post_mat := StandardMaterial3D.new()
 	post_mat.albedo_color = Color(0.40, 0.25, 0.12)
-	var post_mesh := MeshInstance3D.new()
-	var p_box := BoxMesh.new()
-	p_box.size = Vector3(0.18, 1.5, 0.18)
-	post_mesh.mesh = p_box
-	post_mesh.position = Vector3(0.0, 0.75, 0.0)
-	post_mesh.material_override = post_mat
-	sign_node.add_child(post_mesh)
+	post_mat.roughness = 0.85
+
+	# Board: Width 2.9m, Height 0.85m, Depth 0.12m, Center Y = 1.45m
+	# Board bottom is at Y = 1.45 - 0.425 = 1.025m
+	var board_y := 1.45
+	var board_h := 0.85
+	var board_w := 2.9
+	var board_d := 0.12
+	var board_bottom := board_y - board_h * 0.5   # 1.025m
 
 	var board := MeshInstance3D.new()
 	var b_box := BoxMesh.new()
-	b_box.size = Vector3(1.4, 0.55, 0.1)
+	b_box.size = Vector3(board_w, board_h, board_d)
 	board.mesh = b_box
-	board.position = Vector3(0.0, 1.25, 0.0)
+	board.position = Vector3(0.0, board_y, 0.0)
 	board.material_override = post_mat
 	sign_node.add_child(board)
 
+	# Post: stops exactly at the bottom of the board (Y = 1.025m)
+	var post_mesh := MeshInstance3D.new()
+	var p_box := BoxMesh.new()
+	p_box.size = Vector3(0.18, board_bottom, 0.18)
+	post_mesh.mesh = p_box
+	post_mesh.position = Vector3(0.0, board_bottom * 0.5, 0.0)
+	post_mesh.material_override = post_mat
+	sign_node.add_child(post_mesh)
+
+	# Front Label: single-sided, centered, sharp outline
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = 32
+	label.font_size = 36
+	label.pixel_size = 0.0044
 	label.outline_size = 8
-	label.position = Vector3(0.0, 1.25, 0.06)
+	label.outline_modulate = Color(0.12, 0.08, 0.04)
+	label.modulate = Color(0.98, 0.94, 0.82)
+	label.double_sided = false
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.position = Vector3(0.0, board_y, board_d * 0.5 + 0.015)
 	sign_node.add_child(label)
+
+	# Back Label
+	var back := Label3D.new()
+	back.text = text
+	back.font_size = 36
+	back.pixel_size = 0.0044
+	back.outline_size = 8
+	back.outline_modulate = Color(0.12, 0.08, 0.04)
+	back.modulate = Color(0.98, 0.94, 0.82)
+	back.double_sided = false
+	back.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	back.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	back.position = Vector3(0.0, board_y, -board_d * 0.5 - 0.015)
+	back.rotation_degrees.y = 180.0
+	sign_node.add_child(back)
+
+	var body := StaticBody3D.new()
+	var col := CollisionShape3D.new()
+	var cbox := BoxShape3D.new()
+	cbox.size = Vector3(0.4, 1.9, 0.4)
+	col.shape = cbox
+	col.position.y = 0.95
+	body.add_child(col)
+	sign_node.add_child(body)
+
 	parent.add_child(sign_node)

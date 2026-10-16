@@ -236,36 +236,50 @@ func _build_start_zone() -> void:
 	_sign_body = StaticBody3D.new()
 	_sign_body.position = sign_pos
 
-	var post := MeshInstance3D.new()
-	var post_mesh := BoxMesh.new()
-	post_mesh.size = Vector3(0.18, 2.2, 0.18)
-	post.mesh = post_mesh
-	post.position.y = 1.1
 	var wood_mat := StandardMaterial3D.new()
 	wood_mat.albedo_color = Color(0.35, 0.22, 0.12)
-	post.material_override = wood_mat
-	_sign_body.add_child(post)
+	wood_mat.roughness = 0.85
+
+	# Board: Width 2.6m, Height 1.3m, Depth 0.12m, Center Y = 1.8m
+	# Board bottom is at Y = 1.8 - 0.65 = 1.15m
+	var board_y := 1.8
+	var board_h := 1.3
+	var board_w := 2.6
+	var board_d := 0.12
+	var board_bottom := board_y - board_h * 0.5   # 1.15m
 
 	var board := MeshInstance3D.new()
 	var board_mesh := BoxMesh.new()
-	board_mesh.size = Vector3(2.2, 1.3, 0.1)
+	board_mesh.size = Vector3(board_w, board_h, board_d)
 	board.mesh = board_mesh
-	board.position.y = 1.8
+	board.position = Vector3(0.0, board_y, 0.0)
 	board.material_override = wood_mat
 	_sign_body.add_child(board)
 
+	# Post: stops exactly at the bottom of the board (Y = 1.15m)
+	var post := MeshInstance3D.new()
+	var post_mesh := BoxMesh.new()
+	post_mesh.size = Vector3(0.18, board_bottom, 0.18)
+	post.mesh = post_mesh
+	post.position = Vector3(0.0, board_bottom * 0.5, 0.0)
+	post.material_override = wood_mat
+	_sign_body.add_child(post)
+
 	_sign_label = Label3D.new()
-	_sign_label.position = Vector3(0.0, 1.8, 0.06)
+	_sign_label.position = Vector3(0.0, board_y, board_d * 0.5 + 0.015)
 	_sign_label.pixel_size = 0.0052
 	_sign_label.billboard = BaseMaterial3D.BILLBOARD_DISABLED
+	_sign_label.double_sided = false
 	_sign_label.font_size = 32
+	_sign_label.outline_size = 8
+	_sign_label.outline_modulate = Color(0.12, 0.08, 0.04)
 	_sign_label.modulate = Color(1.0, 0.95, 0.8)
 	_sign_body.add_child(_sign_label)
 	_refresh_sign_text()
 
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(2.2, 2.4, 0.3)
+	box.size = Vector3(board_w, 2.4, 0.3)
 	col.shape = box
 	col.position.y = 1.2
 	_sign_body.add_child(col)

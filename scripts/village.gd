@@ -97,7 +97,7 @@ const SIGNPOSTS := [
 	["Παλιά Κρύπτη  ↑\nΚίνδυνος!", 14.0, -118.0, 0],
 	["Κρησφύγετο Ληστών  ↖\nΚίνδυνος!", -118.0, -74.0, 42],
 	["Ξέφωτο της Σέκτας  ↖\nΚίνδυνος!", CultSite.SIGN.x, CultSite.SIGN.y, 20],
-	["Προς τη Θάλασσα & το Φάρο  ↓", -18.0, 72.0, 0],
+	["Προς τη Θάλασσα & το Φάρο  ↓", -12.0, 62.0, 0],
 	["Ποταμός & Καταρράκτης  ↗", 42.0, -52.0, 315],
 	["Βίγλα των Αετών (Οροπέδιο 14μ)  ↗", 38.0, -96.0, 330],
 ]
@@ -1127,39 +1127,65 @@ func _signpost(text: String, pos: Vector3, rot_deg: float, parent: Node) -> void
 	root.position = pos
 	root.rotation_degrees.y = rot_deg
 	parent.add_child(root)
+
 	var wood := StandardMaterial3D.new()
 	wood.albedo_color = Color(0.45, 0.30, 0.17)
-	var post := MeshInstance3D.new()
-	var pm := BoxMesh.new()
-	pm.size = Vector3(0.45, 5.0, 0.45)
-	post.mesh = pm
-	post.material_override = wood
-	post.position.y = 2.5
-	root.add_child(post)
+	wood.roughness = 0.85
+
+	# The board: Width 6.4m, Height 1.7m, Depth 0.22m, Centered at Y = 3.8m
+	# Board bottom is at Y = 3.8 - 0.85 = 2.95m
+	var board_y := 3.8
+	var board_h := 1.7
+	var board_w := 6.4
+	var board_d := 0.22
+	var board_bottom := board_y - board_h * 0.5   # 2.95m
+
 	var board := MeshInstance3D.new()
 	var bm := BoxMesh.new()
-	bm.size = Vector3(5.6, 2.0, 0.25)
+	bm.size = Vector3(board_w, board_h, board_d)
 	board.mesh = bm
 	board.material_override = wood
-	board.position = Vector3(0, 4.0, 0.2)
+	board.position = Vector3(0.0, board_y, 0.0)
 	root.add_child(board)
+
+	# The post: stops exactly at the bottom of the board (Y = 2.95m)
+	var post := MeshInstance3D.new()
+	var pm := BoxMesh.new()
+	pm.size = Vector3(0.42, board_bottom, 0.42)
+	post.mesh = pm
+	post.material_override = wood
+	post.position = Vector3(0.0, board_bottom * 0.5, 0.0)
+	root.add_child(post)
+
+	# Front Label: double_sided = false prevents reversed ghost letters bleeding through
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = 72
-	label.pixel_size = 0.0105
-	label.outline_size = 0
-	label.modulate = Color(0.95, 0.88, 0.7)
-	label.position = Vector3(0, 4.0, 0.34)
+	label.font_size = 54
+	label.pixel_size = 0.0065
+	label.outline_size = 8
+	label.outline_modulate = Color(0.12, 0.08, 0.04)
+	label.modulate = Color(0.98, 0.92, 0.80)
+	label.double_sided = false
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.position = Vector3(0.0, board_y, board_d * 0.5 + 0.02)
 	root.add_child(label)
+
+	# Back Label: double_sided = false prevents front view from seeing reverse text
 	var back := Label3D.new()
 	back.text = text
-	back.font_size = 72
-	back.pixel_size = 0.0105
-	back.outline_size = 0
-	back.modulate = Color(0.95, 0.88, 0.7)
-	back.position = Vector3(0, 4.0, 0.06)
+	back.font_size = 54
+	back.pixel_size = 0.0065
+	back.outline_size = 8
+	back.outline_modulate = Color(0.12, 0.08, 0.04)
+	back.modulate = Color(0.98, 0.92, 0.80)
+	back.double_sided = false
+	back.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	back.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	back.position = Vector3(0.0, board_y, -board_d * 0.5 - 0.02)
 	back.rotation_degrees.y = 180.0
 	root.add_child(back)
+
 	var body := StaticBody3D.new()
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
