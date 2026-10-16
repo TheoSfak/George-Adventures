@@ -1,13 +1,13 @@
 class_name IslandSouthSea
 extends Node3D
 ## The South Sea Coast of Agios Vlasis:
-## Expansive open ocean, golden sandy beach, cliffside stone lighthouse with rotating beacon,
+## Expansive open ocean, smooth golden sandy crescent bay, cliffside stone lighthouse with rotating beacon,
 ## wooden fishing pier with boats, and a sunken shipwreck with treasure.
 
-const COAST_CENTER := Vector3(-45.0, 0.0, 140.0)
+const COAST_CENTER := Vector3(-55.0, 0.0, 135.0)
 const LIGHTHOUSE_POS := Vector3(-115.0, 0.0, 138.0)
-const PIER_POS := Vector3(-35.0, 0.0, 126.0)
-const SHIPWRECK_POS := Vector3(-72.0, 0.0, 168.0)
+const PIER_POS := Vector3(-35.0, 0.0, 96.0)
+const SHIPWRECK_POS := Vector3(-72.0, -0.6, 168.0)
 
 var _beacon_light: SpotLight3D
 var _beacon_beam: MeshInstance3D
@@ -47,31 +47,41 @@ func _build_ocean() -> void:
 	water_mat.set_shader_parameter("shallow_color", Color(0.16, 0.62, 0.68))
 	water_mat.set_shader_parameter("sky_color", Color(0.72, 0.88, 1.0))
 
-	# Vast sea plane
+	# Ocean water plane starting at the shoreline (Z = 108.0) out to open ocean (Z = 610.0)
 	var sea_mesh := PlaneMesh.new()
-	sea_mesh.size = Vector2(700.0, 450.0)
+	sea_mesh.size = Vector2(800.0, 500.0)
 	var sea := MeshInstance3D.new()
 	sea.mesh = sea_mesh
 	sea.material_override = water_mat
-	sea.position = Vector3(0.0, 0.02, 310.0)
+	sea.position = Vector3(0.0, 0.0, 360.0)
 	ocean_holder.add_child(sea)
 
-	# Sandy seabed underneath
+	# Continuous Sandy Seabed underneath the open ocean floor
 	var sand_mat := StandardMaterial3D.new()
-	sand_mat.albedo_color = Color(0.74, 0.65, 0.44)
+	sand_mat.albedo_color = Color(0.70, 0.61, 0.42)   # Mediterranean marine sand
 	sand_mat.roughness = 0.95
 
 	var seabed_mesh := PlaneMesh.new()
-	seabed_mesh.size = Vector2(700.0, 450.0)
+	seabed_mesh.size = Vector2(800.0, 500.0)
 	var seabed := MeshInstance3D.new()
 	seabed.mesh = seabed_mesh
 	seabed.material_override = sand_mat
-	seabed.position = Vector3(0.0, -1.8, 310.0)
+	seabed.position = Vector3(0.0, -1.8, 410.0)
 	ocean_holder.add_child(seabed)
 
-	# Ocean boundary barrier so player can wade in shallows but not walk to infinity
+	# Solid seabed floor collider for the deep ocean
+	var floor_body := StaticBody3D.new()
+	floor_body.position = Vector3(0.0, -2.8, 410.0)
+	var f_shape := CollisionShape3D.new()
+	var f_box := BoxShape3D.new()
+	f_box.size = Vector3(800.0, 2.0, 500.0)
+	f_shape.shape = f_box
+	floor_body.add_child(f_shape)
+	ocean_holder.add_child(floor_body)
+
+	# Ocean boundary barrier so player can wade in bay but not walk to infinity
 	var barrier := StaticBody3D.new()
-	barrier.position = Vector3(0.0, 5.0, 260.0)
+	barrier.position = Vector3(0.0, 5.0, 240.0)
 	var b_shape := CollisionShape3D.new()
 	var b_box := BoxShape3D.new()
 	b_box.size = Vector3(800.0, 20.0, 6.0)
@@ -81,72 +91,127 @@ func _build_ocean() -> void:
 
 
 # =========================================================================
-# 2. SANDY BEACH & DUNES
+# 2. SANDY BEACH & DUNES (Continuous Smooth Mesh via SurfaceTool)
 # =========================================================================
+func _calc_beach_height(x: float, z: float) -> float:
+	# Bay curve: center around X = -55 is indented by ~6m
+	var bay_curve := ((x + 55.0) / 120.0) * ((x + 55.0) / 120.0) * 6.0
+	var eff_z := z + bay_curve
+
+	# Base coastal slope from north dunes down to deep ocean
+	var base_y: float
+	if eff_z <= 88.0:
+		base_y = 0.06
+	elif eff_z <= 112.0:
+		var t := (eff_z - 88.0) / 24.0
+		base_y = lerpf(0.06, 0.0, t)
+	elif eff_z <= 136.0:
+		var t := (eff_z - 112.0) / 24.0
+		base_y = lerpf(0.0, -0.8, t)
+	else:
+		var t := clampf((eff_z - 136.0) / 28.0, 0.0, 1.0)
+		base_y = lerpf(-0.8, -1.8, t)
+
+	# Side bluff elevation: land rises on the west and east edges to frame the bay
+	if x < -135.0:
+		var side_t := clampf((-135.0 - x) / 50.0, 0.0, 1.0)
+		base_y += side_t * 3.5
+	elif x > 35.0:
+		var side_t := clampf((x - 35.0) / 30.0, 0.0, 1.0)
+		base_y += side_t * 2.8
+
+	return base_y
+
+
 func _build_beach() -> void:
 	var beach_holder := Node3D.new()
 	beach_holder.name = "Beach"
 	add_child(beach_holder)
 
 	var sand_mat := StandardMaterial3D.new()
-	sand_mat.albedo_color = Color(0.86, 0.77, 0.52)   # warm Mediterranean golden sand
+	sand_mat.albedo_color = Color(0.85, 0.74, 0.52)   # warm Mediterranean golden sand
+	sand_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	sand_mat.roughness = 0.92
 
-	# Main sandy shore terrace sloping from Z=95 (meadow border) to Z=135 (waterline)
-	var beach_segments: Array[Dictionary] = [
-		{"pos": Vector3(-45.0, -0.05, 108.0), "size": Vector3(175.0, 0.25, 26.0), "rot_x": 0.0},
-		{"pos": Vector3(-45.0, -0.45, 126.0), "size": Vector3(185.0, 0.35, 22.0), "rot_x": -2.5},
-		{"pos": Vector3(-45.0, -0.95, 142.0), "size": Vector3(195.0, 0.45, 24.0), "rot_x": -3.5},
-	]
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
-	for seg in beach_segments:
-		var node := Node3D.new()
-		node.position = seg["pos"]
-		node.rotation_degrees.x = seg["rot_x"]
-		var mi := MeshInstance3D.new()
-		var bm := BoxMesh.new()
-		bm.size = seg["size"]
-		mi.mesh = bm
-		mi.material_override = sand_mat
-		node.add_child(mi)
+	var x_steps := 36
+	var z_steps := 30
+	var x_min := -190.0
+	var x_max := 65.0
+	var z_min := 84.0
+	var z_max := 165.0
 
-		var sb := StaticBody3D.new()
-		var col := CollisionShape3D.new()
-		var bs := BoxShape3D.new()
-		bs.size = seg["size"]
-		col.shape = bs
-		sb.add_child(col)
-		node.add_child(sb)
-		beach_holder.add_child(node)
+	for zi in (z_steps + 1):
+		var z_t := float(zi) / float(z_steps)
+		var z := lerpf(z_min, z_max, z_t)
+		for xi in (x_steps + 1):
+			var x_t := float(xi) / float(x_steps)
+			var x := lerpf(x_min, x_max, x_t)
+			var y := _calc_beach_height(x, z)
 
-	# Scattered beach rocks and driftwood
+			st.set_uv(Vector2(x_t * 12.0, z_t * 10.0))
+			st.add_vertex(Vector3(x, y, z))
+
+	for zi in z_steps:
+		for xi in x_steps:
+			var i0 := zi * (x_steps + 1) + xi
+			var i1 := i0 + 1
+			var i2 := (zi + 1) * (x_steps + 1) + xi
+			var i3 := i2 + 1
+			st.add_index(i0)
+			st.add_index(i2)
+			st.add_index(i1)
+
+			st.add_index(i1)
+			st.add_index(i2)
+			st.add_index(i3)
+
+	st.generate_normals()
+	var mesh := st.commit()
+
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = sand_mat
+	beach_holder.add_child(mi)
+
+	var sb := StaticBody3D.new()
+	var col := CollisionShape3D.new()
+	col.shape = mesh.create_trimesh_shape()
+	sb.add_child(col)
+	beach_holder.add_child(sb)
+
+	# Coastal headland rocks on the west (lighthouse flank) and east (quarry flank)
 	var rock_mat := StandardMaterial3D.new()
-	rock_mat.albedo_color = Color(0.52, 0.50, 0.46)
-	rock_mat.roughness = 0.85
+	rock_mat.albedo_color = Color(0.48, 0.46, 0.42)
+	rock_mat.roughness = 0.88
 
 	var beach_rocks: Array[Vector3] = [
-		Vector3(-12.0, 0.2, 116.0), Vector3(18.0, 0.1, 122.0), Vector3(-68.0, 0.15, 128.0),
-		Vector3(32.0, 0.1, 134.0), Vector3(-88.0, 0.3, 120.0), Vector3(-2.0, 0.05, 132.0),
+		Vector3(-14.0, 0.1, 102.0), Vector3(16.0, 0.08, 106.0), Vector3(-68.0, 0.05, 104.0),
+		Vector3(34.0, 0.1, 114.0), Vector3(-88.0, 0.15, 110.0), Vector3(-2.0, 0.05, 112.0),
+		Vector3(-138.0, 0.8, 120.0), Vector3(-144.0, 1.2, 134.0), Vector3(-132.0, 0.5, 148.0),
+		Vector3(42.0, 0.6, 118.0), Vector3(48.0, 0.9, 132.0), Vector3(52.0, 0.7, 146.0),
 	]
 	for r_pos in beach_rocks:
 		var r_node := Node3D.new()
 		r_node.position = r_pos
 		var r_mesh := MeshInstance3D.new()
 		var r_cyl := CylinderMesh.new()
-		r_cyl.top_radius = 0.65 + randf() * 0.5
-		r_cyl.bottom_radius = 0.95 + randf() * 0.6
-		r_cyl.height = 0.7 + randf() * 0.4
+		r_cyl.top_radius = 0.75 + randf() * 0.5
+		r_cyl.bottom_radius = 1.1 + randf() * 0.6
+		r_cyl.height = 0.8 + randf() * 0.5
 		r_mesh.mesh = r_cyl
 		r_mesh.material_override = rock_mat
 		r_node.add_child(r_mesh)
-		var sb := StaticBody3D.new()
-		var col := CollisionShape3D.new()
+		var r_sb := StaticBody3D.new()
+		var r_col := CollisionShape3D.new()
 		var cs := CylinderShape3D.new()
 		cs.radius = r_cyl.bottom_radius
 		cs.height = r_cyl.height
-		col.shape = cs
-		sb.add_child(col)
-		r_node.add_child(sb)
+		r_col.shape = cs
+		r_sb.add_child(r_col)
+		r_node.add_child(r_sb)
 		beach_holder.add_child(r_node)
 
 
@@ -180,21 +245,21 @@ func _build_lighthouse() -> void:
 	copper_mat.metallic = 0.5
 	copper_mat.roughness = 0.4
 
-	# 1. High Rock Promontory / Cliff Base (Y = 0 to 5.2m)
+	# 1. High Rock Promontory / Cliff Base anchored into seabed (Y = -2.0 to 5.2m)
 	var cliff := StaticBody3D.new()
-	cliff.position = LIGHTHOUSE_POS + Vector3(0.0, 2.6, 0.0)
+	cliff.position = LIGHTHOUSE_POS + Vector3(0.0, 1.6, 0.0)
 	var cliff_mesh := MeshInstance3D.new()
 	var c_cyl := CylinderMesh.new()
 	c_cyl.top_radius = 7.5
-	c_cyl.bottom_radius = 9.5
-	c_cyl.height = 5.2
+	c_cyl.bottom_radius = 9.8
+	c_cyl.height = 7.2
 	cliff_mesh.mesh = c_cyl
 	cliff_mesh.material_override = cliff_mat
 	cliff.add_child(cliff_mesh)
 	var c_col := CollisionShape3D.new()
 	var c_shape := CylinderShape3D.new()
-	c_shape.radius = 8.5
-	c_shape.height = 5.2
+	c_shape.radius = 8.6
+	c_shape.height = 7.2
 	c_col.shape = c_shape
 	cliff.add_child(c_col)
 	lh_holder.add_child(cliff)
@@ -321,6 +386,7 @@ func _build_lighthouse() -> void:
 
 	# 5. Glass Lantern Room & Copper Dome Roof (Y = 19.4m to 23.5m)
 	var lantern_room := Node3D.new()
+	lantern_room.name = "LanternRoom"
 	lantern_room.position = LIGHTHOUSE_POS + Vector3(0.0, balc_y + 1.6, 0.0)
 
 	var glass_mat := StandardMaterial3D.new()
@@ -379,7 +445,7 @@ func _build_lighthouse() -> void:
 	lh_holder.add_child(chest)
 
 	# Signpost at cliff base
-	_add_signpost("Φάρος του Ακρωτηρίου  ↑\nΠροσοχή στα Βράχια!", LIGHTHOUSE_POS + Vector3(8.5, 0.1, -2.0), -60.0, lh_holder)
+	_add_signpost("Φάρος του Ακρωτηρίου  ↑\nΠροσοχή στα Βράχια!", LIGHTHOUSE_POS + Vector3(8.5, 0.2, -2.0), -60.0, lh_holder)
 
 
 # =========================================================================
@@ -398,11 +464,12 @@ func _build_pier() -> void:
 	piling_mat.albedo_color = Color(0.28, 0.18, 0.10)
 	piling_mat.roughness = 0.9
 
-	# Main boardwalk extending south into the sea (Length: 22m, Width: 3.4m)
-	var pier_len := 22.0
+	# Boardwalk connects from the dry golden sand (Z=96) out over the water to Z=144
+	# Length: 48m, Width: 3.4m, Deck height: Y = 0.65m
+	var pier_len := 48.0
 	var pier_w := 3.4
 	var pier_deck := StaticBody3D.new()
-	pier_deck.position = PIER_POS + Vector3(0.0, 0.55, pier_len * 0.5)
+	pier_deck.position = PIER_POS + Vector3(0.0, 0.65, pier_len * 0.5)
 
 	var d_mesh := MeshInstance3D.new()
 	var d_box := BoxMesh.new()
@@ -418,44 +485,61 @@ func _build_pier() -> void:
 	pier_deck.add_child(d_col)
 	pier_holder.add_child(pier_deck)
 
-	# Crosshead T-platform at the end of the pier (Width: 8.0m, Depth: 4.2m)
+	# Smooth wooden approach ramp connecting sand to pier deck
+	var ramp := StaticBody3D.new()
+	ramp.position = PIER_POS + Vector3(0.0, 0.33, -2.5)
+	ramp.rotation.x = -atan2(0.62, 5.0)
+	var r_mesh := MeshInstance3D.new()
+	var r_box := BoxMesh.new()
+	r_box.size = Vector3(pier_w, 0.24, 5.2)
+	r_mesh.mesh = r_box
+	r_mesh.material_override = wood_deck
+	ramp.add_child(r_mesh)
+	var r_col := CollisionShape3D.new()
+	var rc_box := BoxShape3D.new()
+	rc_box.size = Vector3(pier_w, 0.24, 5.2)
+	r_col.shape = rc_box
+	ramp.add_child(r_col)
+	pier_holder.add_child(ramp)
+
+	# Crosshead T-platform at the end of the pier (Width: 8.4m, Depth: 4.8m)
 	var t_deck := StaticBody3D.new()
-	t_deck.position = PIER_POS + Vector3(0.0, 0.55, pier_len + 1.8)
+	t_deck.position = PIER_POS + Vector3(0.0, 0.65, pier_len + 2.2)
 	var t_mesh := MeshInstance3D.new()
 	var t_box := BoxMesh.new()
-	t_box.size = Vector3(8.0, 0.28, 4.2)
+	t_box.size = Vector3(8.4, 0.28, 4.8)
 	t_mesh.mesh = t_box
 	t_mesh.material_override = wood_deck
 	t_deck.add_child(t_mesh)
 	var t_col := CollisionShape3D.new()
 	var tc_box := BoxShape3D.new()
-	tc_box.size = Vector3(8.0, 0.28, 4.2)
+	tc_box.size = Vector3(8.4, 0.28, 4.8)
 	t_col.shape = tc_box
 	t_deck.add_child(t_col)
 	pier_holder.add_child(t_deck)
 
-	# Timber Pilings driven into seabed
-	for z_off in range(3, int(pier_len) + 4, 4):
+	# Timber Pilings driven into seabed (from Y = -1.8 up to pier deck)
+	for z_off in range(4, int(pier_len) + 5, 4):
 		for x_off: float in [-pier_w * 0.45, pier_w * 0.45]:
 			var pile := MeshInstance3D.new()
 			var pc := CylinderMesh.new()
 			pc.top_radius = 0.16
 			pc.bottom_radius = 0.18
-			pc.height = 3.6
+			pc.height = 3.2
 			pile.mesh = pc
 			pile.position = PIER_POS + Vector3(x_off, -0.6, float(z_off))
 			pile.material_override = piling_mat
 			pier_holder.add_child(pile)
 
 	# Pier Lanterns on wooden posts
-	var lantern_zs: Array[float] = [6.0, pier_len + 1.5]
+	var lantern_zs: Array[float] = [12.0, pier_len + 2.0]
 	for lz: float in lantern_zs:
-		var lp: Vector3 = PIER_POS + Vector3(-pier_w * 0.45 - 0.2, 0.6, lz)
+		var lp: Vector3 = PIER_POS + Vector3(-pier_w * 0.45 - 0.2, 0.7, lz)
 		var _lantern_post = _place_prop("res://assets/graveyard/post_lantern.gltf", lp, 90.0, 1.2, pier_holder)
 
 	# Moored Wooden Boat beside the pier
 	var boat := Node3D.new()
-	boat.position = PIER_POS + Vector3(2.8, -0.15, 12.0)
+	boat.position = PIER_POS + Vector3(2.8, -0.15, 26.0)
 	boat.rotation_degrees = Vector3(3.0, -10.0, -4.0)
 	var b_hull := MeshInstance3D.new()
 	var b_box := BoxMesh.new()
@@ -466,7 +550,7 @@ func _build_pier() -> void:
 	pier_holder.add_child(boat)
 
 	# Fishing spot interaction sign on pier head
-	_add_signpost("Ψαρολίμανο Αγίου Βλάση  ⚓\nΑποβάθρα Ψαρέματος", PIER_POS + Vector3(2.4, 0.65, 1.5), 180.0, pier_holder)
+	_add_signpost("Ψαρολίμανο Αγίου Βλάση  ⚓\nΑποβάθρα Ψαρέματος", PIER_POS + Vector3(2.4, 0.75, 6.0), 180.0, pier_holder)
 
 
 # =========================================================================
@@ -481,10 +565,10 @@ func _build_shipwreck() -> void:
 	wood_old.albedo_color = Color(0.24, 0.20, 0.16)   # waterlogged weathered oak
 	wood_old.roughness = 0.95
 
-	# Ship Hull listing 22 degrees in the azure bay
+	# Ship Hull resting on seabed (Y = -1.8) and listing 20 degrees in the azure bay
 	var hull := StaticBody3D.new()
 	hull.position = SHIPWRECK_POS
-	hull.rotation_degrees = Vector3(12.0, 35.0, -22.0)
+	hull.rotation_degrees = Vector3(10.0, 32.0, -20.0)
 
 	var h_mesh := MeshInstance3D.new()
 	var h_box := BoxMesh.new()
@@ -507,18 +591,18 @@ func _build_shipwreck() -> void:
 	m_cyl.bottom_radius = 0.28
 	m_cyl.height = 7.5
 	mast.mesh = m_cyl
-	mast.position = SHIPWRECK_POS + Vector3(0.8, 2.8, -1.0)
+	mast.position = SHIPWRECK_POS + Vector3(0.8, 3.2, -1.0)
 	mast.rotation_degrees = Vector3(25.0, 15.0, -35.0)
 	mast.material_override = wood_old
 	wreck_holder.add_child(mast)
 
-	# Sunken Treasure Chest resting on the tilted deck!
+	# Sunken Treasure Chest resting on the tilted deck above water!
 	var wreck_chest = Chest.new()
 	wreck_chest.golden = true
 	wreck_chest.gold_min = 350
 	wreck_chest.gold_max = 600
 	wreck_chest.potions = 3
-	wreck_chest.position = SHIPWRECK_POS + Vector3(0.5, 0.8, 1.2)
+	wreck_chest.position = SHIPWRECK_POS + Vector3(0.5, 1.2, 1.2)
 	wreck_chest.rotation_degrees.y = 45.0
 	wreck_holder.add_child(wreck_chest)
 

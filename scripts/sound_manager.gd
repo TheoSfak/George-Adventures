@@ -20,7 +20,7 @@ const VOICE_DUCK_DOWN := 0.25         # seconds to sink
 const VOICE_DUCK_UP := 0.5            # seconds to come back
 const CRYPT := Vector2(0.0, -178.0)
 const CAMP := Vector2(-175.0, 20.0)
-const POND := Vector2(-70.0, 108.0)
+const POND := Vector2(-70.0, 65.0)
 
 # minimum seconds between two plays of the same sound (keeps rapid events from stacking)
 const MIN_GAP := {

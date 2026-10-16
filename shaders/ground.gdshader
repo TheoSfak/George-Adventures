@@ -8,6 +8,7 @@ uniform vec3 grass_mid : source_color = vec3(0.34, 0.56, 0.21);
 uniform vec3 grass_dark : source_color = vec3(0.23, 0.42, 0.17);
 uniform vec3 dry_grass : source_color = vec3(0.66, 0.63, 0.32);
 uniform float darken = 1.0;
+uniform bool clip_south_sea = false;
 global uniform float wetness;            // 0 dry .. 1 soaked (set by Weather); darkens the ground
 
 uniform vec2 world_offset = vec2(0.0);   // far-away regions (the Frontier) subtract their origin: float noise breaks at thousands of metres
@@ -43,6 +44,11 @@ void vertex() {
 }
 
 void fragment() {
+	if (clip_south_sea && world_offset == vec2(0.0)) {
+		if ((wpos.z >= 86.0 && wpos.x >= -165.0 && wpos.x <= 55.0) || wpos.z >= 220.0) {
+			discard;
+		}
+	}
 	vec2 p = wpos.xz;
 	float large = fbm(p * 0.016);
 	float mid = fbm(p * 0.085 + 11.0);

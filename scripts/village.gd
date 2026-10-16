@@ -63,7 +63,7 @@ const BUILDING_PROPS := {
 
 # [quest item id, x, z]   (see quest_data.gd; they only appear while their quest is active)
 const QUEST_ITEMS := [
-	["keg", -30.0, -142.0], ["keg", 124.0, -26.0], ["keg", 26.0, 152.0], ["keg", -122.0, 111.0],
+	["keg", -30.0, -142.0], ["keg", 124.0, -26.0], ["keg", 26.0, 78.0], ["keg", -122.0, 74.0],
 	["key", -176.0, 24.0],
 	# flour sacks scattered around the windmill, logs around the lumber mill
 	["sack", -113.0, -41.0], ["sack", -87.0, -67.0], ["sack", -121.0, -63.0], ["sack", -96.0, -33.0], ["sack", -109.0, -81.0],
@@ -81,7 +81,7 @@ const CHESTS := [
 	[-133.0, -76.0, 40, false, 10, 25, 0],     # behind the windmill
 	[134.0, -78.0, 150, false, 12, 28, 1],     # beside the watchtower
 	[92.0, 120.0, 250, false, 8, 20, 0],       # south-east farm track
-	[-100.0, 130.0, 0, false, 10, 24, 1],      # south-west pines
+	[-100.0, 76.0, 0, false, 10, 24, 1],       # south-west meadow edge
 	[-135.0, -95.0, 30, true, 150, 250, 2],    # the bandits' hideout (BanditCamp.CHEST)
 	[CultSite.CHEST.x, CultSite.CHEST.y, 200, true, 120, 200, 2],   # the cult's ritual circle
 	[-30.0, -135.0, 200, false, 10, 20, 0, true],   # a mimic by the road to the crypt
@@ -217,15 +217,35 @@ func _build_ground() -> void:
 	_terrain.setup(seed_value)
 	_terrain.build_ground(Vector2(HEX_W * (radius + 1.0), ROW_H * (radius + 1.0)))
 
-	# One big invisible floor so George never falls anywhere.
+	# Split ground colliders: keep the world solid everywhere EXCEPT the south sea bay opening!
+	# The south sea bay (X in [-165, 55], Z >= 86) has its own sloped beach and seabed colliders in IslandSouthSea.
 	var body := StaticBody3D.new()
 	body.name = "GroundCollider"
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(HEX_W * (radius * 2 + 2), 2.0, ROW_H * (radius * 2 + 2))
-	shape.shape = box
-	shape.position = Vector3(0.0, -1.0, 0.0)
-	body.add_child(shape)
+
+	# 1. Main North & Central land mass (Z from -260 to +86)
+	var shape_main := CollisionShape3D.new()
+	var box_main := BoxShape3D.new()
+	box_main.size = Vector3(HEX_W * (radius * 2 + 2), 2.0, 346.0)
+	shape_main.shape = box_main
+	shape_main.position = Vector3(0.0, -1.0, -87.0)
+	body.add_child(shape_main)
+
+	# 2. South-East land mass (Quarry sector: X from 55 to 270, Z from 86 to 260)
+	var shape_se := CollisionShape3D.new()
+	var box_se := BoxShape3D.new()
+	box_se.size = Vector3(215.0, 2.0, 174.0)
+	shape_se.shape = box_se
+	shape_se.position = Vector3(162.5, -1.0, 173.0)
+	body.add_child(shape_se)
+
+	# 3. South-West land mass (Mountain sector: X from -270 to -165, Z from 86 to 260)
+	var shape_sw := CollisionShape3D.new()
+	var box_sw := BoxShape3D.new()
+	box_sw.size = Vector3(105.0, 2.0, 174.0)
+	shape_sw.shape = box_sw
+	shape_sw.position = Vector3(-217.5, -1.0, 173.0)
+	body.add_child(shape_sw)
+
 	add_child(body)
 
 	# Ground patches: cobbled village square and the three story areas.
@@ -245,7 +265,7 @@ func _build_border() -> void:
 		var d := _hex_dist(h.x, h.y)
 		var pos := _hex_to_world(h.x, h.y)
 		# Skip south border mountains/forests so the coast opens up to the sea!
-		if pos.z > 95.0 and pos.x >= -145.0 and pos.x <= 45.0:
+		if pos.z > 86.0 and pos.x >= -165.0 and pos.x <= 55.0:
 			continue
 		if d == radius:
 			var model: String = BORDER[_rng.randi() % BORDER.size()]
@@ -266,8 +286,8 @@ func _build_rolling_hills() -> void:
 	var hill_data: Array[Dictionary] = [
 		{"model": "decoration/nature/hills_A.gltf", "pos": Vector3(-118.0, 0.0, -18.0), "rot": 45.0, "scale": 11.0},
 		{"model": "decoration/nature/hill_single_A.gltf", "pos": Vector3(-88.0, 0.0, 6.0), "rot": 120.0, "scale": 9.0},
-		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-18.0, 0.0, 84.0), "rot": 20.0, "scale": 10.5},
-		{"model": "decoration/nature/hill_single_B.gltf", "pos": Vector3(32.0, 0.0, 88.0), "rot": 210.0, "scale": 8.5},
+		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-18.0, 0.0, 72.0), "rot": 20.0, "scale": 10.5},
+		{"model": "decoration/nature/hill_single_B.gltf", "pos": Vector3(32.0, 0.0, 74.0), "rot": 210.0, "scale": 8.5},
 		{"model": "decoration/nature/hills_C.gltf", "pos": Vector3(88.0, 0.0, 74.0), "rot": 85.0, "scale": 10.0},
 		{"model": "decoration/nature/hill_single_C.gltf", "pos": Vector3(105.0, 0.0, 8.0), "rot": 160.0, "scale": 8.0},
 	]
@@ -1170,7 +1190,7 @@ func _build_terrain_details() -> void:
 		_terrain.add_garden(Vector2(c.x, c.z), float(h[1]), Vector2(9.0, 7.0))
 		_occupy(c.x, c.z, 8.0)
 	# A pond with a ring of stones in the south-west meadow.
-	var pond := Vector2(-70.0, 108.0)
+	var pond := Vector2(-70.0, 65.0)
 	_terrain.add_pond(pond, 11.0)
 	_occupy(pond.x, pond.y, 17.0)
 	var rocks := Node3D.new()
@@ -1234,8 +1254,12 @@ func _build_dock(pond: Vector2, radius: float) -> void:
 	_occupy(shore.x, shore.z, 6.0)
 
 
+func _is_in_sea(pos: Vector2) -> bool:
+	return pos.y >= 86.0 and pos.x >= -165.0 and pos.x <= 55.0
+
+
 func _finish_terrain() -> void:
-	var blocked := func(p: Vector2) -> bool: return _outside_map(p) or _is_occupied(p.x, p.y, 0.7)
+	var blocked := func(p: Vector2) -> bool: return _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 0.7)
 	_terrain.scatter_path_flowers(blocked)
 	_terrain.scatter_meadow((radius - 2.2) * ROW_H, blocked)
 	_terrain.flush_plants()
@@ -1252,11 +1276,13 @@ func _build_scatter() -> void:
 	while groves < 22 and tries < 400:
 		tries += 1
 		var c := Vector2(_rng.randf_range(-reach, reach), _rng.randf_range(-reach, reach))
-		if _outside_map(c) or _is_occupied(c.x, c.y, 18.0):
+		if _outside_map(c) or _is_in_sea(c) or _is_occupied(c.x, c.y, 18.0):
 			continue
 		groves += 1
 		for i in _rng.randi_range(10, 22):
 			var p := c + Vector2(_rng.randfn(0.0, 14.0), _rng.randfn(0.0, 14.0))
+			if _is_in_sea(p):
+				continue
 			_try_tree(p, holder)
 	# Lone trees and rocks
 	var singles := 0
@@ -1265,7 +1291,7 @@ func _build_scatter() -> void:
 	while (singles < 90 or rocks < 90) and tries < 4000:
 		tries += 1
 		var p := Vector2(_rng.randf_range(-reach, reach), _rng.randf_range(-reach, reach))
-		if _outside_map(p):
+		if _outside_map(p) or _is_in_sea(p):
 			continue
 		if singles < 90 and _rng.randf() < 0.55:
 			if _try_tree(p, holder):
@@ -1280,7 +1306,7 @@ func _build_scatter() -> void:
 
 
 func _try_tree(p: Vector2, holder: Node3D) -> bool:
-	if _outside_map(p) or _is_occupied(p.x, p.y, 2.0) or _terrain.near_path(p, 3.0):
+	if _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 2.0) or _terrain.near_path(p, 3.0):
 		return false
 	var scale := TS * _rng.randf_range(0.85, 1.3)
 	var node := _place(TREES[_rng.randi() % TREES.size()], Vector3(p.x, 0, p.y),

@@ -51,14 +51,14 @@ func _run() -> void:
 	cam.make_current()
 
 	# 1. Lighthouse & Beach Promontory
-	# Lighthouse at (-115, 0, 138), height ~23m
-	_look(cam, Vector3(-115.0, 9.0, 138.0), Vector3(-88.0, 8.5, 105.0))
+	# Standing on golden sand looking southwest across the bay at the cliff lighthouse
+	_look(cam, Vector3(-115.0, 7.5, 138.0), Vector3(-72.0, 3.6, 98.0))
 	await create_timer(0.8).timeout
 	await shot("island_sea_lighthouse")
 
 	# 2. Fishing Pier & Sunken Shipwreck
-	# Pier at (-35, 0, 126), Shipwreck at (-72, 0, 168)
-	_look(cam, Vector3(-45.0, 1.2, 145.0), Vector3(-35.0, 3.8, 116.0))
+	# Standing at the foot of the pier looking south across the bay and sunken shipwreck
+	_look(cam, Vector3(-45.0, 1.2, 142.0), Vector3(-35.0, 2.4, 92.0))
 	await create_timer(0.8).timeout
 	await shot("island_pier_shipwreck")
 

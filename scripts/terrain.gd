@@ -74,6 +74,8 @@ func build_ground(half_extent: Vector2) -> void:
 	# A huge, slightly darker plane so the world fades into the distance instead of the sky.
 	var far_mat := _ground_mat.duplicate() as ShaderMaterial
 	far_mat.set_shader_parameter("darken", 0.82)
+	_ground_mat.set_shader_parameter("clip_south_sea", true)
+	far_mat.set_shader_parameter("clip_south_sea", true)
 	var far := MeshInstance3D.new()
 	var fm := PlaneMesh.new()
 	fm.size = Vector2(7000.0, 7000.0)

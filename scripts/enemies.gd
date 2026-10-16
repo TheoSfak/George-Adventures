@@ -493,11 +493,11 @@ const SPAWNS := [
 	# --- around the stolen wine barrels (quest "Τα Κλεμμένα Βαρέλια")
 	["minion", -38.0, -138.0], ["minion", -22.0, -146.0],
 	["minion", 112.0, -22.0], ["warrior", 110.0, -38.0],
-	["minion", 18.0, 148.0], ["warrior", 34.0, 156.0],
-	["warrior", -128.0, 104.0], ["minion", -116.0, 118.0],
+	["minion", 18.0, 78.0], ["warrior", 34.0, 80.0],
+	["warrior", -128.0, 76.0], ["minion", -116.0, 74.0],
 	# --- wandering around the village outskirts
 	["minion", 80.0, -112.0], ["warrior", 62.0, -126.0],
-	["minion", -82.0, 118.0], ["minion", 96.0, 104.0],
+	["minion", -82.0, 75.0], ["minion", 96.0, 104.0],
 	["warrior", -60.0, -110.0], ["minion", 150.0, 60.0],
 	["minion", -150.0, -40.0],
 	# --- the skeleton camp in the west (quest "Το Χαμένο Κλειδί")
@@ -509,7 +509,7 @@ const SPAWNS := [
 	# --- new mobs: archers hunt in the west and on the outskirts, brutes guard the quarry, mages haunt the crypt
 	["rogue", -150.0, 36.0], ["rogue", -190.0, 40.0], ["rogue", -176.0, -14.0], ["rogue", -140.0, 4.0],
 	["rogue", 70.0, -138.0], ["rogue", 112.0, 80.0], ["rogue", -96.0, -112.0],
-	["brute", 132.0, 100.0], ["brute", 162.0, 124.0], ["brute", 60.0, 150.0], ["brute", -126.0, 136.0],
+	["brute", 132.0, 100.0], ["brute", 162.0, 124.0], ["brute", 68.0, 84.0], ["brute", -126.0, 75.0],
 	["mage", 148.0, 146.0], ["mage", -34.0, -158.0], ["mage", 34.0, -158.0], ["mage", -34.0, -198.0], ["mage", 34.0, -198.0],
 	["mage", -168.0, 22.0], ["mage", 100.0, -150.0],
 	# --- the old crypt in the north (quest "Ο Βασιλιάς των Οστών")
@@ -521,7 +521,7 @@ const SPAWNS := [
 	["bandit_thug", -148.0, -88.0], ["bandit_thug", -132.0, -87.0], ["bandit_thug", -140.0, -81.0],
 	["bandit_archer", -149.0, -95.0], ["bandit_archer", -131.0, -96.0], ["bandit_thief", -136.0, -84.0],
 	["bandit_thug", 140.0, 10.0], ["bandit_archer", 143.0, 12.0],
-	["bandit_thug", -20.0, 170.0], ["bandit_archer", -17.0, 172.0],
+	["bandit_thug", -20.0, 76.0], ["bandit_archer", -17.0, 78.0],
 	["bandit_thug", 60.0, -160.0], ["bandit_archer", 63.0, -158.0],
 	# --- creatures made from props: a pumpkin patch beside the crypt road, haunted trees at the graveyard, boulders that
 	# stand up in the quarry, heaps of bones in the west and on the way to the bandits
@@ -533,10 +533,10 @@ const SPAWNS := [
 	["cult_priest", -80.0, -147.0],
 	["cultist", -87.0, -135.0], ["cultist", -73.0, -135.0], ["cultist", -90.0, -143.0], ["cultist", -70.0, -144.0], ["cultist", -80.0, -130.0],
 	# --- new roamers: Dark Knights, Witches, Thieves, Raiders, Cursed Coffins
-	["dark_knight", -110.0, 150.0], ["dark_knight", 130.0, -120.0],
+	["dark_knight", -110.0, 72.0], ["dark_knight", 130.0, -120.0],
 	["witch", -45.0, -180.0], ["witch", 45.0, -180.0],
 	["thief", -60.0, 40.0], ["thief", 80.0, 20.0],
-	["raider", -70.0, 140.0], ["raider", 90.0, 130.0],
+	["raider", -70.0, 74.0], ["raider", 90.0, 130.0],
 	["cursed_coffin", -50.0, -195.0], ["cursed_coffin", 50.0, -195.0],
 	# --- Cursed Scarecrows haunting the wheat fields and farm tracks
 	["cursed_scarecrow", -114.0, -48.0], ["cursed_scarecrow", -86.0, -62.0], ["cursed_scarecrow", -102.0, -74.0], ["cursed_scarecrow", 86.0, 112.0],
