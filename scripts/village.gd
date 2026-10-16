@@ -369,7 +369,11 @@ func _build_village() -> void:
 			var npc := Npc.new()
 			npc.npc_id = b[5]
 			npc.rest_yaw = heading
-			npc.position = door_front + right * 5.5 + forward * 0.5
+			# For Maria (tavern, index 1), stand on the front terrace porch clear of parkour stairs
+			if i == 1:
+				npc.position = door_front + right * 2.8 + forward * 1.5
+			else:
+				npc.position = door_front + right * 5.5 + forward * 0.5
 			npcs.add_child(npc)
 	_occupy(0, 0, 22)
 # ---------------------------------------------------------------- villagers ----
@@ -586,13 +590,13 @@ func _build_quarry() -> void:
 	_place_abs(ITEMS + "banner_red.gltf.glb", Vector3(QUARRY.x - 5.0, 0, QUARRY.y + 6.0), 0.0, 2.6, holder)
 	_place_abs(ITEMS + "banner_red.gltf.glb", Vector3(QUARRY.x + 5.0, 0, QUARRY.y + 6.0), 0.0, 2.6, holder)
 
-	# Mine excavation entrance, scaffolding and extraction platform
+	# Mine excavation entrance, scaffolding and extraction platform (trimesh colliders allow walking into mine shaft and onto stage)
 	var mine := _place("buildings/blue/building_mine_blue.gltf", Vector3(QUARRY.x + 8.0, 0.0, QUARRY.y + 14.0), -45.0, BS * 1.15, holder)
-	_add_box_collider(mine)
+	_add_trimesh_collider(mine)
 	var scaffold := _place("buildings/neutral/building_scaffolding.gltf", Vector3(QUARRY.x - 2.0, 0.0, QUARRY.y + 16.0), 15.0, BS * 0.95, holder)
-	_add_box_collider(scaffold)
+	_add_trimesh_collider(scaffold)
 	var stage := _place("buildings/neutral/building_stage_B.gltf", Vector3(QUARRY.x + 3.0, 0.0, QUARRY.y - 12.0), 30.0, BS * 0.9, holder)
-	_add_box_collider(stage)
+	_add_trimesh_collider(stage)
 
 	_occupy(QUARRY.x, QUARRY.y, 42)
 
@@ -604,8 +608,9 @@ func _build_lumbermill() -> void:
 	add_child(holder)
 
 	var center := Vector3(95.0, 0.0, 38.0)
-	var mill := _place("buildings/blue/building_lumbermill_blue.gltf", center, 25.0, BS * 1.05, holder)
-	_add_box_collider(mill)
+	# Covered timber seasoning and storage shelter next to Giannis's mill
+	var shed := _place("buildings/neutral/building_scaffolding.gltf", center + Vector3(-8.5, 0.0, -4.0), 25.0, BS * 0.9, holder)
+	_add_trimesh_collider(shed)
 
 	# Timber logs, cut tree stumps, stacks of wood
 	var props: Array = [
@@ -633,17 +638,17 @@ func _build_ruined_outpost() -> void:
 
 	var center := Vector3(150.0, 0.0, 68.0)
 
-	# Ruined keep / fortress
+	# Ruined keep / fortress (trimesh collider allows walking through ruined arches and courtyard!)
 	var destroyed := _place("buildings/neutral/building_destroyed.gltf", center, 45.0, BS * 1.2, holder)
-	_add_box_collider(destroyed)
+	_add_trimesh_collider(destroyed)
 
-	# Fortification walls & gates
+	# Fortification walls & gates (gate and walls use trimesh collider so gateway arch and corridors are open!)
 	var wall1 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(-8.0, 0.0, -4.0), 20.0, BS * 1.0, holder)
-	_add_box_collider(wall1)
+	_add_trimesh_collider(wall1)
 	var wall2 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(8.0, 0.0, 4.0), 20.0, BS * 1.0, holder)
-	_add_box_collider(wall2)
+	_add_trimesh_collider(wall2)
 	var gate := _place("buildings/neutral/wall_corner_A_gate.gltf", center + Vector3(-12.0, 0.0, 6.0), -60.0, BS * 1.0, holder)
-	_add_box_collider(gate)
+	_add_trimesh_collider(gate)
 
 	# Siege weapon & war banners
 	var catapult := _place("buildings/neutral/projectile_catapult.gltf", center + Vector3(-5.0, 0.0, 11.0), -120.0, BS * 0.9, holder)
@@ -719,10 +724,10 @@ func _build_archery_grounds() -> void:
 
 	# Main buildings: Archery range and Barracks
 	var range_bldg := _place("buildings/blue/building_archeryrange_blue.gltf", center + Vector3(-7.0, 0.0, 0.0), 0.0, BS * 1.0, holder)
-	_add_box_collider(range_bldg)
+	_add_trimesh_collider(range_bldg)
 
 	var barracks := _place("buildings/blue/building_barracks_blue.gltf", center + Vector3(8.0, 0.0, 2.0), -15.0, BS * 1.05, holder)
-	_add_box_collider(barracks)
+	_add_trimesh_collider(barracks)
 
 	# Archery targets
 	var targets: Array[Vector3] = [
@@ -747,11 +752,11 @@ func _build_archery_grounds() -> void:
 		var node := _place(p[0], p[1], p[2], PS * p[3], holder)
 		_add_box_collider(node, 0.7)
 
-	# Dimitris the Archer NPC
+	# Dimitris the Archer NPC: stands welcoming in the open entrance avenue
 	var dimitris := Npc.new()
 	dimitris.npc_id = "dimitris"
 	dimitris.rest_yaw = deg_to_rad(180.0)
-	dimitris.position = center + Vector3(-6.0, 0.0, -2.5)
+	dimitris.position = center + Vector3(-8.0, 0.0, 12.0)
 	var npcs := get_node_or_null("Npcs")
 	(npcs if npcs else holder).add_child(dimitris)
 
@@ -1759,3 +1764,12 @@ func _add_cylinder_collider(root: Node3D, r: float, h: float, offset: Vector3) -
 	shape.position = offset + Vector3(0, h / 2.0, 0)
 	body.add_child(shape)
 	root.add_child(body)
+
+
+## Adds exact concave polygon colliders for structures with open archways, ruins, and walkthrough openings.
+func _add_trimesh_collider(root: Node3D) -> void:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var mesh_inst := mi as MeshInstance3D
+		if mesh_inst and mesh_inst.mesh:
+			mesh_inst.create_trimesh_collision()
+

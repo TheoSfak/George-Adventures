@@ -18,18 +18,18 @@ func _ready() -> void:
 	var scene := load("res://assets/animals/Cow.glb") as PackedScene
 	if scene:
 		_model = scene.instantiate() as Node3D
-		_model.scale = Vector3.ONE * 1.35
+		_model.scale = Vector3.ONE * 0.30
 		add_child(_model)
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		if _anim:
 			_anim.play("AnimalArmature|Idle")
 
-	# Add physical collider
+	# Add physical collider matching resized cow
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.2, 1.5, 2.2)
+	box.size = Vector3(0.7, 1.4, 2.2)
 	col.shape = box
-	col.position = Vector3(0.0, 0.75, 0.0)
+	col.position = Vector3(0.0, 0.7, 0.0)
 	add_child(col)
 
 
@@ -44,7 +44,16 @@ func _physics_process(delta: float) -> void:
 				_anim.play(anim_name, 0.4)
 
 
+func interact_range() -> float:
+	return 2.6
+
+
+func interact_prompt() -> String:
+	return "Χάιδεψε την αγελάδα"
+
+
 func interact(player: Player) -> void:
 	if player:
 		player.message.emit("Η αγελάδα μασάει νωχελικά το γρασίδι και σε κοιτάζει ήρεμα.")
 		Sfx.play("dog_whimper", global_position, -3.0, 0.6)  # gentle low friendly sound
+
