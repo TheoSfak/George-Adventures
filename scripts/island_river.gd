@@ -29,6 +29,7 @@ func _ready() -> void:
 	_build_river_channel()
 	_build_bridges()
 	_build_secret_cave()
+	_build_river_flora()
 
 
 # =========================================================================
@@ -213,6 +214,50 @@ func _build_bridges() -> void:
 	# Directional signposts by the bridges
 	_add_signpost("Πέτρινο Γεφύρι  ←\nΠρος το Χωριό", BRIDGE_1_POS + Vector3(4.5, 0.1, -4.5), -45.0, bridge_holder)
 	_add_signpost("Γέφυρα του Αιωνόβιου  →\nΠρος τη Μεγάλη Λίμνη", BRIDGE_2_POS + Vector3(-4.5, 0.1, -4.5), 45.0, bridge_holder)
+
+
+# =========================================================================
+# 5. RIVER FLORA: WATERLILIES & REEDS
+# =========================================================================
+func _build_river_flora() -> void:
+	var flora_holder := Node3D.new()
+	flora_holder.name = "RiverFlora"
+	add_child(flora_holder)
+
+	# Waterlilies floating on calm pools and bends
+	var waterlilies: Array[Dictionary] = [
+		{"model": "waterlily_A.gltf", "pos": WATERFALL_POS + Vector3(-2.2, 0.08, 4.2), "rot": 40.0, "sc": 1.4},
+		{"model": "waterlily_B.gltf", "pos": WATERFALL_POS + Vector3(2.5, 0.08, 5.0), "rot": -70.0, "sc": 1.5},
+		{"model": "waterlily_A.gltf", "pos": WATERFALL_POS + Vector3(0.5, 0.08, 6.8), "rot": 110.0, "sc": 1.3},
+		{"model": "waterlily_B.gltf", "pos": Vector3(56.5, 0.08, -104.0), "rot": 25.0, "sc": 1.4},
+		{"model": "waterlily_A.gltf", "pos": Vector3(64.0, 0.08, -78.0), "rot": -45.0, "sc": 1.5},
+		{"model": "waterlily_B.gltf", "pos": Vector3(73.5, 0.08, -58.0), "rot": 80.0, "sc": 1.6},
+		{"model": "waterlily_A.gltf", "pos": Vector3(88.0, 0.08, -42.0), "rot": -15.0, "sc": 1.5},
+		{"model": "waterlily_B.gltf", "pos": Vector3(104.0, 0.08, -28.0), "rot": 60.0, "sc": 1.4},
+		{"model": "waterlily_A.gltf", "pos": Vector3(122.0, 0.08, -21.0), "rot": -100.0, "sc": 1.6},
+		{"model": "waterlily_B.gltf", "pos": Vector3(138.0, 0.08, -25.5), "rot": 45.0, "sc": 1.7},
+		{"model": "waterlily_A.gltf", "pos": Vector3(143.0, 0.08, -30.0), "rot": -130.0, "sc": 1.6},
+	]
+	for wl in waterlilies:
+		_place_model("decoration/nature/" + wl["model"], wl["pos"], wl["rot"], wl["sc"], flora_holder)
+
+	# Tall reeds and waterplants along riverbanks and bridge footings
+	var reeds: Array[Dictionary] = [
+		{"model": "waterplant_A.gltf", "pos": WATERFALL_POS + Vector3(-5.2, 0.08, 3.0), "rot": 15.0, "sc": 1.4},
+		{"model": "waterplant_C.gltf", "pos": WATERFALL_POS + Vector3(5.4, 0.08, 3.5), "rot": -40.0, "sc": 1.6},
+		{"model": "waterplant_B.gltf", "pos": Vector3(51.0, 0.08, -114.0), "rot": 65.0, "sc": 1.5},
+		{"model": "waterplant_A.gltf", "pos": Vector3(58.0, 0.08, -98.0), "rot": -80.0, "sc": 1.4},
+		{"model": "waterplant_C.gltf", "pos": Vector3(66.5, 0.08, -70.0), "rot": 30.0, "sc": 1.6},
+		{"model": "waterplant_B.gltf", "pos": Vector3(74.0, 0.08, -62.0), "rot": -120.0, "sc": 1.5},
+		{"model": "waterplant_A.gltf", "pos": Vector3(81.0, 0.08, -51.0), "rot": 45.0, "sc": 1.3},
+		{"model": "waterplant_C.gltf", "pos": Vector3(92.0, 0.08, -39.0), "rot": -35.0, "sc": 1.7},
+		{"model": "waterplant_B.gltf", "pos": Vector3(110.5, 0.08, -26.0), "rot": 95.0, "sc": 1.5},
+		{"model": "waterplant_A.gltf", "pos": Vector3(118.0, 0.08, -18.0), "rot": -75.0, "sc": 1.4},
+		{"model": "waterplant_C.gltf", "pos": Vector3(134.0, 0.08, -21.0), "rot": 20.0, "sc": 1.8},
+		{"model": "waterplant_B.gltf", "pos": Vector3(146.5, 0.08, -34.0), "rot": -110.0, "sc": 1.6},
+	]
+	for rd in reeds:
+		_place_model("decoration/nature/" + rd["model"], rd["pos"], rd["rot"], rd["sc"], flora_holder)
 
 
 # --- Helpers ---

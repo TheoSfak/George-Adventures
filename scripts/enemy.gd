@@ -17,6 +17,10 @@ signal died(enemy: Enemy)
 @export var human := false            # a person (bandit) instead of a skeleton: other sounds, only `show_nodes` props visible
 @export var show_nodes: Array = []                               # props of an Adventurers model that stay visible (CharacterProps)
 @export var walk_anim := "Walking_D_Skeletons"                    # humans walk with "Walking_A"
+@export var idle_anim := "Idle"
+@export var run_anim := "Running_A"
+@export var hit_anim := ""
+@export var death_anim := ""
 @export_group("Props")                # creatures made from props (no skeleton, no AnimationPlayer): body language in static_rig.gd
 @export var static_mob := false
 @export var parts: Array = []         # [{"path", "pos", "scale", "yaw"}] built under the model root when model_path is ""
@@ -84,6 +88,9 @@ const SOUND_SETS := {
 	"squish": {"skel_attack": "squish_hit", "skel_hurt": "squish_hit", "skel_death": "squish_death", "skel_aggro": "skel_aggro"},
 	"mimic": {"skel_attack": "mimic_snap", "skel_hurt": "wood_hit", "skel_death": "wood_death", "skel_aggro": "mimic_snap"},
 	"scarecrow": {"skel_attack": "wood_hit", "skel_hurt": "scarecrow_groan", "skel_death": "wood_death", "skel_aggro": "scarecrow_groan"},
+	"orc": {"skel_attack": "sword_swing", "skel_hurt": "boss_roar", "skel_death": "brute_roar", "skel_aggro": "brute_roar"},
+	"wolf": {"skel_attack": "dog_bark", "skel_hurt": "dog_whimper", "skel_death": "dog_whimper", "skel_aggro": "dog_bark"},
+	"spider": {"skel_attack": "squish_hit", "skel_hurt": "squish_hit", "skel_death": "squish_death", "skel_aggro": "mimic_snap"},
 }
 
 @onready var _model_root: Node3D = $Model
@@ -763,11 +770,27 @@ func _face(direction: Vector3, delta: float) -> void:
 
 
 func _play(anim_name: String, blend: float = 0.15, restart: bool = false) -> void:
-	if _anim == null or not _anim.has_animation(anim_name):
+	if _anim == null:
 		return
-	if not restart and _anim.current_animation == anim_name and _anim.is_playing():
+	var resolved := anim_name
+	if not _anim.has_animation(resolved):
+		if anim_name == "Idle" and idle_anim != "":
+			resolved = idle_anim
+		elif anim_name == "Running_A" and run_anim != "":
+			resolved = run_anim
+		elif (anim_name == "Walking_D_Skeletons" or anim_name == "Walking_A") and walk_anim != "":
+			resolved = walk_anim
+		elif (anim_name == "Death_A" or anim_name == "Death_B") and death_anim != "":
+			resolved = death_anim
+		elif anim_name in HITS and hit_anim != "":
+			resolved = hit_anim
+		elif anim_name in ATTACKS and attack_anim != "":
+			resolved = attack_anim
+	if not _anim.has_animation(resolved):
 		return
-	_anim.play(anim_name, blend)
+	if not restart and _anim.current_animation == resolved and _anim.is_playing():
+		return
+	_anim.play(resolved, blend)
 
 
 func _on_animation_finished(anim_name: StringName) -> void:

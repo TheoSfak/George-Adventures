@@ -151,6 +151,10 @@ func _ready() -> void:
 	add_child(parkour)
 	_build_camp()
 	_build_quarry()
+	_build_lumbermill()
+	_build_ruined_outpost()
+	_build_golden_grove()
+	_build_archery_grounds()
 	_build_crypt()
 	_build_chests_items_signs()
 	_build_totems()
@@ -581,7 +585,181 @@ func _build_quarry() -> void:
 		_add_box_collider(node, 0.8)
 	_place_abs(ITEMS + "banner_red.gltf.glb", Vector3(QUARRY.x - 5.0, 0, QUARRY.y + 6.0), 0.0, 2.6, holder)
 	_place_abs(ITEMS + "banner_red.gltf.glb", Vector3(QUARRY.x + 5.0, 0, QUARRY.y + 6.0), 0.0, 2.6, holder)
+
+	# Mine excavation entrance, scaffolding and extraction platform
+	var mine := _place("buildings/blue/building_mine_blue.gltf", Vector3(QUARRY.x + 8.0, 0.0, QUARRY.y + 14.0), -45.0, BS * 1.15, holder)
+	_add_box_collider(mine)
+	var scaffold := _place("buildings/neutral/building_scaffolding.gltf", Vector3(QUARRY.x - 2.0, 0.0, QUARRY.y + 16.0), 15.0, BS * 0.95, holder)
+	_add_box_collider(scaffold)
+	var stage := _place("buildings/neutral/building_stage_B.gltf", Vector3(QUARRY.x + 3.0, 0.0, QUARRY.y - 12.0), 30.0, BS * 0.9, holder)
+	_add_box_collider(stage)
+
 	_occupy(QUARRY.x, QUARRY.y, 42)
+
+
+## The working timber mill of Giannis the woodcutter in the eastern forest edge.
+func _build_lumbermill() -> void:
+	var holder := Node3D.new()
+	holder.name = "Lumbermill"
+	add_child(holder)
+
+	var center := Vector3(95.0, 0.0, 38.0)
+	var mill := _place("buildings/blue/building_lumbermill_blue.gltf", center, 25.0, BS * 1.05, holder)
+	_add_box_collider(mill)
+
+	# Timber logs, cut tree stumps, stacks of wood
+	var props: Array = [
+		["decoration/props/resource_lumber.gltf", center + Vector3(-6.5, 0.0, 4.0), 40.0, 1.4],
+		["decoration/props/resource_lumber.gltf", center + Vector3(-8.0, 0.0, 1.5), 10.0, 1.5],
+		["decoration/nature/trees_A_cut.gltf", center + Vector3(7.0, 0.0, -5.0), 0.0, 1.3],
+		["decoration/nature/tree_single_A_cut.gltf", center + Vector3(5.5, 0.0, 4.5), 60.0, 1.4],
+		["decoration/nature/tree_single_B_cut.gltf", center + Vector3(-5.0, 0.0, -6.0), -35.0, 1.3],
+		["decoration/props/wheelbarrow.gltf", center + Vector3(-3.5, 0.0, 6.0), 120.0, 1.2],
+		["decoration/props/crate_long_A.gltf", center + Vector3(4.0, 0.0, -3.0), -20.0, 1.2],
+	]
+	for p in props:
+		var n := _place(p[0], p[1], p[2], PS * p[3], holder)
+		_add_box_collider(n, 0.75)
+
+	_signpost("Υλοτομείο Αγίου Βλάση  →\nΕργαστήρι Γιάννη", center + Vector3(-7.5, 0.0, -6.0), 135.0, holder)
+	_occupy(center.x, center.z, 16.0)
+
+
+## The ruined eastern fortress now occupied by the Orc Warband.
+func _build_ruined_outpost() -> void:
+	var holder := Node3D.new()
+	holder.name = "RuinedOutpost"
+	add_child(holder)
+
+	var center := Vector3(150.0, 0.0, 68.0)
+
+	# Ruined keep / fortress
+	var destroyed := _place("buildings/neutral/building_destroyed.gltf", center, 45.0, BS * 1.2, holder)
+	_add_box_collider(destroyed)
+
+	# Fortification walls & gates
+	var wall1 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(-8.0, 0.0, -4.0), 20.0, BS * 1.0, holder)
+	_add_box_collider(wall1)
+	var wall2 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(8.0, 0.0, 4.0), 20.0, BS * 1.0, holder)
+	_add_box_collider(wall2)
+	var gate := _place("buildings/neutral/wall_corner_A_gate.gltf", center + Vector3(-12.0, 0.0, 6.0), -60.0, BS * 1.0, holder)
+	_add_box_collider(gate)
+
+	# Siege weapon & war banners
+	var catapult := _place("buildings/neutral/projectile_catapult.gltf", center + Vector3(-5.0, 0.0, 11.0), -120.0, BS * 0.9, holder)
+	_add_box_collider(catapult)
+	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(-4.0, 0.0, -7.0), 0.0, 2.8, holder)
+	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(5.0, 0.0, 8.0), 180.0, 2.8, holder)
+
+	# Props around outpost
+	var outpost_props: Array = [
+		["decoration/props/barrel.gltf", center + Vector3(4.0, 0.0, -2.0), 10.0, 1.4],
+		["decoration/props/crate_open.gltf", center + Vector3(6.0, 0.0, -4.0), 45.0, 1.3],
+		["decoration/props/tent.gltf", center + Vector3(12.0, 0.0, -7.0), -45.0, 1.4],
+	]
+	for op in outpost_props:
+		var n := _place(op[0], op[1], op[2], PS * op[3], holder)
+		_add_box_collider(n, 0.75)
+
+	_signpost("Ερειπωμένο Προπύργιο  ↖\nΠροσοχή: Πολεμική Συμμορία Όρκ!", center + Vector3(-16.0, 0.0, -5.0), 75.0, holder)
+	_occupy(center.x, center.z, 22.0)
+
+
+## Autumn golden and orange pine forest grove on the eastern ridge.
+func _build_golden_grove() -> void:
+	var holder := Node3D.new()
+	holder.name = "GoldenGrove"
+	add_child(holder)
+
+	var center := Vector3(112.0, 0.0, 68.0)
+
+	# Beautiful Autumn golden and orange pine clusters
+	var pines: Array = [
+		[GRAVE + "tree_pine_orange_large.gltf", center + Vector3(-8.0, 0.0, -6.0), 30.0, 1.5],
+		[GRAVE + "tree_pine_orange_medium.gltf", center + Vector3(-12.0, 0.0, 4.0), -45.0, 1.4],
+		[GRAVE + "tree_pine_orange_small.gltf", center + Vector3(-4.0, 0.0, 8.0), 70.0, 1.3],
+		[GRAVE + "tree_pine_yellow_large.gltf", center + Vector3(8.0, 0.0, -8.0), -15.0, 1.5],
+		[GRAVE + "tree_pine_yellow_medium.gltf", center + Vector3(12.0, 0.0, 2.0), 110.0, 1.4],
+		[GRAVE + "tree_pine_yellow_small.gltf", center + Vector3(6.0, 0.0, 9.0), -80.0, 1.3],
+		[GRAVE + "tree_pine_orange_large.gltf", center + Vector3(2.0, 0.0, -14.0), 40.0, 1.6],
+		[GRAVE + "tree_pine_yellow_large.gltf", center + Vector3(-6.0, 0.0, -15.0), -60.0, 1.5],
+	]
+	for p in pines:
+		var node := _place_abs(p[0], p[1], p[2], p[3], holder)
+		_add_box_collider(node, 0.4)
+
+	# Central ancient lantern tree
+	var anc_tree := _place_abs(GRAVE + "tree_dead_large_decorated.gltf", center, 15.0, 1.8, holder)
+	_add_box_collider(anc_tree, 0.5)
+
+	var omni := OmniLight3D.new()
+	omni.light_color = Color(1.0, 0.78, 0.38)
+	omni.light_energy = 1.4
+	omni.omni_range = 14.0
+	omni.position = center + Vector3(0.0, 3.5, 0.0)
+	holder.add_child(omni)
+
+	# Decorated sitting benches
+	var bench1 := _place_abs(GRAVE + "bench_decorated.gltf", center + Vector3(-3.2, 0.0, 2.5), 35.0, 1.2, holder)
+	_add_box_collider(bench1, 0.7)
+	var bench2 := _place_abs(GRAVE + "bench_decorated.gltf", center + Vector3(3.5, 0.0, -1.8), -145.0, 1.2, holder)
+	_add_box_collider(bench2, 0.7)
+
+	_signpost("Άλσος των Χρυσών Πεύκων  ↗\nΠροσοχή στους Άγριους Λύκους!", center + Vector3(-14.0, 0.0, -10.0), 45.0, holder)
+	_occupy(center.x, center.z, 20.0)
+
+
+## Archery training grounds and village defense barracks.
+func _build_archery_grounds() -> void:
+	var holder := Node3D.new()
+	holder.name = "ArcheryGrounds"
+	add_child(holder)
+
+	var center := Vector3(84.0, 0.0, -96.0)
+
+	# Main buildings: Archery range and Barracks
+	var range_bldg := _place("buildings/blue/building_archeryrange_blue.gltf", center + Vector3(-7.0, 0.0, 0.0), 0.0, BS * 1.0, holder)
+	_add_box_collider(range_bldg)
+
+	var barracks := _place("buildings/blue/building_barracks_blue.gltf", center + Vector3(8.0, 0.0, 2.0), -15.0, BS * 1.05, holder)
+	_add_box_collider(barracks)
+
+	# Archery targets
+	var targets: Array[Vector3] = [
+		center + Vector3(-12.0, 0.0, -14.0),
+		center + Vector3(-7.0, 0.0, -14.0),
+		center + Vector3(-2.0, 0.0, -14.0),
+	]
+	for t_pos in targets:
+		var target_node := _place("decoration/props/target.gltf", t_pos, 0.0, PS * 1.3, holder)
+		_add_box_collider(target_node, 0.8)
+
+	# Weapon racks, arrow buckets, flags
+	var props: Array = [
+		["decoration/props/bucket_arrows.gltf", center + Vector3(-10.0, 0.0, -4.0), 15.0, 1.2],
+		["decoration/props/bucket_arrows.gltf", center + Vector3(-5.0, 0.0, -4.0), -20.0, 1.2],
+		["decoration/props/weaponrack.gltf", center + Vector3(1.5, 0.0, -3.0), 90.0, 1.2],
+		["decoration/props/weaponrack.gltf", center + Vector3(1.5, 0.0, -1.0), 90.0, 1.2],
+		["decoration/props/flag_blue.gltf", center + Vector3(-13.0, 0.0, 4.0), 45.0, 1.4],
+		["decoration/props/flag_blue.gltf", center + Vector3(14.0, 0.0, 5.0), -30.0, 1.4],
+	]
+	for p in props:
+		var node := _place(p[0], p[1], p[2], PS * p[3], holder)
+		_add_box_collider(node, 0.7)
+
+	# Dimitris the Archer NPC
+	var dimitris := Npc.new()
+	dimitris.npc_id = "dimitris"
+	dimitris.rest_yaw = deg_to_rad(180.0)
+	dimitris.position = center + Vector3(-6.0, 0.0, -2.5)
+	var npcs := get_node_or_null("Npcs")
+	(npcs if npcs else holder).add_child(dimitris)
+
+	# Signpost
+	_signpost("Πεδίο Τοξοβολίας & Στρατώνες  ←\nΕκπαίδευση Φρουράς", center + Vector3(-0.5, 0.0, 7.5), 180.0, holder)
+
+	_occupy(center.x, center.z, 20.0)
+
 func _build_crypt() -> void:
 	# The old crypt in the north: a fenced graveyard with the Bone King's tomb at the back.
 	var holder := Node3D.new()
@@ -1109,7 +1287,50 @@ func _build_animals() -> void:
 
 	_occupy(pen_center.x, pen_center.z, 7.5)
 
-	# 3. Dynamic Night Roadside Encounters
+	# 4. Pasture Cows in a fenced paddock near (26.0, -82.0)
+	var cow_center := Vector3(26.0, 0.0, -82.0)
+	var cow_half := Vector2(4.8, 4.0)
+	for x in range(-4, 5, 2):
+		var n_b := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(float(x), 0.0, -cow_half.y), 0.0, PS * 0.85, holder)
+		_add_box_collider(n_b, 0.6)
+	for z in range(-2, 3, 2):
+		var n_l := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(-cow_half.x, 0.0, float(z) * 1.5), 90.0, PS * 0.85, holder)
+		_add_box_collider(n_l, 0.6)
+		var n_r := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(cow_half.x, 0.0, float(z) * 1.5), 90.0, PS * 0.85, holder)
+		_add_box_collider(n_r, 0.6)
+	for x in [-3.5, 3.5]:
+		var n_f := _place("buildings/neutral/fence_wood_straight.gltf", cow_center + Vector3(x, 0.0, cow_half.y), 0.0, PS * 0.85, holder)
+		_add_box_collider(n_f, 0.6)
+
+	var cow_script := load("res://scripts/village_cow.gd") as GDScript
+	if cow_script:
+		var cow1 = cow_script.new()
+		cow1.position = cow_center + Vector3(-1.4, 0.0, -0.5)
+		cow1.rotation.y = randf() * TAU
+		holder.add_child(cow1)
+
+		var cow2 = cow_script.new()
+		cow2.position = cow_center + Vector3(1.6, 0.0, 0.8)
+		cow2.rotation.y = randf() * TAU
+		holder.add_child(cow2)
+
+	_occupy(cow_center.x, cow_center.z, 7.5)
+
+	# 5. Wild Deer roaming the eastern meadows and forest margins
+	var deer_script := load("res://scripts/village_deer.gd") as GDScript
+	if deer_script:
+		var deer_positions: Array[Vector3] = [
+			Vector3(132.0, 0.0, -58.0),
+			Vector3(124.0, 0.0, -76.0),
+			Vector3(138.0, 0.0, -86.0),
+		]
+		for d_pos in deer_positions:
+			var deer = deer_script.new()
+			deer.position = d_pos
+			deer.rotation.y = randf() * TAU
+			holder.add_child(deer)
+
+	# 6. Dynamic Night Roadside Encounters
 	var ambush := RoadAmbush.new()
 	add_child(ambush)
 

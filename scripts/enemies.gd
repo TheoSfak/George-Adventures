@@ -483,10 +483,73 @@ const KINDS := {
 		"enrage_below": 0.45, "enrage_summon": "cinder_guardian", "summon_interval": 11.0, "summon_max": 3,
 		"xp_reward": 6000, "gold_min": 800, "gold_max": 1200, "potion_chance": 1.0,
 	},
+	# --- Feature 5: New Mobs (Orcs, Wolves, Spiders) ---
+	"orc_warrior": {
+		"kind_id": "orc_warrior", "human": false, "model_scale": 1.25,
+		"model_path": CHAR + "Orc.glb",
+		"walk_anim": "CharacterArmature|Walk", "idle_anim": "CharacterArmature|Idle",
+		"run_anim": "CharacterArmature|Run", "attack_anim": "CharacterArmature|Weapon",
+		"hit_anim": "CharacterArmature|HitReact", "death_anim": "CharacterArmature|Death",
+		"sound_set": "orc",
+		"max_health": 85.0, "attack_damage": 16.0, "chase_speed": 4.5, "attack_range": 2.2,
+		"attack_hit_time": 0.5, "attack_cooldown": 1.5,
+		"aggro_range": 16.0, "leash_range": 32.0, "patrol_radius": 5.0,
+		"xp_reward": 45, "gold_min": 6, "gold_max": 14, "potion_chance": 0.35,
+	},
+	"orc_berserker": {
+		"kind_id": "orc_berserker", "human": false, "model_scale": 1.5,
+		"tint_color": Color(0.85, 0.20, 0.10, 0.25),
+		"model_path": CHAR + "Orc.glb",
+		"walk_anim": "CharacterArmature|Walk", "idle_anim": "CharacterArmature|Idle",
+		"run_anim": "CharacterArmature|Run", "attack_anim": "CharacterArmature|Punch",
+		"hit_anim": "CharacterArmature|HitReact", "death_anim": "CharacterArmature|Death",
+		"sound_set": "orc",
+		"max_health": 150.0, "attack_damage": 23.0, "chase_speed": 4.9, "attack_range": 2.5,
+		"attack_hit_time": 0.55, "attack_cooldown": 1.4,
+		"aggro_range": 18.0, "leash_range": 34.0, "patrol_radius": 6.0,
+		"xp_reward": 80, "gold_min": 12, "gold_max": 24, "potion_chance": 0.5,
+	},
+	"orc_warlord": {
+		"kind_id": "orc_warlord", "respawn_after": 60.0, "model_scale": 2.0,
+		"tint_color": Color(0.95, 0.15, 0.05, 0.35), "display_name": "Γκρομ'γκαρ ο Αιμοδιψής",
+		"model_path": CHAR + "Orc.glb",
+		"walk_anim": "CharacterArmature|Walk", "idle_anim": "CharacterArmature|Idle",
+		"run_anim": "CharacterArmature|Run", "attack_anim": "CharacterArmature|Weapon",
+		"hit_anim": "CharacterArmature|HitReact", "death_anim": "CharacterArmature|Death",
+		"sound_set": "orc",
+		"max_health": 580.0, "attack_damage": 28.0, "chase_speed": 4.4, "attack_range": 3.4,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.7, "aggro_range": 22.0, "leash_range": 45.0,
+		"enrage_below": 0.5, "enrage_summon": "orc_warrior", "summon_interval": 12.0, "summon_max": 3,
+		"xp_reward": 350, "gold_min": 80, "gold_max": 140, "potion_chance": 1.0,
+	},
+	"wolf": {
+		"kind_id": "wolf", "model_scale": 1.15,
+		"model_path": CHAR + "Wolf.glb",
+		"walk_anim": "AnimalArmature|Walk", "idle_anim": "AnimalArmature|Idle",
+		"run_anim": "AnimalArmature|Gallop", "attack_anim": "AnimalArmature|Attack",
+		"hit_anim": "AnimalArmature|Idle_HitReact_Left", "death_anim": "AnimalArmature|Death",
+		"sound_set": "wolf",
+		"max_health": 55.0, "attack_damage": 14.0, "chase_speed": 6.0, "attack_range": 1.9,
+		"attack_hit_time": 0.45, "attack_cooldown": 1.2,
+		"aggro_range": 19.0, "leash_range": 36.0, "patrol_radius": 7.0,
+		"xp_reward": 30, "gold_min": 2, "gold_max": 6, "potion_chance": 0.25,
+	},
+	"spider": {
+		"kind_id": "spider", "model_scale": 1.3,
+		"model_path": CHAR + "Spider.glb",
+		"walk_anim": "SpiderArmature|Spider_Walk", "idle_anim": "SpiderArmature|Spider_Idle",
+		"run_anim": "SpiderArmature|Spider_Walk", "attack_anim": "SpiderArmature|Spider_Attack",
+		"hit_anim": "SpiderArmature|Spider_Idle", "death_anim": "SpiderArmature|Spider_Death",
+		"sound_set": "spider", "stomp_slow": 1.5,
+		"max_health": 50.0, "attack_damage": 13.0, "chase_speed": 4.8, "attack_range": 2.1,
+		"attack_hit_time": 0.5, "attack_cooldown": 1.4,
+		"aggro_range": 17.0, "leash_range": 32.0, "patrol_radius": 5.0,
+		"xp_reward": 32, "gold_min": 3, "gold_max": 7, "potion_chance": 0.3,
+	},
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord", "cinder_archon"]
+const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord", "cinder_archon", "orc_warlord"]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [
@@ -540,6 +603,15 @@ const SPAWNS := [
 	["cursed_coffin", -50.0, -195.0], ["cursed_coffin", 50.0, -195.0],
 	# --- Cursed Scarecrows haunting the wheat fields and farm tracks
 	["cursed_scarecrow", -114.0, -48.0], ["cursed_scarecrow", -86.0, -62.0], ["cursed_scarecrow", -102.0, -74.0], ["cursed_scarecrow", 86.0, 112.0],
+	# --- Feature 5: Orcs, Wolves, and Spiders ---
+	# The Orc Stronghold at the eastern ruined outpost (148, 68)
+	["orc_warlord", 152.0, 68.0],
+	["orc_berserker", 144.0, 64.0], ["orc_berserker", 155.0, 74.0],
+	["orc_warrior", 140.0, 70.0], ["orc_warrior", 150.0, 60.0], ["orc_warrior", 160.0, 68.0],
+	# The Wolves roaming the Autumn Golden Pine Forest (112, 68)
+	["wolf", 110.0, 62.0], ["wolf", 116.0, 72.0], ["wolf", 104.0, 75.0], ["wolf", 120.0, 60.0],
+	# Giant Spiders in the eastern Quarry rocks and cave path (158, 115)
+	["spider", 162.0, 112.0], ["spider", 156.0, 128.0], ["spider", 168.0, 134.0], ["spider", 148.0, 102.0],
 ]
 
 @export var respawn_time := 45.0     # seconds until a defeated skeleton returns

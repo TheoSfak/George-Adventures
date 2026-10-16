@@ -200,6 +200,28 @@ func _build_lake() -> void:
 	water.scale = Vector3(LAKE.x, 1.0, LAKE.y)
 	water.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(water)
+
+	# Floating waterlilies around the edges of the Great Tree lake
+	var lake_lilies: Array[Vector3] = [
+		Vector3(-22.0, WATER_Y + 0.01, -18.0),
+		Vector3(-14.0, WATER_Y + 0.01, -22.0),
+		Vector3(12.0, WATER_Y + 0.01, -20.0),
+		Vector3(26.0, WATER_Y + 0.01, -14.0),
+		Vector3(-28.0, WATER_Y + 0.01, 16.0),
+		Vector3(8.0, WATER_Y + 0.01, 24.0),
+		Vector3(25.0, WATER_Y + 0.01, 10.0),
+	]
+	var lily_res_a := load("res://assets/world/decoration/nature/waterlily_A.gltf") as PackedScene
+	var lily_res_b := load("res://assets/world/decoration/nature/waterlily_B.gltf") as PackedScene
+	for i in lake_lilies.size():
+		var res: PackedScene = lily_res_a if i % 2 == 0 else lily_res_b
+		if res:
+			var inst := res.instantiate() as Node3D
+			inst.position = lake_lilies[i]
+			inst.rotation_degrees.y = float(i * 53)
+			inst.scale = Vector3.ONE * 1.5
+			add_child(inst)
+
 	if terrain != null:
 		terrain.add_patch(CENTER, 40.0, Color(0.74, 0.66, 0.45), false, Color(0.55, 0.48, 0.32))
 

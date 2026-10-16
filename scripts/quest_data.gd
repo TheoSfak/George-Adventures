@@ -14,7 +14,7 @@ class_name QuestData
 
 ## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
 ## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
-const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon"]
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider"]
 
 
 static func is_skeleton(kind: String) -> bool:
@@ -24,6 +24,11 @@ static func is_skeleton(kind: String) -> bool:
 ## A bandit of the forest hideout (the chief has his own target "bandit_chief").
 static func is_bandit(kind: String) -> bool:
 	return kind.begins_with("bandit_") and kind != "bandit_chief"
+
+
+## An orc of the eastern warband (the warlord has his own target "orc_warlord").
+static func is_orc(kind: String) -> bool:
+	return kind.begins_with("orc_") and kind != "orc_warlord"
 
 
 const PROLOGUE: Array[String] = [
@@ -213,6 +218,16 @@ const NPCS := {
 		"idle": [
 			"Γυρίζω όλο το νησί με το σακίδιό μου γεμάτο σπάνια καλούδια!",
 			"Από τη στάχτη του νότου ως τα παγωμένα βουνά, όλοι ξέρουν τον Κυρ-Παντελή.",
+		],
+	},
+	"dimitris": {
+		"name": "Δημήτρης ο Τοξότης",
+		"model": "res://assets/characters/Rogue.glb",
+		"show": ["2H_Crossbow"],
+		"idle": [
+			"Στο πεδίο τοξοβολίας εκπαιδεύουμε τους φρουρούς. Ένα βέλος στα μάτια σταματάει ακόμα και τα όρκ.",
+			"Οι λύκοι στο άλσος των χρυσών πεύκων έχουν αγριέψει από τότε που πλησίασαν τα όρκ.",
+			"Πρόσεχε τις σκοτεινές σχισμές στο λατομείο... τεράστιες αράχνες έχουν υφάνει ιστούς.",
 		],
 	},
 }
@@ -985,5 +1000,67 @@ const QUESTS := {
 			"Πάρε αυτά, είναι το λιγότερο που μπορώ να κάνω. Θα σε περιμένω στην πλατεία!",
 		],
 		"reward": {"xp": 250, "gold": 120, "potions": 2},
+	},
+
+	# ---------------------------------------- Quests: Dimitris & The Eastern Lands ----
+	"orc_raid": {
+		"title": "Η Επιδρομή των Όρκ",
+		"giver": "dimitris",
+		"turn_in": "dimitris",
+		"requires": [],
+		"objectives": [
+			{"type": "kill", "target": "orc", "count": 4, "text": "Εξόντωσε 4 Όρκ στο ανατολικό οχυρό"},
+		],
+		"offer": [
+			"Γιώργο, καλά νέα που ήρθες στους στρατώνες! Μια πολεμική συμμορία από Όρκ κατέλαβε τα παλιά ανατολικά ερείπια.",
+			"Είναι βαριά οπλισμένοι και αν δεν τους αναχαιτίσουμε, θα χτυπήσουν το χωριό. Πήγαινε και δείξε τους τη δύναμη του Αγίου Βλάση!",
+		],
+		"progress": [
+			"Τα Όρκ συνεχίζουν τις περιπολίες στα ερείπια. Μην τους αφήσεις να πλησιάσουν περισσότερο!",
+		],
+		"complete": [
+			"Εξαιρετική δουλειά, Γιώργο! Τα Όρκ υποχώρησαν προσωρινά. Πάρε αυτά τα νομίσματα για τον κόπο σου.",
+		],
+		"reward": {"xp": 180, "gold": 100, "potions": 1},
+	},
+	"orc_warlord": {
+		"title": "Ο Πολέμαρχος Γκρομ'γκαρ",
+		"giver": "dimitris",
+		"turn_in": "dimitris",
+		"requires": ["orc_raid"],
+		"objectives": [
+			{"type": "kill", "target": "orc_warlord", "count": 1, "text": "Νίκησε τον Πολέμαρχο Γκρομ'γκαρ στα ερείπια"},
+		],
+		"offer": [
+			"Τα απλά Όρκ ήταν μόνο η εμπροσθοφυλακή. Ο αρχηγός τους, ο Γκρομ'γκαρ ο Αιμοδιψής, έστησε το στρατηγείο του μέσα στο κατεστραμμένο οχυρό!",
+			"Είναι τεράστιος και μανιασμένος. Αν τον νικήσεις, η απειλή των Όρκ θα σβήσει οριστικά!",
+		],
+		"progress": [
+			"Ο Γκρομ'γκαρ βρυχάται στα ανατολικά ερείπια. Ετοιμάσου καλά πριν τον αντιμετωπίσεις!",
+		],
+		"complete": [
+			"Δεν το πιστεύω... έριξες τον ίδιο τον Γκρομ'γκαρ! Το όνομά σου θα μείνει στην ιστορία του χωριού μας!",
+		],
+		"reward": {"xp": 350, "gold": 220, "potions": 2},
+	},
+	"wolf_hunt": {
+		"title": "Οι Λύκοι των Χρυσών Πεύκων",
+		"giver": "dimitris",
+		"turn_in": "dimitris",
+		"requires": [],
+		"objectives": [
+			{"type": "kill", "target": "wolf", "count": 4, "text": "Κυνήγησε 4 λύκους στο Άλσος των Χρυσών Πεύκων"},
+		],
+		"offer": [
+			"Στο νέο μονοπάτι προς τα ανατολικά, ανάμεσα στα χρυσά και πορτοκαλί πεύκα, μια αγέλη από άγριους λύκους επιτίθεται στους περαστικούς.",
+			"Χρειαζόμαστε έναν γενναίο κυνηγό να καθαρίσει το πέρασμα. Αναλαμβάνεις;",
+		],
+		"progress": [
+			"Ακούω ακόμα τα ουρλιαχτά των λύκων στο χρυσό άλσος. Συνέχισε το κυνήγι!",
+		],
+		"complete": [
+			"Το άλσος είναι πάλι ασφαλές! Τώρα οι χωρικοί μπορούν να θαυμάσουν τα χρυσά πεύκα με ασφάλεια. Ορίστε η αμοιβή σου.",
+		],
+		"reward": {"xp": 150, "gold": 80, "potions": 1},
 	},
 }

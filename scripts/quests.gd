@@ -104,7 +104,7 @@ func report_kill(kind: String) -> void:
 		var objectives: Array = QuestData.QUESTS[id]["objectives"]
 		for i in objectives.size():
 			var o: Dictionary = objectives[i]
-			if o["type"] == "kill" and progress[id][i] < o["count"] and ((o["target"] == "skeleton" and QuestData.is_skeleton(kind)) or o["target"] == kind or (o["target"] == "bandit" and QuestData.is_bandit(kind))):
+			if o["type"] == "kill" and progress[id][i] < o["count"] and ((o["target"] == "skeleton" and QuestData.is_skeleton(kind)) or o["target"] == kind or (o["target"] == "bandit" and QuestData.is_bandit(kind)) or (o["target"] == "orc" and QuestData.is_orc(kind))):
 				progress[id][i] += 1
 		_check_ready(id)
 	changed.emit()
