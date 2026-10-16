@@ -66,6 +66,7 @@ func _register_defaults() -> void:
 	_key("kick", KEY_C)               # front kick
 	_button("kick", JOY_BUTTON_LEFT_STICK)
 	_key("mount", KEY_G)              # ride the horse (once it is bought at the stable)
+	_key("unstuck", KEY_U)            # emergency teleport to village center if stuck
 	_key("potion", KEY_H)
 	_button("potion", JOY_BUTTON_Y)
 	# Action bar: keys 1-8, 9, 0, -, = (physical keys, so they work on the Greek layout too)

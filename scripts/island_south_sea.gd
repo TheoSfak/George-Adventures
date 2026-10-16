@@ -161,12 +161,12 @@ func _build_beach() -> void:
 			var i2 := (zi + 1) * (x_steps + 1) + xi
 			var i3 := i2 + 1
 			st.add_index(i0)
-			st.add_index(i2)
 			st.add_index(i1)
+			st.add_index(i2)
 
 			st.add_index(i1)
-			st.add_index(i2)
 			st.add_index(i3)
+			st.add_index(i2)
 
 	st.generate_normals()
 	var mesh := st.commit()
@@ -180,6 +180,32 @@ func _build_beach() -> void:
 	var col := CollisionShape3D.new()
 	col.shape = mesh.create_trimesh_shape()
 	sb.add_child(col)
+
+	# Watertight continuous floor colliders guaranteeing zero void gap across the entire beach and bay
+	# 1. Upper dunes & transition zone: Z in [82, 114], overlaps village ground (ends at Z=86)
+	var col_dunes := CollisionShape3D.new()
+	var box_dunes := BoxShape3D.new()
+	box_dunes.size = Vector3(265.0, 2.0, 32.0)
+	col_dunes.shape = box_dunes
+	col_dunes.position = Vector3(-62.5, -1.0, 98.0) # top at Y = 0.0
+	sb.add_child(col_dunes)
+
+	# 2. Shallow wading surf & pier approach: Z in [110, 142]
+	var col_surf := CollisionShape3D.new()
+	var box_surf := BoxShape3D.new()
+	box_surf.size = Vector3(265.0, 2.0, 32.0)
+	col_surf.shape = box_surf
+	col_surf.position = Vector3(-62.5, -1.45, 126.0) # top at Y = -0.45
+	sb.add_child(col_surf)
+
+	# 3. Bay seabed floor & pier end / shipwreck approach: Z in [138, 172], overlaps ocean floor (starts at Z=160)
+	var col_bay := CollisionShape3D.new()
+	var box_bay := BoxShape3D.new()
+	box_bay.size = Vector3(265.0, 2.0, 34.0)
+	col_bay.shape = box_bay
+	col_bay.position = Vector3(-62.5, -2.1, 155.0) # top at Y = -1.1
+	sb.add_child(col_bay)
+
 	beach_holder.add_child(sb)
 
 	# Coastal headland rocks on the west (lighthouse flank) and east (quarry flank)

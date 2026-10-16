@@ -382,6 +382,8 @@ func _draw_invasion_well() -> void:
 
 
 func _draw_quest_markers(cfg: Dictionary) -> void:
+	if get_node_or_null("/root/Quests") == null:
+		return
 	# Priority 1: Ready turn-ins ("?") and active quest objectives (diamonds)
 	for n in get_tree().get_nodes_in_group("npcs"):
 		if not _inside_world(n.global_position):

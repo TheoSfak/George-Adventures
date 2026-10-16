@@ -286,15 +286,14 @@ func _build_rolling_hills() -> void:
 	var hill_data: Array[Dictionary] = [
 		{"model": "decoration/nature/hills_A.gltf", "pos": Vector3(-118.0, 0.0, -18.0), "rot": 45.0, "scale": 11.0},
 		{"model": "decoration/nature/hill_single_A.gltf", "pos": Vector3(-88.0, 0.0, 6.0), "rot": 120.0, "scale": 9.0},
-		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-18.0, 0.0, 72.0), "rot": 20.0, "scale": 10.5},
+		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-6.0, 0.0, 70.0), "rot": 20.0, "scale": 10.5},
 		{"model": "decoration/nature/hill_single_B.gltf", "pos": Vector3(32.0, 0.0, 74.0), "rot": 210.0, "scale": 8.5},
 		{"model": "decoration/nature/hills_C.gltf", "pos": Vector3(88.0, 0.0, 74.0), "rot": 85.0, "scale": 10.0},
 		{"model": "decoration/nature/hill_single_C.gltf", "pos": Vector3(105.0, 0.0, 8.0), "rot": 160.0, "scale": 8.0},
 	]
 
 	for hd in hill_data:
-		var node = _place(hd["model"], hd["pos"], hd["rot"], hd["scale"], holder)
-		_add_cylinder_collider(node, hd["scale"] * 0.45, 8.0, Vector3.ZERO)
+		_place(hd["model"], hd["pos"], hd["rot"], hd["scale"], holder)
 
 
 ## Clear space in scatter grid so procedural trees/rocks do not overlap the ocean, river or highlands.

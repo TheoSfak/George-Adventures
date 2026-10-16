@@ -56,8 +56,9 @@ func _ready() -> void:
 		_:
 			_show_title()
 			_updater.check()
-	var quests := Quests
-	quests.quest_done.connect(func(_id): autosave())
+	var quests = get_node_or_null("/root/Quests")
+	if quests:
+		quests.quest_done.connect(func(_id): autosave())
 	if _player:
 		_player.leveled_up.connect(func(_l): autosave())
 	var daynight := get_tree().get_first_node_in_group("daynight") as DayNight
@@ -349,6 +350,7 @@ func _build_pause_page() -> void:
 	_panel.offset_top = 0.0
 	_heading(Strings.MENU_PAUSED)
 	_menu_button(Strings.MENU_RESUME, _close_menu)
+	_menu_button(Strings.MENU_UNSTUCK, _unstuck)
 	_menu_button(Strings.MENU_SAVE, func():
 		autosave(true)
 		_close_menu())
@@ -358,6 +360,14 @@ func _build_pause_page() -> void:
 	_menu_button(Strings.MENU_QUIT, func():
 		autosave(true)
 		get_tree().quit())
+
+
+func _unstuck() -> void:
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Player
+	if _player != null:
+		_player.unstuck()
+	_close_menu()
 
 
 ## The controls help: every key and mouse action in two columns, each with a key cap.
@@ -644,7 +654,9 @@ func _continue_game() -> void:
 
 func _new_game() -> void:
 	SaveGame.delete()
-	Quests.reset()
+	var quests = get_node_or_null("/root/Quests")
+	if quests:
+		quests.reset()
 	get_tree().call_group("rescue", "reset")
 	_title = false
 	_close_menu_silent()

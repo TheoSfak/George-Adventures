@@ -276,6 +276,8 @@ func _physics_process(delta: float) -> void:
 	_update_mount(delta)
 	_tick_timers(delta)
 	if not busy and _mount_swallow <= 0.0:
+		if Input.is_action_just_pressed("unstuck") and not is_dead:
+			unstuck()
 		if Input.is_action_just_pressed("potion"):
 			use_consumable("health")
 		for i in bar.size():
@@ -291,12 +293,17 @@ func _physics_process(delta: float) -> void:
 
 	# --- Gravity and jumping ---
 	var on_floor := is_on_floor()
-	if not on_floor:
+	var in_water := global_position.y <= 0.05 and global_position.z >= 85.0 and global_position.z <= 250.0 and global_position.x >= -190.0 and global_position.x <= 70.0
+	if in_water and global_position.y < -1.4:
+		velocity.y = maxf(velocity.y + 20.0 * delta, -0.8)
+	elif not on_floor:
 		if _air_attacking:
 			velocity.y = minf(velocity.y - gravity * 2.0 * delta, -12.0)
 		else:
 			velocity.y -= gravity * delta
-	elif Input.is_action_just_pressed("jump") and not _attacking and not is_dead and _stun <= 0.0 and not busy:
+
+	var can_jump := on_floor or in_water
+	if Input.is_action_just_pressed("jump") and can_jump and not _attacking and not is_dead and _stun <= 0.0 and not busy:
 		velocity.y = jump_velocity
 		Sfx.play("jump", global_position, -4.0)
 		_landing = false
@@ -1821,6 +1828,29 @@ func _respawn() -> void:
 	Sfx.ui("heal")
 	health_changed.emit(health, max_health)
 	respawned.emit()
+
+
+## Emergency unstuck command: safely places George at the village square well and clears all locks
+func unstuck() -> void:
+	if mounted and is_instance_valid(_horse):
+		dismount()
+	global_position = _spawn_point + Vector3(0.0, 0.2, 0.0)
+	velocity = Vector3.ZERO
+	is_dead = false
+	busy = false
+	_stun = 0.0
+	_invulnerable = 2.0
+	_kicking = false
+	_kick_queued = 0.0
+	_air_attacking = false
+	_dodging = false
+	_dodge_time = 0.0
+	_attacking = false
+	_attack_queued = 0.0
+	_landing = false
+	_play("Idle", 0.2, true)
+	Sfx.ui("heal")
+	message.emit(Strings.MSG_UNSTUCK)
 
 
 func _update_animation() -> void:
