@@ -181,12 +181,116 @@ const DEFS := {
 			[I + "keg_decorated.gltf.glb", -8.6, 5.0, 0, 0.55],
 			[P + "sack.gltf", 7.8, 4.2, 40, 1.4],
 			[P + "sack.gltf", 8.4, 5.2, 110, 1.4],
-			[F + "rug_rectangle_A.gltf", 0.0, 4.0, 0, 1.6],
 			[I + "candle_lit.gltf.glb", -3.0, 0.5, 0, 1.0, 1.0],
 			[I + "torch_mounted.gltf.glb", -9.6, -2.0, 90, 1.8, 2.6],
 		],
 		"chests": [[-8.4, -5.8, 0, false, 15, 30, 0]],
 		"shopkeeper": ["elena", 0.5, -2.2, 0],
+	},
+	"tower": {
+		"size": Vector2(20, 18), "height": 5.8,
+		"floor_color": Color(0.35, 0.37, 0.40), "wall_color": Color(0.48, 0.50, 0.54),
+		"trim_color": Color(0.24, 0.25, 0.28), "ceiling_color": Color(0.20, 0.16, 0.12),
+		"light_color": Color(1.0, 0.88, 0.65), "light_energy": 3.0,
+		"furniture": [
+			[I + "column.gltf.glb", -6.0, -4.0, 0, 2.4],
+			[I + "column.gltf.glb", 6.0, -4.0, 0, 2.4],
+			[I + "column.gltf.glb", -6.0, 3.0, 0, 2.4],
+			[I + "column.gltf.glb", 6.0, 3.0, 0, 2.4],
+			[I + "banner_blue.gltf.glb", -4.0, -8.6, 0, 1.8, 1.5],
+			[I + "banner_blue.gltf.glb", 4.0, -8.6, 0, 1.8, 1.5],
+			[F + "table_medium_long.gltf", 0.0, -3.5, 0, 1.3],
+			[F + "chair_B_wood.gltf", 0.0, -5.2, 0, 1.2],
+			[F + "book_set.gltf", 0.6, -3.5, 30, 1.0, 1.1],
+			[I + "candle_lit.gltf.glb", -1.0, -3.5, 0, 1.0, 1.1],
+			[F + "rug_rectangle_stripes_A.gltf", 0.0, 1.5, 0, 2.2],
+			[P + "weaponrack.gltf", -8.4, -6.5, 90, 1.6],
+			[P + "weaponrack.gltf", -8.4, -2.5, 90, 1.6],
+			[P + "target.gltf", -8.4, 4.5, 90, 1.5],
+			[P + "bucket_arrows.gltf", -7.5, 3.0, 0, 1.4],
+			[F + "bed_single_B.gltf", 7.8, -6.5, 270, 1.1],
+			[F + "cabinet_medium_decorated.gltf", 8.4, -2.5, 270, 1.1],
+			[F + "shelf_B_large_decorated.gltf", 8.4, 2.0, 270, 1.1, 1.8],
+			[I + "crates_stacked.gltf.glb", 7.8, 6.0, 180, 1.1],
+			[I + "barrel_large.gltf.glb", -7.8, 6.5, 0, 0.7],
+			[I + "torch_mounted.gltf.glb", -9.6, -1.0, 90, 2.0, 2.8],
+			[I + "torch_mounted.gltf.glb", 9.6, -1.0, 270, 2.0, 2.8],
+			[I + "torch_mounted.gltf.glb", -4.0, 8.6, 180, 2.0, 2.8],
+			[I + "torch_mounted.gltf.glb", 4.0, 8.6, 180, 2.0, 2.8],
+		],
+		"chests": [[8.2, -4.5, 270, true, 80, 160, 2]],
+		"npcs": [[C + "Knight.glb", 0.0, -1.8, 180, "stand"]],
+	},
+	"orc_castle": {
+		"size": Vector2(26, 20), "height": 6.2,
+		"floor_color": Color(0.24, 0.22, 0.21), "wall_color": Color(0.30, 0.28, 0.28),
+		"trim_color": Color(0.18, 0.16, 0.15), "ceiling_color": Color(0.14, 0.11, 0.10),
+		"light_color": Color(1.0, 0.50, 0.20), "light_energy": 3.2,
+		"furniture": [
+			[I + "column.gltf.glb", -7.5, -5.0, 0, 2.6],
+			[I + "column.gltf.glb", 7.5, -5.0, 0, 2.6],
+			[I + "column.gltf.glb", -7.5, 3.5, 0, 2.6],
+			[I + "column.gltf.glb", 7.5, 3.5, 0, 2.6],
+			[G + "bench_decorated.gltf", 0.0, -8.2, 0, 1.8],
+			[I + "banner_red.gltf.glb", -3.5, -9.6, 0, 2.2, 1.2],
+			[I + "banner_red.gltf.glb", 3.5, -9.6, 0, 2.2, 1.2],
+			[G + "post_skull.gltf", -2.8, -7.5, 0, 1.6],
+			[G + "post_skull.gltf", 2.8, -7.5, 0, 1.6],
+			[F + "table_medium_long.gltf", 0.0, -1.0, 0, 1.4],
+			[G + "skull_candle.gltf", 0.0, -1.0, 0, 1.3, 1.1],
+			[F + "chair_A_wood.gltf", -2.5, -1.0, 90, 1.2],
+			[F + "chair_A_wood.gltf", 2.5, -1.0, 270, 1.2],
+			[F + "rug_rectangle_B.gltf", 0.0, -4.5, 0, 2.2],
+			[I + "crates_stacked.gltf.glb", -11.2, -6.5, 90, 1.2],
+			[I + "barrel_large.gltf.glb", -11.5, -3.5, 0, 0.8],
+			[I + "keg_decorated.gltf.glb", -10.0, -1.5, 45, 0.7],
+			[P + "weaponrack.gltf", 11.4, -6.5, 270, 1.8],
+			[P + "weaponrack.gltf", 11.4, -2.5, 270, 1.8],
+			[P + "resource_stone.gltf", 10.5, 6.0, 0, 1.5],
+			[G + "skull.gltf", -5.0, 5.0, 45, 1.5],
+			[G + "ribcage.gltf", 5.5, 5.5, 120, 1.4],
+			[G + "bone_A.gltf", -6.5, 6.5, 30, 1.5],
+			[I + "torch_mounted.gltf.glb", -12.6, -2.0, 90, 2.2, 3.0],
+			[I + "torch_mounted.gltf.glb", 12.6, -2.0, 270, 2.2, 3.0],
+			[I + "torch_mounted.gltf.glb", -6.0, 9.6, 180, 2.2, 3.0],
+			[I + "torch_mounted.gltf.glb", 6.0, 9.6, 180, 2.2, 3.0],
+		],
+		"chests": [
+			[11.0, -8.2, 270, true, 250, 450, 3],
+			[-11.2, 5.0, 90, false, 60, 130, 1],
+		],
+	},
+	"shadow_castle": {
+		"size": Vector2(28, 22), "height": 7.2,
+		"floor_color": Color(0.15, 0.14, 0.18), "wall_color": Color(0.20, 0.18, 0.25),
+		"trim_color": Color(0.12, 0.10, 0.15), "ceiling_color": Color(0.10, 0.08, 0.12),
+		"light_color": Color(0.72, 0.48, 0.95), "light_energy": 3.2,
+		"furniture": [
+			[I + "column.gltf.glb", -8.5, -6.0, 0, 3.0],
+			[I + "column.gltf.glb", 8.5, -6.0, 0, 3.0],
+			[I + "column.gltf.glb", -8.5, 0.0, 0, 3.0],
+			[I + "column.gltf.glb", 8.5, 0.0, 0, 3.0],
+			[I + "column.gltf.glb", -8.5, 6.0, 0, 3.0],
+			[I + "column.gltf.glb", 8.5, 6.0, 0, 3.0],
+			[G + "bench_decorated.gltf", 0.0, -9.5, 0, 2.0],
+			[G + "shrine_candles.gltf", 0.0, -10.5, 0, 2.4],
+			[G + "candle_triple.gltf", -4.0, -9.8, 0, 2.2],
+			[G + "candle_triple.gltf", 4.0, -9.8, 0, 2.2],
+			[I + "banner_red.gltf.glb", -6.5, -10.5, 0, 2.4, 1.5],
+			[I + "banner_red.gltf.glb", 6.5, -10.5, 0, 2.4, 1.5],
+			[G + "coffin_decorated.gltf", -11.8, -5.0, 90, 1.5],
+			[G + "coffin_decorated.gltf", 11.8, -5.0, 270, 1.5],
+			[G + "shrine.gltf", -11.8, 3.0, 90, 1.8],
+			[G + "shrine.gltf", 11.8, 3.0, 270, 1.8],
+			[G + "skull_candle.gltf", -11.8, 3.0, 90, 1.5, 1.2],
+			[G + "skull_candle.gltf", 11.8, 3.0, 270, 1.5, 1.2],
+			[F + "rug_rectangle_stripes_B.gltf", 0.0, 0.0, 0, 2.8],
+			[I + "torch_mounted.gltf.glb", -13.6, 0.0, 90, 2.4, 3.5],
+			[I + "torch_mounted.gltf.glb", 13.6, 0.0, 270, 2.4, 3.5],
+			[I + "torch_mounted.gltf.glb", -7.0, 10.6, 180, 2.4, 3.5],
+			[I + "torch_mounted.gltf.glb", 7.0, 10.6, 180, 2.4, 3.5],
+		],
+		"chests": [[0.0, -7.2, 180, true, 350, 650, 4]],
 	},
 }
 
@@ -263,14 +367,20 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	_set_indoor_light(true, kind)
 	player.teleport(room["spawn"] if room.has("spawn") else room["origin"] + Vector3(0, 0.05, size.y / 2.0 - 4.4), PI)
 	_saved_zoom = player.get_node("CameraRig/SpringArm3D").spring_length
-	player.get_node("CameraRig/SpringArm3D").spring_length = 6.2 if kind == "catacombs" else 4.6   # rooms are small: zoom in
+	player.get_node("CameraRig/SpringArm3D").spring_length = 6.2 if kind == "catacombs" else (6.5 if (kind in ["tower", "orc_castle", "shadow_castle"]) else 4.6)   # castles are grand halls
+	_rooms[door_id]["region"] = current_kind if _in_region else ""
 	_inside = true
 	current_kind = kind
 	current_door = door_id
 	await hud.fade_in(0.3)
 	player.busy = false
 	if kind == "catacombs":
-		Quests.report_reach("catacombs")
+		_report_reach("catacombs")
+
+func _report_reach(place: String) -> void:
+	var q: Node = get_tree().root.get_node_or_null("Quests")
+	if q != null and q.has_method("report_reach"):
+		q.call("report_reach", place)
 
 
 ## The node of a region that is built on the first visit ("frontier", "ashvalley").
@@ -324,7 +434,7 @@ func enter_region(region_id: String, outside_pos: Vector3, outside_heading: floa
 	current_kind = region_id
 	await hud.fade_in(0.3)
 	player.busy = false
-	Quests.report_reach(region_id)
+	_report_reach(region_id)
 
 
 func exit_region(player: Player) -> void:
@@ -361,11 +471,11 @@ func exit_region(player: Player) -> void:
 	if prev_kind == "temple":
 		_in_region = true
 		current_kind = "ashvalley"
-		Quests.report_reach("ashvalley")
+		_report_reach("ashvalley")
 	else:
 		_in_region = false
 		current_kind = ""
-		Quests.report_reach("village")
+		_report_reach("village")
 	await hud.fade_in(0.3)
 	player.busy = false
 
@@ -382,8 +492,14 @@ func _exit_room(door_id: String, player: Player) -> void:
 	player.get_node("CameraRig/SpringArm3D").spring_length = _saved_zoom
 	player.teleport(room["outside_pos"] + Vector3(0, 0.05, 0), room["outside_heading"])
 	_inside = false
-	current_kind = ""
 	current_door = ""
+	if room.get("region", "") != "":
+		_in_region = true
+		current_kind = room["region"]
+		_report_reach(current_kind)
+	else:
+		_in_region = false
+		current_kind = ""
 	await hud.fade_in(0.3)
 	player.busy = false
 
@@ -409,6 +525,18 @@ func _set_indoor_light(indoor: bool, kind: String = "") -> void:
 			env.background_color = Color(0.01, 0.01, 0.02)
 			env.ambient_light_color = Color(0.42, 0.48, 0.70)
 			env.ambient_light_energy = 0.55
+		elif kind == "orc_castle":
+			env.background_color = Color(0.03, 0.02, 0.01)
+			env.ambient_light_color = Color(0.75, 0.45, 0.25)
+			env.ambient_light_energy = 0.75
+		elif kind == "shadow_castle":
+			env.background_color = Color(0.02, 0.01, 0.03)
+			env.ambient_light_color = Color(0.55, 0.35, 0.75)
+			env.ambient_light_energy = 0.65
+		elif kind == "tower":
+			env.background_color = Color(0.04, 0.03, 0.03)
+			env.ambient_light_color = Color(0.78, 0.72, 0.62)
+			env.ambient_light_energy = 0.80
 		env.fog_enabled = false
 		if sun:
 			sun.visible = false
@@ -428,6 +556,14 @@ func _set_indoor_light(indoor: bool, kind: String = "") -> void:
 ## which the doors were opened: the save game remembers an opened chest by its position, so the position of a
 ## chest inside a house must be the same in every session.
 func _slot_for(door_id: String) -> int:
+	if door_id.begins_with("george_cottage"):
+		return 50
+	if door_id.begins_with("orc_castle"):
+		return 51
+	if door_id.begins_with("shadow_castle"):
+		return 52
+	if door_id.begins_with("tower"):
+		return 53
 	var tail := door_id.get_slice("_", door_id.get_slice_count("_") - 1)
 	if tail.is_valid_int():
 		return int(tail)
@@ -446,10 +582,15 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 	root.name = "Room_" + door_id
 	add_child(root)
 
-	var floor_mat := _material(Color(0.64, 0.46, 0.29), 0.85)
-	var wall_mat := _material(Color(0.88, 0.80, 0.64), 0.95)
-	var trim_mat := _material(Color(0.40, 0.27, 0.16), 0.8)
-	var ceiling_mat := _material(Color(0.36, 0.25, 0.16), 0.9)
+	var floor_col: Color = def.get("floor_color", Color(0.64, 0.46, 0.29))
+	var wall_col: Color = def.get("wall_color", Color(0.88, 0.80, 0.64))
+	var trim_col: Color = def.get("trim_color", Color(0.40, 0.27, 0.16))
+	var ceiling_col: Color = def.get("ceiling_color", Color(0.36, 0.25, 0.16))
+
+	var floor_mat := _material(floor_col, def.get("floor_roughness", 0.85))
+	var wall_mat := _material(wall_col, def.get("wall_roughness", 0.95))
+	var trim_mat := _material(trim_col, def.get("trim_roughness", 0.8))
+	var ceiling_mat := _material(ceiling_col, def.get("ceiling_roughness", 0.9))
 
 	# Floor, ceiling and the four walls are solid (the spring-arm camera stays inside too).
 	_box(root, origin + Vector3(0, -0.25, 0), Vector3(size.x + 2, 0.5, size.y + 2), floor_mat, true)
@@ -476,8 +617,8 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 	for cx in cols:
 		for cz in rows:
 			var light := OmniLight3D.new()
-			light.light_color = Color(1.0, 0.82, 0.55)
-			light.light_energy = 2.8
+			light.light_color = def.get("light_color", Color(1.0, 0.82, 0.55))
+			light.light_energy = def.get("light_energy", 2.8)
 			light.omni_range = maxf(size.x, size.y) * 0.6
 			light.position = origin + Vector3(-size.x / 2 + (cx + 0.5) * size.x / cols, h - 0.9, -size.y / 2 + (cz + 0.5) * size.y / rows)
 			root.add_child(light)

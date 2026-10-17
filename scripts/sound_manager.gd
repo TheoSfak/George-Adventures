@@ -357,14 +357,14 @@ func _update_ambience(delta: float) -> void:
 		var rain_out: float = _weather.rain
 		var rain_all: float = _weather.rain_raw
 		if out > 0.0 and rain_out > 0.01:
-			target["amb_rain"] = lerpf(-45.0, -3.0, sqrt(rain_out))
+			target["amb_rain"] = lerpf(-45.0, -7.0, sqrt(rain_out))
 			for layer in ["amb_day", "amb_night"]:
 				if float(target[layer]) > -59.0:
-					target[layer] = float(target[layer]) - 18.0 * rain_out
+					target[layer] = float(target[layer]) - 14.0 * rain_out
 			if float(target["wind_loop"]) > -59.0:
 				target["wind_loop"] = float(target["wind_loop"]) + 4.0 * float(_weather.storm)
 		if inside and sfx_on and kind != "catacombs" and rain_all > 0.01:
-			target["amb_rain_roof"] = lerpf(-45.0, -9.0, sqrt(rain_all))
+			target["amb_rain_roof"] = lerpf(-45.0, -12.0, sqrt(rain_all))
 	for id in _ambient:
 		var a: AudioStreamPlayer = _ambient[id]
 		a.volume_db = move_toward(a.volume_db, target[id], 30.0 * delta)

@@ -35,7 +35,7 @@ const BUILDINGS := [
 	["buildings/blue/building_blacksmith_blue.gltf", -93.5, 29.5, "blacksmith", 1.0, "nikitas"],
 	["buildings/red/building_lumbermill_red.gltf", 96.0, 40.0, "", 1.0, ""],
 	["buildings/yellow/building_windmill_yellow.gltf", -100.0, -54.1, "", 1.0, "stelios"],
-	["buildings/blue/building_tower_A_blue.gltf", 95.1, -78.7, "", 1.0, "vasilis"],
+	["buildings/blue/building_tower_A_blue.gltf", 95.1, -78.7, "tower", 1.0, "vasilis"],
 	["buildings/blue/building_well_blue.gltf", 0.0, 0.0, "", 0.6, ""],
 ]
 
@@ -783,12 +783,25 @@ func _build_ruined_outpost() -> void:
 	var destroyed := _place("buildings/neutral/building_destroyed.gltf", center, 45.0, BS * 1.2, holder)
 	_add_trimesh_collider(destroyed)
 
+	# Entrance door to explore inside the Ruined Orc Castle Keep!
+	var castle_door_front := center + Vector3(-3.5, 0.05, 4.0)
+	var orc_door_label: String = Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["orc_castle"]
+	var orc_castle_spot := InteractSpot.make(orc_door_label, func(player: Player):
+		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+		if interiors:
+			interiors.enter("orc_castle_0", "orc_castle", castle_door_front, deg_to_rad(45.0), player), 4.6)
+	orc_castle_spot.position = castle_door_front
+	holder.add_child(orc_castle_spot)
+
 	# Fortification walls & gates (gate and walls use trimesh collider so gateway arch and corridors are open!)
 	var wall1 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(-8.0, 0.0, -4.0), 20.0, BS * 1.0, holder)
 	_add_trimesh_collider(wall1)
 	var wall2 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(8.0, 0.0, 4.0), 20.0, BS * 1.0, holder)
 	_add_trimesh_collider(wall2)
 	var gate := _place("buildings/neutral/wall_corner_A_gate.gltf", center + Vector3(-12.0, 0.0, 6.0), -60.0, BS * 1.0, holder)
+	# Remove closed gate doors so the ruined fortress entrance arch is wide open and passable
+	for d in gate.find_children("*door*", "MeshInstance3D", true, false):
+		d.free()
 	_add_trimesh_collider(gate)
 
 	# Siege weapon & war banners
@@ -1466,6 +1479,7 @@ func _build_animals() -> void:
 		for d_pos in deer_positions:
 			var deer = deer_script.new()
 			deer.position = d_pos
+			deer.scale = Vector3.ONE * 1.25
 			deer.rotation.y = randf() * TAU
 			holder.add_child(deer)
 

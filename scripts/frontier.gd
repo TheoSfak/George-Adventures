@@ -473,6 +473,16 @@ func _build_fortress() -> void:
 	_tint(keep, Color(0.10, 0.06, 0.18, 0.55))
 	_root.add_child(keep)
 	Interiors.collider_for(keep)
+
+	# Entrance door to explore inside the Fortress of Shadow Keep!
+	var shadow_door_front := wp(0.0, -160.0, 0.05)
+	var shadow_door_label: String = Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["shadow_castle"]
+	var shadow_castle_spot := InteractSpot.make(shadow_door_label, func(player: Player):
+		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+		if interiors:
+			interiors.enter("shadow_castle_0", "shadow_castle", shadow_door_front, 0.0, player), 5.0)
+	shadow_castle_spot.position = shadow_door_front
+	_root.add_child(shadow_castle_spot)
 	# purple braziers along the courtyard
 	for z in [-126.0, -146.0, -166.0]:
 		for x in [-30.0, 30.0]:

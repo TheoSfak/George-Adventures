@@ -30,10 +30,10 @@ const STORM_MIN := 0.6                # lightning only while the storm is this s
 const BOLT_MIN := 6.0
 const BOLT_MAX := 18.0
 const BOLT_SECONDS := 0.25
-const RAIN_AMOUNT := 3200             # fixed particle count; the intensity scales amount_ratio
-const RAIN_ALPHA_DAY := 0.34          # the streaks are unshaded, so they are made fainter at night
-const RAIN_ALPHA_NIGHT := 0.2
-const RAIN_LIFETIME := 0.5            # seconds; a drop falls about 14 m in that time
+const RAIN_AMOUNT := 1600             # softer particle count (was 3200); reduces visual noise & screen clutter
+const RAIN_ALPHA_DAY := 0.31          # gentle, semi-translucent drops (was 0.34)
+const RAIN_ALPHA_NIGHT := 0.16        # softer at night (was 0.20)
+const RAIN_LIFETIME := 0.55           # seconds; a drop falls smoothly through the 14 m box
 const RAIN_HEIGHT := 14.0             # the emitter hangs this high above George
 const RAIN_HALF := 15.0               # half the side of the rain box (30 x 30 m)
 
@@ -246,20 +246,28 @@ func _build_rain() -> void:
 	pm.emission_box_extents = Vector3(RAIN_HALF, 0.5, RAIN_HALF)
 	pm.direction = Vector3(0.12, -1.0, 0.05)
 	pm.spread = 1.5
-	pm.initial_velocity_min = 26.0
-	pm.initial_velocity_max = 30.0
+	pm.initial_velocity_min = 22.0
+	pm.initial_velocity_max = 26.0
 	pm.gravity = Vector3.ZERO
 	pm.particle_flag_align_y = true
 	_rain.process_material = pm
 	var quad := QuadMesh.new()
-	quad.size = Vector2(0.02, 0.8)
+	quad.size = Vector2(0.009, 0.52)
 	_rain_mat = StandardMaterial3D.new()
 	_rain_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_rain_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_rain_mat.albedo_color = Color(0.78, 0.86, 1.0, RAIN_ALPHA_DAY)
+	_rain_mat.albedo_color = Color(0.74, 0.82, 0.94, RAIN_ALPHA_DAY)
 	_rain_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
 	_rain_mat.billboard_keep_scale = true
 	_rain_mat.disable_receive_shadows = true
+	var img := Image.create(2, 32, false, Image.FORMAT_RGBA8)
+	for y in 32:
+		var t := float(y) / 31.0
+		var a := sin(t * PI)
+		a = pow(a, 0.75)
+		for x in 2:
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a))
+	_rain_mat.albedo_texture = ImageTexture.create_from_image(img)
 	quad.material = _rain_mat
 	_rain.draw_pass_1 = quad
 	add_child(_rain)
@@ -276,7 +284,7 @@ func apply_effects() -> void:
 			if _daynight == null:
 				_daynight = get_tree().get_first_node_in_group("daynight")
 			var dark: float = _daynight.darkness() if _daynight != null else 0.0
-			_rain_mat.albedo_color = Color(0.78, 0.86, 1.0, lerpf(RAIN_ALPHA_DAY, RAIN_ALPHA_NIGHT, dark))
+			_rain_mat.albedo_color = Color(0.74, 0.82, 0.94, lerpf(RAIN_ALPHA_DAY, RAIN_ALPHA_NIGHT, dark))
 	if absf(wet - _wet_sent) > 0.002:
 		_wet_sent = wet
 		RenderingServer.global_shader_parameter_set("wetness", wet)

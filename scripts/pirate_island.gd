@@ -642,11 +642,41 @@ func _build_wildlife() -> void:
 
 	for off in cow_offsets:
 		var cow := VillageCow.new()
-		cow.scale = Vector3.ONE * 1.55 # Grand highland cattle
+		cow.scale = Vector3.ONE * 1.75 # Grand highland cattle
 		var cy := _calc_island_height(off.x, off.y)
 		cow.position = ISLAND_CENTER + Vector3(off.x, cy, off.y)
 		cow.rotation.y = randf() * TAU
 		wildlife_holder.add_child(cow)
+
+	# 4 Grand Island Wolves roaming the high forest ridges and northern wilderness
+	var wolf_offsets: Array[Vector2] = [
+		Vector2(-92.0, -42.0), # Western high forest ridge
+		Vector2(-72.0, -68.0), # Northwestern pine grove
+		Vector2(48.0, -52.0),  # Northeastern clifftops
+		Vector2(-42.0, 78.0),  # Southern wild valley
+	]
+	var wolf_sc := load("res://assets/characters/Wolf.glb") as PackedScene
+	if wolf_sc:
+		for w_off in wolf_offsets:
+			var wolf_body := CharacterBody3D.new()
+			wolf_body.collision_layer = 16
+			wolf_body.collision_mask = 1
+			var w_model := wolf_sc.instantiate() as Node3D
+			w_model.scale = Vector3.ONE * 0.85
+			wolf_body.add_child(w_model)
+			var w_anim := w_model.find_child("AnimationPlayer", true, false) as AnimationPlayer
+			if w_anim and w_anim.has_animation("AnimalArmature|Idle"):
+				w_anim.play("AnimalArmature|Idle")
+			var w_col := CollisionShape3D.new()
+			var w_box := BoxShape3D.new()
+			w_box.size = Vector3(1.4, 2.0, 3.8)
+			w_col.shape = w_box
+			w_col.position = Vector3(0.0, 1.0, 0.0)
+			wolf_body.add_child(w_col)
+			var wy := _calc_island_height(w_off.x, w_off.y)
+			wolf_body.position = ISLAND_CENTER + Vector3(w_off.x, wy, w_off.y)
+			wolf_body.rotation.y = randf() * TAU
+			wildlife_holder.add_child(wolf_body)
 
 
 # =========================================================================

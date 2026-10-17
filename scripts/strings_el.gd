@@ -129,6 +129,9 @@ const BUILDING_NAMES := {
 	"market": "Παζάρι",
 	"home": "Σπίτι",
 	"george_cottage": "Το Σπίτι του Γιώργου",
+	"tower": "Πύργος Φρουράς",
+	"orc_castle": "Κάστρο των Όρκ",
+	"shadow_castle": "Κάστρο των Σκιών",
 	"catacombs": "Κατακόμβη",
 	"frontier": "Βουνίσιο Πέρασμα", "ashvalley": "Κοιλάδα της Στάχτης", "temple": "Άδυτο της Φλόγας",
 }

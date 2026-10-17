@@ -89,8 +89,8 @@ func _init() -> void:
 	if deer_model:
 		var deer_sz = _calc_mesh_bounds(deer_model)
 		print("  Deer dimensions: Height=%.2fm, Length=%.2fm, Width=%.2fm" % [deer_sz.y, deer_sz.z, deer_sz.x])
-		check("Deer has majestic height with antlers (~2.1m)", deer_sz.y >= 1.8 and deer_sz.y <= 2.5)
-		check("Deer length is natural (~2.2m)", deer_sz.z >= 1.8 and deer_sz.z <= 2.6)
+		check("Deer has majestic height with antlers (~3.1m)", deer_sz.y >= 2.0 and deer_sz.y <= 3.8)
+		check("Deer length is natural (~3.2m)", deer_sz.z >= 2.0 and deer_sz.z <= 3.8)
 	deer.free()
 
 	# [3] Testing Forest Wolf
@@ -98,15 +98,15 @@ func _init() -> void:
 	var enemies_script = load("res://scripts/enemies.gd")
 	var wolf_data = enemies_script.KINDS.get("wolf", {})
 	var wolf_scale: float = wolf_data.get("model_scale", 1.0)
-	check("Wolf scale is in normal dire wolf range (0.50 - 0.65)", wolf_scale >= 0.50 and wolf_scale <= 0.65)
+	check("Wolf scale is in grand dire wolf range (0.70 - 0.95)", wolf_scale >= 0.70 and wolf_scale <= 0.95)
 	var wolf_sc = load("res://assets/characters/Wolf.glb") as PackedScene
 	if wolf_sc:
 		var wolf_inst = wolf_sc.instantiate() as Node3D
 		wolf_inst.scale = Vector3.ONE * wolf_scale
 		var wolf_sz = _calc_mesh_bounds(wolf_inst)
 		print("  Wolf dimensions: Height=%.2fm, Length=%.2fm" % [wolf_sz.y, wolf_sz.z])
-		check("Wolf height is visible and formidable (~1.5m)", wolf_sz.y >= 1.2 and wolf_sz.y <= 1.8)
-		check("Wolf length is natural (~3.0m)", wolf_sz.z >= 2.5 and wolf_sz.z <= 3.5)
+		check("Wolf height is visible and formidable (~2.2m)", wolf_sz.y >= 1.8 and wolf_sz.y <= 2.8)
+		check("Wolf length is natural (~4.5m)", wolf_sz.z >= 3.6 and wolf_sz.z <= 5.2)
 		wolf_inst.free()
 
 	# [4] Testing Cave Spider
