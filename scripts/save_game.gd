@@ -115,11 +115,14 @@ static func save() -> bool:
 			"region": region_id,
 			"fish_seen": player.fish_seen,
 			"horse_owned": player.horse_owned,
+			"cottage_owned": player.cottage_owned,
+			"stash": player.stash,
 		},
 		"rescue": rescue.save_data() if rescue != null else {},
 		"enemies": spawner.save_data() if spawner != null else {},
 		"invasion": invasion.save_data() if invasion != null else {},
 		"bounties": bounty_mgr.save_data() if bounty_mgr != null else {},
+		"cottage_garden": tree.get_first_node_in_group("cottage_garden").save_data() if tree.get_first_node_in_group("cottage_garden") != null else {},
 		"quests": quests_dict,
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
@@ -207,6 +210,17 @@ static func apply(d: Dictionary) -> void:
 	player.fish_seen.assign(pd.get("fish_seen", []))
 	player.dismount(false)
 	player.horse_owned = bool(pd.get("horse_owned", false))
+	player.cottage_owned = bool(pd.get("cottage_owned", false))
+	if pd.has("stash") and pd["stash"] is Dictionary:
+		var st: Dictionary = pd["stash"]
+		player.stash = {
+			"gear": (st.get("gear", []) as Array).duplicate(),
+			"junk": (st.get("junk", {}) as Dictionary).duplicate(),
+			"consumables": (st.get("consumables", {}) as Dictionary).duplicate(),
+		}
+	else:
+		player.stash = {"gear": [], "junk": {}, "consumables": {}}
+	player.stash_changed.emit()
 	player.is_dead = false
 	player._recalc()
 	player.health = minf(float(pd.get("health", player.max_health)), player.max_health)
@@ -247,6 +261,9 @@ static func apply(d: Dictionary) -> void:
 	var bounty_mgr := tree.get_first_node_in_group("bounty_manager")
 	if bounty_mgr != null and d.has("bounties"):
 		bounty_mgr.load_data(d.get("bounties", {}))
+	var garden := tree.get_first_node_in_group("cottage_garden")
+	if garden != null and d.has("cottage_garden"):
+		garden.load_data(d.get("cottage_garden", {}))
 
 	var wd: Dictionary = d["world"]
 	var village_spawns := tree.get_first_node_in_group("enemy_spawner")

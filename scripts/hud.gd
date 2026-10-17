@@ -52,6 +52,7 @@ var _hero: HeroWindow
 var _shop: ShopWindow
 var _fishing: Fishing
 var _bounty_window: BountyWindow
+var _stash_window: StashWindow
 var _hint: Label
 var _clock_label: Label
 var _clock_icon: Control
@@ -603,6 +604,10 @@ func _input(event: InputEvent) -> void:
 		_bounty_window.close()
 		get_viewport().set_input_as_handled()
 		return
+	if _stash_window != null and _stash_window.is_open() and event.is_action_pressed("ui_cancel"):
+		_stash_window.close()
+		get_viewport().set_input_as_handled()
+		return
 	if _big_map.visible and event.is_action_pressed("ui_cancel"):
 		_big_map.visible = false
 		Sfx.ui("window_close")
@@ -1001,6 +1006,8 @@ func _build_windows() -> void:
 	add_child(_fishing)
 	_bounty_window = BountyWindow.new()
 	add_child(_bounty_window)
+	_stash_window = StashWindow.new()
+	add_child(_stash_window)
 	if _player:
 		_player.talents_changed.connect(_update_hint)
 		_player.leveled_up.connect(func(_l): _update_hint())
@@ -1038,14 +1045,32 @@ func open_bounty_board(player: Player) -> void:
 		_shop.close()
 	if _hero != null and _hero.visible:
 		_hero.visible = false
-	if _dialogue != null and _dialogue.visible:
-		_dialogue.visible = false
+	if _dlg_panel != null and _dlg_panel.visible:
+		_dlg_panel.visible = false
 	if _bounty_window != null:
 		_bounty_window.open(player)
 
 
 func is_bounty_window_open() -> bool:
 	return _bounty_window != null and _bounty_window.is_open()
+
+
+## Opens the personal storage stash chest window.
+func open_stash(player: Player) -> void:
+	if _shop != null and _shop.is_open():
+		_shop.close()
+	if _hero != null and _hero.visible:
+		_hero.visible = false
+	if _bounty_window != null and _bounty_window.is_open():
+		_bounty_window.close()
+	if _dlg_panel != null and _dlg_panel.visible:
+		_dlg_panel.visible = false
+	if _stash_window != null:
+		_stash_window.open(player)
+
+
+func is_stash_open() -> bool:
+	return _stash_window != null and _stash_window.is_open()
 
 
 # ------------------------------------------------------------------- fading ----

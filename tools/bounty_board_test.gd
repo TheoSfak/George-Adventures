@@ -19,7 +19,7 @@ func _assert(condition: bool, msg: String) -> void:
 		print("  FAIL: %s" % msg)
 
 
-func _initialize() -> void:
+func _init() -> void:
 	_run()
 
 

@@ -120,6 +120,9 @@ var food := {}                   # the meal George ate: {"id": String, "time": s
 var blade_coating := {"type": "", "time": 0.0, "power": 0.0, "mods": {}} # active blade coating
 var active_elixirs := {}         # elixir_id -> {"time": float, "mods": Dictionary}
 var junk := {}                   # junk id -> count, sold at the market
+var cottage_owned := false        # whether George has purchased & repaired his cottage
+var stash := {"gear": [], "junk": {}, "consumables": {}} # George's personal storage stash
+signal stash_changed
 var talents := {}                # talent id -> rank (talent_data.gd)
 var _frenzy_time := 0.0
 var _shout_time := 0.0
@@ -1447,6 +1450,87 @@ func unequip(slot: String) -> void:
 	_recalc()
 	_update_equipment_visuals()
 	gear_changed.emit()
+
+
+# ---------------------------------------------------------------- stash ----
+
+func deposit_gear(id: String) -> bool:
+	if not gear_owned.has(id):
+		return false
+	if equipped.get("weapon") == id or equipped.get("armor") == id or equipped.get("shield") == id:
+		message.emit("Δεν μπορείς να αποθηκεύσεις εξοπλισμένο αντικείμενο!")
+		return false
+	gear_owned.erase(id)
+	var st_gear: Array = stash.get("gear", [])
+	st_gear.append(id)
+	stash["gear"] = st_gear
+	gear_changed.emit()
+	stash_changed.emit()
+	return true
+
+
+func withdraw_gear(id: String) -> bool:
+	var st_gear: Array = stash.get("gear", [])
+	if not st_gear.has(id):
+		return false
+	st_gear.erase(id)
+	gear_owned.append(id)
+	gear_changed.emit()
+	stash_changed.emit()
+	return true
+
+
+func deposit_junk(id: String, amount: int = 1) -> bool:
+	var cur: int = int(junk.get(id, 0))
+	if cur < amount:
+		return false
+	junk[id] = cur - amount
+	if int(junk[id]) <= 0:
+		junk.erase(id)
+	var st_junk: Dictionary = stash.get("junk", {})
+	st_junk[id] = int(st_junk.get(id, 0)) + amount
+	stash["junk"] = st_junk
+	stash_changed.emit()
+	return true
+
+
+func withdraw_junk(id: String, amount: int = 1) -> bool:
+	var st_junk: Dictionary = stash.get("junk", {})
+	var cur: int = int(st_junk.get(id, 0))
+	if cur < amount:
+		return false
+	st_junk[id] = cur - amount
+	if int(st_junk[id]) <= 0:
+		st_junk.erase(id)
+	junk[id] = int(junk.get(id, 0)) + amount
+	stash_changed.emit()
+	return true
+
+
+func deposit_consumable(id: String, amount: int = 1) -> bool:
+	var cur: int = int(consumables.get(id, 0))
+	if cur < amount:
+		return false
+	consumables[id] = cur - amount
+	var st_c: Dictionary = stash.get("consumables", {})
+	st_c[id] = int(st_c.get(id, 0)) + amount
+	stash["consumables"] = st_c
+	stash_changed.emit()
+	return true
+
+
+func withdraw_consumable(id: String, amount: int = 1) -> bool:
+	var st_c: Dictionary = stash.get("consumables", {})
+	var cur: int = int(st_c.get(id, 0))
+	if cur < amount:
+		return false
+	st_c[id] = cur - amount
+	if int(st_c[id]) <= 0:
+		st_c.erase(id)
+	consumables[id] = int(consumables.get(id, 0)) + amount
+	stash_changed.emit()
+	return true
+
 
 
 func _gear_tier(slot: String) -> int:

@@ -19,6 +19,23 @@ const C := "res://assets/characters/"
 # rotation 0 = faces +Z (toward the door); 90 faces +X; 180 faces the back wall; 270 faces -X.
 # chest entry: [x, z, rotation, golden, gold_min, gold_max, potions]
 const DEFS := {
+	"george_cottage": {
+		"size": Vector2(16, 13), "height": 4.5,
+		"furniture": [
+			[F + "bed_double_A.gltf", -5.2, -3.8, 0, 1.0],
+			[F + "table_medium.gltf", 2.5, 0.5, 0, 1.0],
+			[F + "chair_A_wood.gltf", 2.5, 2.4, 180, 1.0],
+			[F + "chair_A_wood.gltf", 0.5, 0.5, 90, 1.0],
+			[F + "cabinet_medium_decorated.gltf", 5.2, -1.8, 270, 1.0],
+			[F + "shelf_B_large_decorated.gltf", 0.0, -6.1, 0, 1.0, 2.0],
+			[F + "couch.gltf", -5.4, 2.2, 90, 1.0],
+			[F + "rug_rectangle_A.gltf", 0.0, 1.8, 0, 1.5],
+			[F + "lamp_standing.gltf", -6.8, -5.4, 0, 1.0],
+			[I + "candle_lit.gltf.glb", 2.5, 0.5, 0, 1.0, 1.0],
+			[P + "weaponrack.gltf", -6.6, -0.8, 90, 1.2],
+		],
+		"chests": [],
+	},
 	"home": {
 		"size": Vector2(14, 12), "height": 4.2,
 		"furniture": [
@@ -518,6 +535,32 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 		root.add_child(chest)
 		if SaveGame.opened_chests.has(SaveGame.key_for(chest.position)):
 			chest.mark_opened()                  # opened in an earlier session
+
+	if kind == "george_cottage":
+		var stash_script = load("res://scripts/personal_stash.gd")
+		var stash_node: Node3D = stash_script.new()
+		stash_node.position = origin + Vector3(5.2, 0.0, -4.5)
+		stash_node.rotation_degrees.y = 180.0
+		root.add_child(stash_node)
+
+		var trophy_script = load("res://scripts/trophy_wall.gd")
+		var trophy_node: Node3D = trophy_script.new()
+		trophy_node.position = origin + Vector3(0.0, 1.8, -size.y / 2.0 + 0.15)
+		root.add_child(trophy_node)
+
+		var bed_spot := InteractSpot.make(
+			"[R] Ανάπαυση & Ύπνος (Πλήρης Θεραπεία)",
+			func(p: Player):
+				p.health = p.max_health
+				var daynight := get_tree().get_first_node_in_group("daynight") as DayNight
+				if daynight != null:
+					daynight.time_of_day = 8.0
+				p.message.emit("Ξεκουράστηκες στο κρεβάτι σου! Η υγεία σου αποκαταστάθηκε πλήρως.")
+				Sfx.ui("quest_complete"),
+			3.2
+		)
+		bed_spot.position = origin + Vector3(-5.2, 0.5, -3.8)
+		root.add_child(bed_spot)
 
 	# The way out
 	var door_z := size.y / 2
