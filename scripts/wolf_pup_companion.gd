@@ -228,7 +228,8 @@ func _physics_process(delta: float) -> void:
 			_target_pos = _target_enemy.global_position
 		else:
 			_target_enemy = null
-			var offset := Basis(Vector3.UP, player_node.rotation.y) * Vector3(-1.6, 0.0, 1.4)
+			var p_rot: float = player_node.call("get_heading") if player_node.has_method("get_heading") else player_node.rotation.y
+			var offset := Basis(Vector3.UP, p_rot) * Vector3(-1.6, 0.0, 1.4)
 			_target_pos = p_pos + offset
 
 		var move_vec := _target_pos - my_pos

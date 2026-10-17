@@ -313,6 +313,8 @@ func _update_mouse_look(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if rotation != Vector3.ZERO:
+		rotation = Vector3.ZERO
 	_update_mouse_look(delta)
 	_update_interaction()
 	_update_mount(delta)
@@ -327,6 +329,12 @@ func _physics_process(delta: float) -> void:
 		for i in bar.size():
 			if Input.is_action_just_pressed("slot_%d" % (i + 1)):
 				use_slot(i)
+	if sailing:
+		velocity = Vector3.ZERO
+		if _rig != null:
+			_update_camera(delta)
+		_update_animation()
+		return
 	var rmb := _game_rmb
 	var lmb := _game_lmb
 
@@ -2197,14 +2205,26 @@ func _update_interaction() -> void:
 		best.call("interact", self)
 
 
+func get_heading() -> float:
+	return _heading
+
+
+func set_heading(h: float, update_camera: bool = false) -> void:
+	rotation = Vector3.ZERO
+	_heading = wrapf(h, -PI, PI)
+	if _model_root != null:
+		_model_root.rotation.y = _heading
+	if update_camera:
+		_yaw = wrapf(_heading + PI, -PI, PI)
+		if _rig != null:
+			_rig.rotation.y = _yaw
+
+
 ## Moves George somewhere instantly (doors) and points him and the camera along `heading`.
 func teleport(pos: Vector3, heading: float) -> void:
 	global_position = pos
 	velocity = Vector3.ZERO
-	_heading = heading
-	if _model_root != null:
-		_model_root.rotation.y = heading
-	_yaw = heading + PI
+	set_heading(heading, true)
 	if _rig != null:
 		_rig.global_position = pos + Vector3.UP * camera_height
 
@@ -2290,6 +2310,7 @@ func unstuck() -> void:
 	_attacking = false
 	_attack_queued = 0.0
 	_landing = false
+	set_heading(PI, true)
 	_play("Idle", 0.2, true)
 	Sfx.ui("heal")
 	message.emit(Strings.MSG_UNSTUCK)
@@ -2297,6 +2318,9 @@ func unstuck() -> void:
 
 func _update_animation() -> void:
 	if _anim == null or (_attacking and not _swing_layer) or _dodging or _kicking or _air_attacking or _landing or is_dead or _stun > 0.0 or _special_time > 0.0:
+		return
+	if sailing:
+		_play("Sit_Chair_Idle", 0.2)
 		return
 	if mounted:
 		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
@@ -2356,6 +2380,8 @@ func _on_animation_finished(anim_name: StringName) -> void:
 
 
 func is_in_water() -> bool:
+	if sailing:
+		return false
 	var pos := global_position if is_inside_tree() else position
 	# South Sea coastal waters and deep ocean
 	if pos.z >= 85.0 and pos.z <= 480.0 and pos.x >= -195.0 and pos.x <= 80.0 and pos.y <= 0.20:

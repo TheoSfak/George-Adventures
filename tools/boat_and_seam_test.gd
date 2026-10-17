@@ -33,6 +33,7 @@ func _init() -> void:
 	_test_beach_seam_geometry()
 	_test_boat_dismount_and_anti_reboard()
 	_test_boat_esc_and_unstuck()
+	_test_boat_rotation_and_heading_invariance()
 
 	print("==================================================")
 	print("Summary: %d Passed, %d Failed" % [_passed, _failed])
@@ -153,3 +154,67 @@ func _test_boat_esc_and_unstuck() -> void:
 	menu.free()
 	player.free()
 	boat.free()
+
+func _test_boat_rotation_and_heading_invariance() -> void:
+	print("\n[4] Testing Boat Rotation, Heading Invariance & Walk Direction...")
+	var boat: SailingBoat = SailingBoatClass.new()
+	root.add_child(boat)
+	boat._ready()
+
+	var player_scene: PackedScene = load("res://scenes/player.tscn")
+	var player: Player = player_scene.instantiate() as Player
+	player.position = Vector3(-24.0, 0.0, 112.0)
+	root.add_child(player)
+
+	# 1. Player starts on foot
+	_check(player.rotation == Vector3.ZERO, "Player starts with exact Vector3.ZERO rotation")
+	_check(absf(player.get_heading() - PI) < 0.01, "Player starts with heading PI (facing -Z)")
+
+	# 2. Board boat facing South (_yaw = PI, towards Pirate Island)
+	boat.set("_yaw", PI)
+	boat.rotation.y = PI
+	boat.call("board", player)
+
+	_check(player.sailing == true, "Player is sailing on the boat")
+	_check(player.rotation == Vector3.ZERO, "Player CharacterBody3D rotation remains Vector3.ZERO after boarding")
+	# Boat forward is +Z, so player heading facing forward should be _yaw + PI = 2*PI == 0.0
+	var h_south: float = player.get_heading()
+	_check(absf(sin(h_south)) < 0.01 and cos(h_south) > 0.99, "Player heading faces boat bow along +Z (sin=%.2f, cos=%.2f)" % [sin(h_south), cos(h_south)])
+
+	# 3. Simulate sailing physics tick on the boat
+	boat._physics_process(0.016)
+	_check(player.rotation == Vector3.ZERO, "Player rotation is preserved as Vector3.ZERO during sailing physics process")
+
+	# 4. Disembark on the Pirate Island
+	boat.call("disembark")
+	_check(player.sailing == false, "Player disembarked onto island")
+	_check(player.rotation == Vector3.ZERO, "Player rotation is strictly Vector3.ZERO after disembarking on island (NOT backwards!)")
+	var h_island: float = player.get_heading()
+	_check(absf(sin(h_island)) < 0.01 and cos(h_island) > 0.99, "Player disembarks facing forward (cos=%.2f > 0.99)" % cos(h_island))
+
+	# 5. Simulate player forward movement on island: verify velocity direction matches facing
+	var facing := Vector3(sin(player.get_heading()), 0.0, cos(player.get_heading()))
+	_check(facing.z > 0.99, "Facing vector points forward along +Z (z=%.2f)" % facing.z)
+
+	# 6. Re-board boat and steer diagonally (e.g. returning to Agios Vlasis at 45 degree angle)
+	boat.set("_board_cooldown", 0.0)
+	boat.set("_yaw", 0.785398) # 45 degrees diagonal
+	boat.rotation.y = 0.785398
+	boat.call("board", player)
+	_check(player.rotation == Vector3.ZERO, "Player rotation remains Vector3.ZERO while boarding diagonally")
+
+	boat._physics_process(0.016)
+	_check(player.rotation == Vector3.ZERO, "Player rotation remains Vector3.ZERO during diagonal sailing")
+
+	# 7. Disembark at Agios Vlasis dock
+	boat.call("disembark")
+	_check(player.rotation == Vector3.ZERO, "Player rotation remains strictly Vector3.ZERO after disembarking at Agios Vlasis (NO diagonal drift!)")
+
+	# 8. Unstuck safeguard test
+	player.rotation.y = 1.57 # intentionally perturb
+	player.unstuck()
+	_check(player.rotation == Vector3.ZERO, "Player unstuck forces rotation back to Vector3.ZERO")
+
+	player.free()
+	boat.free()
+

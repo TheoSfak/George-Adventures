@@ -179,11 +179,17 @@ func board(player: Player) -> void:
 	player.set("boat", self)
 	if player.has_method("consume_interact"):
 		player.consume_interact(0.35)
+	player.rotation = Vector3.ZERO
+	if player.has_method("set_heading"):
+		player.set_heading(_yaw + PI, true)
+	else:
+		player.set("_heading", _yaw + PI)
+	var seat_pos := Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.72, 1.2)
 	if is_inside_tree() and player.is_inside_tree():
-		player.global_position = global_position + Vector3(0.0, 0.7, 1.2)
+		player.global_position = global_position + seat_pos
 		Sfx.play("door_open", global_position)
 	else:
-		player.position = position + Vector3(0.0, 0.7, 1.2)
+		player.position = position + seat_pos
 	player.velocity = Vector3.ZERO
 	player._play("Sit_Chair_Idle", 0.2)
 	player.message.emit("Σαλπάρισες! [W/S] Πρόωση, [A/D] Πηδάλιο, [Shift] Άνοιγμα Πανιού, [R] Αποβίβαση.")
@@ -204,6 +210,7 @@ func disembark(place_player: bool = true) -> void:
 	if p.has_method("consume_interact"):
 		p.consume_interact(0.4)
 
+	p.rotation = Vector3.ZERO
 	if place_player:
 		# Step off beside the boat onto nearest dry land / dock or water surface
 		var exit_pos: Vector3
@@ -215,6 +222,11 @@ func disembark(place_player: bool = true) -> void:
 			exit_pos = position + Basis(Vector3.UP, _yaw) * Vector3(2.4, 0.5, 0.0)
 			p.position = exit_pos
 		p.velocity = Vector3.ZERO
+		p.rotation = Vector3.ZERO
+		if p.has_method("set_heading"):
+			p.set_heading(_yaw + PI, true)
+		else:
+			p.set("_heading", _yaw + PI)
 		p._play("Idle", 0.2)
 		p.message.emit("Αποβιβάστηκες από τη βάρκα.")
 	disembarked.emit()
@@ -277,7 +289,11 @@ func _physics_process(delta: float) -> void:
 		global_position.z = clampf(global_position.z, MIN_Z, MAX_Z)
 		if current_player != null and current_player.is_inside_tree():
 			current_player.global_position = global_position + Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.72 + wave_bob, 1.2)
-			current_player.rotation.y = _yaw
+			current_player.rotation = Vector3.ZERO
+			if current_player.has_method("set_heading"):
+				current_player.set_heading(_yaw + PI)
+			else:
+				current_player.set("_heading", _yaw + PI)
 			if _board_cooldown <= 0.0 and Input.is_action_just_pressed("interact"):
 				disembark()
 	else:
