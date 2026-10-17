@@ -159,12 +159,19 @@ var _game_lmb := false           # mouse buttons that went down over the game, n
 var _game_rmb := false
 var _guard_visual: MeshInstance3D
 var busy := false              # in a dialogue or a door transition: George stands still
+var sailing := false           # on a sailing skiff / boat in the South Sea
+var boat: Node = null          # current sailing boat instance
 var horse_owned := false       # bought at the stable (saved)
 var mounted := false           # riding (not saved: after loading George is on foot)
 var _horse: Horse
 var _mount_swallow := 0.0      # after an attack or skill press threw him off the horse, that press is spent
+var _interact_swallow := 0.0   # debounces interact input to prevent duplicate board/dismount on same frame
 const MOUNT_CAMERA_LIFT := 0.7
 var _interactable: Node
+
+func consume_interact(time: float = 0.35) -> void:
+	_interact_swallow = maxf(_interact_swallow, time)
+
 var _last_prompt := ""
 var _stun := 0.0
 var _slow_time := 0.0           # a soul collector's shot: George moves slower for a while
@@ -310,9 +317,11 @@ func _physics_process(delta: float) -> void:
 	_update_interaction()
 	_update_mount(delta)
 	_tick_timers(delta)
-	if not busy and _mount_swallow <= 0.0:
-		if Input.is_action_just_pressed("unstuck") and not is_dead:
+	_interact_swallow = maxf(_interact_swallow - delta, 0.0)
+	if not is_dead and (not busy or sailing) and _mount_swallow <= 0.0:
+		if Input.is_action_just_pressed("unstuck"):
 			unstuck()
+	if not busy and _mount_swallow <= 0.0:
 		if Input.is_action_just_pressed("potion"):
 			use_consumable("health")
 		for i in bar.size():
@@ -2183,7 +2192,8 @@ func _update_interaction() -> void:
 	if text != _last_prompt:
 		_last_prompt = text
 		prompt_changed.emit(text)
-	if best != null and Input.is_action_just_pressed("interact"):
+	if _interact_swallow <= 0.0 and best != null and Input.is_action_just_pressed("interact"):
+		_interact_swallow = 0.35
 		best.call("interact", self)
 
 
@@ -2218,6 +2228,14 @@ func _announce() -> void:
 
 
 func _die() -> void:
+	if sailing and is_instance_valid(boat):
+		boat.call("disembark", false)
+	elif is_inside_tree():
+		for b in get_tree().get_nodes_in_group("boats"):
+			if b.has_method("disembark") and b.get("current_player") == self:
+				b.call("disembark", false)
+	sailing = false
+	boat = null
 	is_dead = true
 	_attacking = false
 	_blocking = false
@@ -2247,7 +2265,18 @@ func _respawn() -> void:
 func unstuck() -> void:
 	if mounted and is_instance_valid(_horse):
 		dismount()
-	global_position = _spawn_point + Vector3(0.0, 0.2, 0.0)
+	if sailing and is_instance_valid(boat):
+		boat.call("disembark", false)
+	elif is_inside_tree():
+		for b in get_tree().get_nodes_in_group("boats"):
+			if b.has_method("disembark") and b.get("current_player") == self:
+				b.call("disembark", false)
+	sailing = false
+	boat = null
+	if is_inside_tree():
+		global_position = _spawn_point + Vector3(0.0, 0.2, 0.0)
+	else:
+		position = _spawn_point + Vector3(0.0, 0.2, 0.0)
 	velocity = Vector3.ZERO
 	is_dead = false
 	busy = false

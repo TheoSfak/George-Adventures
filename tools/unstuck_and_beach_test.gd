@@ -65,7 +65,7 @@ func _run() -> void:
 		paused = false
 
 	# Test 3: Pier jumping into sea lands on solid seabed
-	player.global_position = Vector3(-31.0, 1.0, 120.0) # jumping off east side of pier into sea
+	player.global_position = Vector3(-24.0, 1.0, 120.0) # jumping east of pier and skiff into open sea
 	player.velocity = Vector3(2.0, 0.0, 0.0)
 	for f in 40:
 		await physics_frame

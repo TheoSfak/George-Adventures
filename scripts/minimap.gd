@@ -26,7 +26,7 @@ const PLACES := [
 	["bridge_meadow", 70.0, -66.0], ["highlands", 82.0, -155.0], ["shipwreck", -72.0, 168.0],
 	["cliffs", 64.0, 160.0], ["barracks", 78.0, -84.0], ["orc_stronghold", 150.0, 68.0],
 	["golden_grove", 55.0, 25.0], ["grotto", -15.0, 142.0], ["bounty_board", -53.5, -12.5],
-	["george_cottage", -28.0, -28.0],
+	["george_cottage", -28.0, -28.0], ["pirate_island", -25.0, 465.0], ["camp_babis", -22.0, 92.0],
 ]
 const SHOPS := [
 	Vector2(59.0, -11.5), Vector2(-93.5, 29.5),
@@ -40,6 +40,7 @@ const BOSS_AREAS := {
 	"warband_totem": Vector2(150.0, 68.0), "orc_catapult": Vector2(145.0, 79.0),
 	"wolf": Vector2(55.0, 25.0), "spider": Vector2(140.0, 125.0),
 	"brute": Vector2(140.0, 125.0), "cursed_scarecrow": Vector2(-95.0, -50.0),
+	"pirate_captain": Vector2(-25.0, 465.0),
 }
 
 const REGION_DATA := {

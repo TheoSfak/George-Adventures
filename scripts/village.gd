@@ -1731,7 +1731,7 @@ func _build_dock(pond: Vector2, radius: float) -> void:
 
 
 func _is_in_sea(pos: Vector2) -> bool:
-	return pos.y >= 86.0 and pos.x >= -165.0 and pos.x <= 55.0
+	return pos.y >= 84.5 and pos.x >= -192.0 and pos.x <= 56.0
 
 
 func _finish_terrain() -> void:

@@ -8,7 +8,9 @@ const COAST_CENTER := Vector3(-55.0, 0.0, 135.0)
 const LIGHTHOUSE_POS := Vector3(-115.0, 0.0, 138.0)
 const PIER_POS := Vector3(-35.0, 0.0, 96.0)
 const SHIPWRECK_POS := Vector3(-72.0, -0.6, 168.0)
+const CAMP_BABIS_POS := Vector3(-22.0, 0.0, 92.0)
 const SailingBoatClass := preload("res://scripts/sailing_boat.gd")
+const PirateIslandClass := preload("res://scripts/pirate_island.gd")
 
 var _beacon_light: SpotLight3D
 var _beacon_beam: MeshInstance3D
@@ -24,6 +26,8 @@ func _ready() -> void:
 	_build_shipwreck()
 	_build_southeast_cliffs()
 	_build_underwater_cave()
+	_build_captain_babis_camp()
+	_build_pirate_volcano_island()
 
 
 func _process(delta: float) -> void:
@@ -112,14 +116,34 @@ func _build_ocean() -> void:
 	floor_body.add_child(f_shape_open)
 	ocean_holder.add_child(floor_body)
 
-	# Ocean boundary barrier so player can wade in bay but not walk to infinity
+	# Ocean boundary barriers: encloses the open sea around Pirate Island up to Z=650
 	var barrier := StaticBody3D.new()
-	barrier.position = Vector3(0.0, 5.0, 240.0)
-	var b_shape := CollisionShape3D.new()
-	var b_box := BoxShape3D.new()
-	b_box.size = Vector3(900.0, 20.0, 6.0)
-	b_shape.shape = b_box
-	barrier.add_child(b_shape)
+	barrier.name = "OceanBoundaries"
+
+	# South outer boundary (Z = 650)
+	var b_shape_s := CollisionShape3D.new()
+	var b_box_s := BoxShape3D.new()
+	b_box_s.size = Vector3(900.0, 20.0, 10.0)
+	b_shape_s.shape = b_box_s
+	b_shape_s.position = Vector3(0.0, 5.0, 650.0)
+	barrier.add_child(b_shape_s)
+
+	# West outer boundary (X = -380)
+	var b_shape_w := CollisionShape3D.new()
+	var b_box_w := BoxShape3D.new()
+	b_box_w.size = Vector3(10.0, 20.0, 500.0)
+	b_shape_w.shape = b_box_w
+	b_shape_w.position = Vector3(-380.0, 5.0, 440.0)
+	barrier.add_child(b_shape_w)
+
+	# East outer boundary (X = 380)
+	var b_shape_e := CollisionShape3D.new()
+	var b_box_e := BoxShape3D.new()
+	b_box_e.size = Vector3(10.0, 20.0, 500.0)
+	b_shape_e.shape = b_box_e
+	b_shape_e.position = Vector3(380.0, 5.0, 440.0)
+	barrier.add_child(b_shape_e)
+
 	ocean_holder.add_child(barrier)
 
 
@@ -145,10 +169,17 @@ func _calc_beach_height(x: float, z: float) -> float:
 		var t := clampf((eff_z - 136.0) / 28.0, 0.0, 1.0)
 		base_y = lerpf(-0.8, -1.8, t)
 
+	# Northern forest seam tuck: sand cleanly dips below meadow (Y = 0.0) between Z = 83.0 and 85.0
+	# so the meadow shader discard at Z = 85.0 transitions seamlessly with zero coplanar Z-fighting.
+	if z < 85.0:
+		var tuck_t := clampf((z - 83.0) / 2.0, 0.0, 1.0)
+		base_y = lerpf(-0.06, 0.0, tuck_t)
+
 	# West bluff elevation: land rises on the west flank to support the cliffside lighthouse
 	if x < -135.0:
 		var side_t := clampf((-135.0 - x) / 50.0, 0.0, 1.0)
-		base_y += side_t * 3.5
+		var z_blend := clampf((z - 85.0) / 8.0, 0.0, 1.0)
+		base_y += side_t * 3.5 * z_blend
 	elif x > 35.0:
 		# East side: smoothly blend any underwater slope to 0.0 at X = 55.0, perfectly flush with mainland ground
 		var east_t := clampf((x - 35.0) / 20.0, 0.0, 1.0)
@@ -171,10 +202,10 @@ func _build_beach() -> void:
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 
 	var x_steps := 36
-	var z_steps := 30
+	var z_steps := 32
 	var x_min := -190.0
 	var x_max := 55.0
-	var z_min := 84.0
+	var z_min := 83.0
 	var z_max := 165.0
 
 	for zi in (z_steps + 1):
@@ -1104,5 +1135,116 @@ func _build_underwater_cave() -> void:
 
 	# Grotto Ancient Inscription
 	_add_signpost("Σπήλαιο των Σμαραγδένιων Νερών  🌊\nΑρχαίο Καταφύγιο Πειρατών", grotto_center + Vector3(-2.0, -0.2, 4.0), 160.0, cave_holder)
+
+
+# =========================================================================
+# 8. CAPTAIN BABIS'S BEACH CAMP & PIRATE ISLAND
+# =========================================================================
+func _build_captain_babis_camp() -> void:
+	var camp_holder := Node3D.new()
+	camp_holder.name = "CaptainBabisCamp"
+	camp_holder.add_to_group("camp_babis")
+	add_child(camp_holder)
+
+	# 1. Veteran Corsair NPC: Καπετάν-Μπάμπης
+	var babis := Npc.new()
+	babis.npc_id = "babis"
+	babis.rest_yaw = deg_to_rad(150.0) # Looking out towards the fishing pier and the open sea
+	babis.position = CAMP_BABIS_POS
+	camp_holder.add_child(babis)
+
+	# 2. Canvas Beach Tent
+	_place_prop("res://assets/world/decoration/props/tent.gltf", CAMP_BABIS_POS + Vector3(-3.4, 0.0, -1.8), 35.0, 1.25, camp_holder)
+
+	# 3. Beach Campfire with Stone Ring & Crackling Warm Glow
+	var fire_center := CAMP_BABIS_POS + Vector3(1.8, 0.0, 1.2)
+	var stone_mat := StandardMaterial3D.new()
+	stone_mat.albedo_color = Color(0.35, 0.32, 0.30)
+	stone_mat.roughness = 0.95
+
+	for i in 8:
+		var rad := (float(i) / 8.0) * TAU
+		var sp := fire_center + Vector3(cos(rad) * 0.75, 0.08, sin(rad) * 0.75)
+		var sm := MeshInstance3D.new()
+		var s_sph := SphereMesh.new()
+		s_sph.radius = 0.14
+		s_sph.height = 0.22
+		sm.mesh = s_sph
+		sm.material_override = stone_mat
+		sm.position = sp
+		camp_holder.add_child(sm)
+
+	var log_mat := StandardMaterial3D.new()
+	log_mat.albedo_color = Color(0.12, 0.08, 0.05)
+	for i in 3:
+		var lm := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.08
+		cyl.bottom_radius = 0.08
+		cyl.height = 0.9
+		lm.mesh = cyl
+		lm.material_override = log_mat
+		lm.position = fire_center + Vector3(0.0, 0.1, 0.0)
+		lm.rotation_degrees = Vector3(15.0 * (i - 1), float(i) * 60.0, 10.0)
+		camp_holder.add_child(lm)
+
+	var flame_mesh := MeshInstance3D.new()
+	var f_cone := CylinderMesh.new()
+	f_cone.top_radius = 0.02
+	f_cone.bottom_radius = 0.24
+	f_cone.height = 0.55
+	flame_mesh.mesh = f_cone
+	flame_mesh.position = fire_center + Vector3(0.0, 0.35, 0.0)
+	var flame_mat := StandardMaterial3D.new()
+	flame_mat.albedo_color = Color(1.0, 0.5, 0.1)
+	flame_mat.emission_enabled = true
+	flame_mat.emission = Color(1.0, 0.45, 0.05)
+	flame_mat.emission_energy_multiplier = 3.5
+	flame_mesh.material_override = flame_mat
+	camp_holder.add_child(flame_mesh)
+
+	var fire_light := OmniLight3D.new()
+	fire_light.light_color = Color(1.0, 0.62, 0.22)
+	fire_light.light_energy = 2.2
+	fire_light.omni_range = 9.0
+	fire_light.position = fire_center + Vector3(0.0, 0.6, 0.0)
+	camp_holder.add_child(fire_light)
+
+	# 4. Corsair Navigation Table with Sea Chart & Flagon
+	var table_pos := CAMP_BABIS_POS + Vector3(1.2, 0.0, -1.6)
+	_place_prop("res://assets/furniture/table_medium.gltf", table_pos, 10.0, 1.1, camp_holder)
+	_place_prop("res://assets/furniture/chair_stool_wood.gltf", table_pos + Vector3(-0.9, 0.0, 0.0), 90.0, 1.1, camp_holder)
+
+	# Ancient nautical parchment map rolled open on table
+	var map_mat := StandardMaterial3D.new()
+	map_mat.albedo_color = Color(0.88, 0.80, 0.65)
+	map_mat.roughness = 0.85
+	var map_mesh := MeshInstance3D.new()
+	var m_quad := PlaneMesh.new()
+	m_quad.size = Vector2(1.1, 0.75)
+	map_mesh.mesh = m_quad
+	map_mesh.material_override = map_mat
+	map_mesh.position = table_pos + Vector3(0.0, 0.85, 0.0)
+	map_mesh.rotation_degrees.y = 12.0
+	camp_holder.add_child(map_mesh)
+
+	_place_prop("res://assets/items/bottle_A_green.gltf.glb", table_pos + Vector3(0.4, 0.85, 0.2), 0.0, 0.9, camp_holder)
+	_place_prop("res://assets/items/coin_stack_small.gltf.glb", table_pos + Vector3(-0.35, 0.85, -0.2), 40.0, 0.9, camp_holder)
+
+	# 5. Corsair Provisions: Rum barrels and cargo crates
+	_place_prop("res://assets/items/crates_stacked.gltf.glb", CAMP_BABIS_POS + Vector3(-3.8, 0.0, 1.5), -20.0, 1.0, camp_holder)
+	_place_prop("res://assets/items/barrel_large.gltf.glb", CAMP_BABIS_POS + Vector3(-2.6, 0.0, 2.2), 15.0, 1.1, camp_holder)
+	_place_prop("res://assets/items/barrel_small.gltf.glb", CAMP_BABIS_POS + Vector3(-2.1, 0.0, 2.7), -10.0, 1.0, camp_holder)
+
+	# 6. Informational Shore Signpost
+	_add_signpost("Καταυλισμός Καπετάν-Μπάμπη  ⚓\nΠαλιός Κουρσάρος & Θαλασσόλυκος", CAMP_BABIS_POS + Vector3(2.6, 0.0, -3.2), -40.0, camp_holder)
+
+
+func _build_pirate_volcano_island() -> void:
+	var island := PirateIslandClass.new()
+	island.name = "PirateVolcanoIsland"
+	island.add_to_group("pirate_island")
+	add_child(island)
+
 
 

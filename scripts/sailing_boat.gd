@@ -13,9 +13,14 @@ const ACCEL := 4.5
 const DECEL := 3.0
 const TURN_SPEED := 1.8
 const WATER_Y := -0.15
+const MIN_Z := 108.0
+const MAX_Z := 580.0
+const OPEN_SEA_MIN_X := -220.0
+const OPEN_SEA_MAX_X := 180.0
 
 var is_sailing := false
 var current_player: Player = null
+var _board_cooldown := 0.0
 
 var _speed := 0.0
 var _yaw := 0.0
@@ -143,6 +148,8 @@ func _build_boat_mesh() -> void:
 func interact_prompt() -> String:
 	if is_sailing:
 		return "[R] Αποβίβαση στην Ακτή"
+	if _board_cooldown > 0.0:
+		return ""
 	return "[R] Σαλπάρισμα με τη Βάρκα"
 
 
@@ -151,6 +158,8 @@ func interact_range() -> float:
 
 
 func interact(player: Player) -> void:
+	if _board_cooldown > 0.0:
+		return
 	if is_sailing:
 		disembark()
 	else:
@@ -158,13 +167,18 @@ func interact(player: Player) -> void:
 
 
 func board(player: Player) -> void:
-	if is_sailing or player == null or player.is_dead or player.busy:
+	if _board_cooldown > 0.0 or is_sailing or player == null or player.is_dead or player.busy:
 		return
 	if player.mounted:
 		player.dismount()
 	is_sailing = true
 	current_player = player
+	_board_cooldown = 0.4
 	player.busy = true
+	player.set("sailing", true)
+	player.set("boat", self)
+	if player.has_method("consume_interact"):
+		player.consume_interact(0.35)
 	if is_inside_tree() and player.is_inside_tree():
 		player.global_position = global_position + Vector3(0.0, 0.7, 1.2)
 		Sfx.play("door_open", global_position)
@@ -176,31 +190,39 @@ func board(player: Player) -> void:
 	boarded.emit(player)
 
 
-func disembark() -> void:
+func disembark(place_player: bool = true) -> void:
 	if not is_sailing or current_player == null:
 		return
 	var p := current_player
 	is_sailing = false
 	current_player = null
-	p.busy = false
 	_speed = 0.0
+	_board_cooldown = 0.5
+	p.busy = false
+	p.set("sailing", false)
+	p.set("boat", null)
+	if p.has_method("consume_interact"):
+		p.consume_interact(0.4)
 
-	# Step off beside the boat onto nearest dry land / dock or water surface
-	var exit_pos: Vector3
-	if is_inside_tree():
-		exit_pos = global_position + Basis(Vector3.UP, _yaw) * Vector3(2.4, 0.5, 0.0)
-		p.global_position = exit_pos
-		Sfx.play("land", exit_pos)
-	else:
-		exit_pos = position + Basis(Vector3.UP, _yaw) * Vector3(2.4, 0.5, 0.0)
-		p.position = exit_pos
-	p.velocity = Vector3.ZERO
-	p._play("Idle", 0.2)
-	p.message.emit("Αποβιβάστηκες από τη βάρκα.")
+	if place_player:
+		# Step off beside the boat onto nearest dry land / dock or water surface
+		var exit_pos: Vector3
+		if is_inside_tree():
+			exit_pos = global_position + Basis(Vector3.UP, _yaw) * Vector3(2.4, 0.5, 0.0)
+			p.global_position = exit_pos
+			Sfx.play("land", exit_pos)
+		else:
+			exit_pos = position + Basis(Vector3.UP, _yaw) * Vector3(2.4, 0.5, 0.0)
+			p.position = exit_pos
+		p.velocity = Vector3.ZERO
+		p._play("Idle", 0.2)
+		p.message.emit("Αποβιβάστηκες από τη βάρκα.")
 	disembarked.emit()
 
 
 func _physics_process(delta: float) -> void:
+	_board_cooldown = maxf(_board_cooldown - delta, 0.0)
+
 	# Gentle wave bobbing & rocking motion
 	var time_ms := float(Time.get_ticks_msec())
 	var wave_bob := sin(time_ms / 500.0) * 0.06
@@ -249,12 +271,14 @@ func _physics_process(delta: float) -> void:
 	if is_inside_tree():
 		global_position.y = WATER_Y
 		move_and_slide()
-		global_position.x = clampf(global_position.x, -165.0, 58.0)
-		global_position.z = clampf(global_position.z, 108.0, 480.0)
+		var min_x := -165.0 if global_position.z < 210.0 else OPEN_SEA_MIN_X
+		var max_x := 58.0 if global_position.z < 210.0 else OPEN_SEA_MAX_X
+		global_position.x = clampf(global_position.x, min_x, max_x)
+		global_position.z = clampf(global_position.z, MIN_Z, MAX_Z)
 		if current_player != null and current_player.is_inside_tree():
 			current_player.global_position = global_position + Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.72 + wave_bob, 1.2)
 			current_player.rotation.y = _yaw
-			if Input.is_action_just_pressed("interact"):
+			if _board_cooldown <= 0.0 and Input.is_action_just_pressed("interact"):
 				disembark()
 	else:
 		position.y = WATER_Y

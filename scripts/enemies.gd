@@ -106,6 +106,28 @@ const KINDS := {
 		"patrol_radius": 3.0,
 		"xp_reward": 400, "gold_min": 100, "gold_max": 140, "potion_chance": 1.0,
 	},
+	# --- The Pirates of the Volcanic Island ---
+	"pirate_corsair": {
+		"kind_id": "pirate_corsair", "display_name": "Πειρατής Κουρσάρος",
+		"tint_color": Color(0.85, 0.30, 0.15, 0.35),
+		"model_path": CHAR + "Skeleton_Rogue.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"max_health": 65.0, "attack_damage": 14.0, "chase_speed": 4.8, "attack_range": 2.3,
+		"attack_hit_time": 0.5, "attack_cooldown": 1.4, "aggro_range": 16.0, "patrol_radius": 4.0,
+		"xp_reward": 40, "gold_min": 10, "gold_max": 22, "potion_chance": 0.4,
+	},
+	"pirate_captain": {
+		"kind_id": "pirate_captain", "respawn_after": 60.0,
+		"display_name": "Αρχικουρσάρος Μαυροδόντης", "model_scale": 2.0,
+		"tint_color": Color(1.0, 0.22, 0.08, 0.45),
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Small_A.gltf",
+		"max_health": 380.0, "attack_damage": 24.0, "chase_speed": 4.4, "attack_range": 3.2,
+		"attack_hit_time": 0.55, "attack_cooldown": 1.6, "aggro_range": 24.0, "leash_range": 45.0,
+		"patrol_radius": 3.0,
+		"xp_reward": 240, "gold_min": 70, "gold_max": 120, "potion_chance": 1.0,
+	},
 	# --- the bandits (people, not skeletons): Adventurers models with one weapon each, tinted and named
 	# (see docs/superpowers/specs/2026-10-14-bandits-design.md; the hideout is bandit_camp.gd)
 	"bandit_thug": {

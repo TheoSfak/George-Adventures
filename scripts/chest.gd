@@ -15,6 +15,7 @@ var gold_max := 15
 var potions := 0
 var opened := false
 var mimic := false              # looks like any chest; opening it brings the creature to life (the "mimic" kind)
+var quest_item: String = ""     # drops/reports a quest item when opened (e.g. pirate_treasure)
 
 var _lid: Node3D
 var _body: StaticBody3D
@@ -82,10 +83,14 @@ func interact(_player: Player) -> void:
 		# The lid hinges at the back of the chest: tilt it up and open.
 		create_tween().tween_property(_lid, "rotation:x", deg_to_rad(-115.0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	if mimic:
-		await get_tree().create_timer(0.3).timeout
+		var tree := get_tree()
+		if tree:
+			await tree.create_timer(0.3).timeout
 		_become_mimic()
 		return
-	await get_tree().create_timer(0.35).timeout
+	var tree := get_tree()
+	if tree:
+		await tree.create_timer(0.35).timeout
 	Sfx.play("chest_coins", global_position)
 	var parent := get_parent()
 	var amount := randi_range(gold_min, gold_max)
@@ -98,6 +103,12 @@ func interact(_player: Player) -> void:
 	# chests sometimes hold a buff potion, golden ones more often
 	if randf() < (0.75 if golden else 0.35):
 		_drop(Pickup.make(["power_potion", "speed_potion"][randi() % 2], 1), parent)
+	if quest_item != "":
+		var quests = get_node_or_null("/root/Quests")
+		if quests and quests.has_method("report_item"):
+			quests.report_item(quest_item)
+		if _player:
+			_player.message.emit(QuestData.ITEMS.get(quest_item, "Βρήκες το αντικείμενο της αποστολής!"))
 
 
 ## The chest was a creature: it disappears and the mimic stands on its spot, ready to bite.

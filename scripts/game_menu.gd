@@ -173,7 +173,8 @@ func _open_menu() -> void:
 	_open = true
 	_dim.visible = true
 	_title_label.visible = _title
-	get_tree().paused = true
+	if is_inside_tree() and get_tree():
+		get_tree().paused = true
 	if _hud:
 		_hud.visible = not _title
 
@@ -629,15 +630,19 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _open:
 		if _capturing == "":
 			toggle_pause()
-		get_viewport().set_input_as_handled()
+		if get_viewport():
+			get_viewport().set_input_as_handled()
 		return
 	# the game: Esc opens the pause menu unless a window is open (those close themselves first)
 	if _hud != null and (_hud.is_dialogue_open() or _hud.is_shop_open()):
 		return
 	if _player != null and _player.busy:
-		return
+		var is_sailing: bool = bool(_player.get("sailing")) if _player.has_method("get") else false
+		if not is_sailing:
+			return
 	toggle_pause()
-	get_viewport().set_input_as_handled()
+	if get_viewport():
+		get_viewport().set_input_as_handled()
 
 
 # ------------------------------------------------------------------ actions ----

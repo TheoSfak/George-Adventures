@@ -45,7 +45,7 @@ void vertex() {
 
 void fragment() {
 	if (clip_south_sea && world_offset == vec2(0.0)) {
-		if ((wpos.z >= 86.0 && wpos.x >= -165.0 && wpos.x <= 55.0) || wpos.z >= 220.0) {
+		if ((wpos.z >= 85.0 && wpos.x >= -195.0 && wpos.x <= 55.5) || wpos.z >= 220.0) {
 			discard;
 		}
 	}

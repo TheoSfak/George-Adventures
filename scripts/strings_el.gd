@@ -190,6 +190,7 @@ const MAP_PLACES := {
 	"cliffs": "Νότιοι Γκρεμοί", "barracks": "Στρατώνες & Τοξοβολία", "orc_stronghold": "Ερειπωμένο Οχυρό (Όρκ)",
 	"golden_grove": "Χρυσό Άλσος", "grotto": "Μυστικό Σπήλαιο", "lumbermill": "Υλοτομείο Γέρο-Γιάννη",
 	"bounty_board": "Πίνακας Επικηρύξεων", "george_cottage": "Το Σπίτι του Γιώργου",
+	"pirate_island": "Νησί των Πειρατών (Ηφαίστειο)", "camp_babis": "Καταυλισμός Καπετάν-Μπάμπη",
 	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
 	"frontier_road": "Δρόμος της Σκιάς", "frontier_fort": "Φρούριο της Σκιάς",
 	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",

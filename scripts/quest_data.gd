@@ -14,7 +14,7 @@ class_name QuestData
 
 ## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
 ## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
-const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider", "warband_totem", "orc_catapult"]
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider", "warband_totem", "orc_catapult", "pirate_corsair", "pirate_captain"]
 
 
 static func is_skeleton(kind: String) -> bool:
@@ -47,6 +47,7 @@ const ITEMS := {
 	"symbol": "Βρήκες ένα Σύμβολο της Σκιάς",
 	"shard": "Βρήκες ένα Θραύσμα της Φλόγας",
 	"crystal": "Βρήκες έναν Κρύσταλλο της Λάβας",
+	"pirate_treasure": "Έκλεψες το Χρυσό Περιδέραιο των Πειρατών!",
 }
 
 ## model: file in assets/characters, show: weapon/prop nodes of the model that stay visible.
@@ -229,6 +230,16 @@ const NPCS := {
 			"Στο πεδίο τοξοβολίας εκπαιδεύουμε τους φρουρούς. Ένα βέλος στα μάτια σταματάει ακόμα και τα όρκ.",
 			"Οι λύκοι στο άλσος των χρυσών πεύκων έχουν αγριέψει από τότε που πλησίασαν τα όρκ.",
 			"Πρόσεχε τις σκοτεινές σχισμές στο λατομείο... τεράστιες αράχνες έχουν υφάνει ιστούς.",
+		],
+	},
+	"babis": {
+		"name": "Καπετάν-Μπάμπης",
+		"model": "res://assets/characters/Barbarian.glb",
+		"show": ["Barbarian_Hat", "1H_Axe"],
+		"idle": [
+			"Αχ, η θάλασσα… Σε καλεί κι εσένα, παλικάρι μου; Πρόσεχε όμως τα βαθιά νερά.",
+			"Ένα τέτοιο ηφαίστειο στη μέση του πελάγους δεν κοιμάται ποτέ ήσυχο.",
+			"Οι πειρατές του Μαυροδόντη δεν έχουν μπέσα. Αν πας στο νησί τους, κράτα γερά το σπαθί σου!",
 		],
 	},
 }
@@ -1105,5 +1116,30 @@ const QUESTS := {
 			"Νίκη! Ο Γκρομ'γκαρ έπεσε και το προπύργιο απελευθερώθηκε οριστικά! Ο Άγιος Βλάσης υποκλίνεται στη γενναιότητά σου!",
 		],
 		"reward": {"xp": 1200, "gold": 750, "potions": 4, "damage": 4},
+	},
+	"pirate_island": {
+		"title": "Το Νησί των Πειρατών & ο Θησαυρός του Ηφαιστείου",
+		"giver": "babis",
+		"turn_in": "babis",
+		"requires": ["bell"],
+		"objectives": [
+			{"type": "reach", "place": "pirate_island", "count": 1, "text": "Ταξίδεψε με τη βάρκα στο Ηφαιστειογενές Νησί"},
+			{"type": "kill", "target": "pirate_captain", "count": 1, "text": "Εξόντωσε τον Αρχικουρσάρο Μαυροδόντη"},
+			{"type": "collect", "item": "pirate_treasure", "count": 1, "text": "Κλέψε τον Καταραμένο Θησαυρό από τον κρατήρα"},
+		],
+		"offer": [
+			"Ε, παλικάρι! Πλησίασε έναν παλιό θαλασσόλυκο. Βλέπεις αυτό το σκαρί δεμένο στην αποβάθρα; Αν έχεις κότσια να βγεις στ' ανοιχτά, έχω μια ιστορία για σένα.",
+			"Νότια, πέρα από τους σκοπέλους και τις ομίχλες, υψώνεται ένα καταραμένο μαγικό νησί. Ένα πελώριο ηφαίστειο που ξερνάει καπνούς μέσα από τα κύματα!",
+			"Εκεί έχει το ορμητήριό του ο Αρχικουρσάρος Μαυροδόντης και η συμμορία του. Έχουν στήσει παρατηρητήρια στα μονοπάτια και φυλάνε στον κρατήρα του ηφαιστείου έναν μυθικό θησαυρό!",
+			"Λύσε τη βάρκα, σαλπάρισε νότια, ανέβα τα απόκρημνα μονοπάτια του ηφαιστείου και κλέψε τους τον θησαυρό μέσα απ' τα χέρια τους! Μοιραζόμαστε τη δόξα και τα πλούτη!",
+		],
+		"progress": [
+			"Σαλπάρισε νότια με τη βάρκα, Γιώργο! Το ηφαίστειο φαίνεται από μίλια μακριά. Ανέβα το μονοπάτι ως τον κρατήρα!",
+		],
+		"complete": [
+			"Μα τους χίλιους κεραυνούς! Τα κατάφερες! Έκλεψες τον θησαυρό του Μαυροδόντη μέσα από τα μάτια των πειρατών!",
+			"Ο Άγιος Βλάσης έχει τώρα έναν αληθινό Θαλασσοπόρο Ήρωα! Πάρε αυτό το μερίδιο και τον τίτλο που σου αξίζει, καπετάνιε μου!",
+		],
+		"reward": {"xp": 500, "gold": 350, "potions": 3, "title": "Κυρίαρχος των Θαλασσών"},
 	},
 }
