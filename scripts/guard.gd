@@ -26,6 +26,7 @@ var _target: Enemy
 var _cooldown := 0.0
 var _swing := -1.0                   # time since the swing started, -1 = not swinging
 var _leaving := false
+var _returning := false                 # true while moving back to home post
 
 # anti-snag: a guard that pushes against a prop without getting anywhere sidesteps left or right
 # until it is free (no navigation mesh in the village, same idea as Enemy._check_blocked)
@@ -110,6 +111,7 @@ func _physics_process(delta: float) -> void:
 		if _swing >= 0.9:
 			_swing = -1.0
 	elif _target != null:
+		_returning = false
 		var to := _target.global_position - global_position
 		to.y = 0.0
 		if to.length() > REACH:
@@ -128,12 +130,31 @@ func _physics_process(delta: float) -> void:
 				target_pos = p.global_position
 		var back := target_pos - global_position
 		back.y = 0.0
-		if back.length() > (2.5 if follow_player else 1.2):
+		var dist := back.length()
+		var start_thresh := 3.2 if follow_player else 2.2
+		var stop_thresh := 1.8 if follow_player else 0.45
+
+		if not _returning:
+			if dist > start_thresh:
+				_returning = true
+		else:
+			if dist <= stop_thresh:
+				_returning = false
+				_detour_time = 0.0
+				velocity.x = 0.0
+				velocity.z = 0.0
+
+		if _returning:
 			wanted = _steer(_nav.direction(global_position, target_pos, CLEARANCE, delta)) * SPEED * (1.1 if follow_player else 0.7)
 			anim = "Running_A"
 			_face(wanted if (_detour_time > 0.0 or _nav.active) else back, delta)
-	velocity.x = move_toward(velocity.x, wanted.x, 40.0 * delta)
-	velocity.z = move_toward(velocity.z, wanted.z, 40.0 * delta)
+		else:
+			wanted = Vector3.ZERO
+			anim = "Idle"
+			if not follow_player and home != Vector3.ZERO:
+				_face(Vector3(home.x, 0.0, home.z).normalized(), delta)
+	velocity.x = move_toward(velocity.x, wanted.x, (40.0 if wanted != Vector3.ZERO else 60.0) * delta)
+	velocity.z = move_toward(velocity.z, wanted.z, (40.0 if wanted != Vector3.ZERO else 60.0) * delta)
 	move_and_slide()
 	_check_blocked(wanted, delta)
 	if _swing < 0.0 and _anim != null and _anim.has_animation(anim) and _anim.current_animation != anim:
@@ -158,6 +179,10 @@ func _steer(dir: Vector3) -> Vector3:
 ## longer each time it is still stuck afterwards and always to the same side (that side was free);
 ## if the sidestep itself is blocked it tries the other side.
 func _check_blocked(wanted: Vector3, delta: float) -> void:
+	if wanted.length_squared() < 0.01:
+		_blocked_time = 0.0
+		_detour_time = 0.0
+		return
 	_since_detour += delta
 	if get_slide_collision_count() > 0:
 		var n := get_slide_collision(0).get_normal()

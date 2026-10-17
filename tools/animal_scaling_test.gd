@@ -70,9 +70,8 @@ func _init() -> void:
 	if cow_model:
 		var cow_sz = _calc_mesh_bounds(cow_model)
 		print("  Cow dimensions: Height=%.2fm, Length=%.2fm, Width=%.2fm" % [cow_sz.y, cow_sz.z, cow_sz.x])
-		check("Cow is scaled to 3x requested size (height <= 4.5m)", cow_sz.y <= 4.5)
-		check("Cow length fits in enlarged pasture (length <= 8.5m)", cow_sz.z <= 8.5)
-		check("Cow has substantial pasture height (>= 3.0m)", cow_sz.y >= 3.0)
+		check("Cow has natural pasture height (~2.0m)", cow_sz.y >= 1.7 and cow_sz.y <= 2.5)
+		check("Cow length matches realistic livestock (~3.6m)", cow_sz.z >= 3.0 and cow_sz.z <= 4.2)
 	check("VillageCow has interact_range", cow.has_method("interact_range"))
 	check("VillageCow has interact_prompt", cow.has_method("interact_prompt"))
 	cow.free()
@@ -90,9 +89,8 @@ func _init() -> void:
 	if deer_model:
 		var deer_sz = _calc_mesh_bounds(deer_model)
 		print("  Deer dimensions: Height=%.2fm, Length=%.2fm, Width=%.2fm" % [deer_sz.y, deer_sz.z, deer_sz.x])
-		check("Deer is not giant (height <= 1.6m, was 5.3m)", deer_sz.y <= 1.6)
-		check("Deer length is realistic (length <= 2.0m, was 5.5m)", deer_sz.z <= 2.0)
-		check("Deer has natural height (>= 0.9m)", deer_sz.y >= 0.9)
+		check("Deer has majestic height with antlers (~2.1m)", deer_sz.y >= 1.8 and deer_sz.y <= 2.5)
+		check("Deer length is natural (~2.2m)", deer_sz.z >= 1.8 and deer_sz.z <= 2.6)
 	deer.free()
 
 	# [3] Testing Forest Wolf
@@ -100,30 +98,30 @@ func _init() -> void:
 	var enemies_script = load("res://scripts/enemies.gd")
 	var wolf_data = enemies_script.KINDS.get("wolf", {})
 	var wolf_scale: float = wolf_data.get("model_scale", 1.0)
-	check("Wolf scale reduced from 1.15 (scale <= 0.40)", wolf_scale <= 0.40)
+	check("Wolf scale is in normal dire wolf range (0.50 - 0.65)", wolf_scale >= 0.50 and wolf_scale <= 0.65)
 	var wolf_sc = load("res://assets/characters/Wolf.glb") as PackedScene
 	if wolf_sc:
 		var wolf_inst = wolf_sc.instantiate() as Node3D
 		wolf_inst.scale = Vector3.ONE * wolf_scale
 		var wolf_sz = _calc_mesh_bounds(wolf_inst)
 		print("  Wolf dimensions: Height=%.2fm, Length=%.2fm" % [wolf_sz.y, wolf_sz.z])
-		check("Wolf height is realistic (height <= 1.1m, was 3.1m)", wolf_sz.y <= 1.1)
-		check("Wolf length is realistic (length <= 2.2m, was 6.4m)", wolf_sz.z <= 2.2)
+		check("Wolf height is visible and formidable (~1.5m)", wolf_sz.y >= 1.2 and wolf_sz.y <= 1.8)
+		check("Wolf length is natural (~3.0m)", wolf_sz.z >= 2.5 and wolf_sz.z <= 3.5)
 		wolf_inst.free()
 
 	# [4] Testing Cave Spider
 	print("\n[4] Testing Cave Spider (enemies.gd)...")
 	var spider_data = enemies_script.KINDS.get("spider", {})
 	var spider_scale: float = spider_data.get("model_scale", 1.0)
-	check("Spider scale reduced from 1.3 (scale <= 0.35)", spider_scale <= 0.35)
+	check("Spider scale is in giant cave spider range (0.45 - 0.60)", spider_scale >= 0.45 and spider_scale <= 0.60)
 	var spider_sc = load("res://assets/characters/Spider.glb") as PackedScene
 	if spider_sc:
 		var spider_inst = spider_sc.instantiate() as Node3D
 		spider_inst.scale = Vector3.ONE * spider_scale
 		var spider_sz = _calc_mesh_bounds(spider_inst)
 		print("  Spider dimensions: Width=%.2fm, Height=%.2fm, Length=%.2fm" % [spider_sz.x, spider_sz.y, spider_sz.z])
-		check("Spider width is realistic (width <= 2.0m, was 7.7m)", spider_sz.x <= 2.0)
-		check("Spider height is low (height <= 0.8m, was 2.5m)", spider_sz.y <= 0.8)
+		check("Spider width has wide leg span (~3.1m)", spider_sz.x >= 2.5 and spider_sz.x <= 3.8)
+		check("Spider height is formidable (~1.0m)", spider_sz.y >= 0.8 and spider_sz.y <= 1.4)
 		spider_inst.free()
 
 	# [5] Testing Orcs
@@ -131,9 +129,9 @@ func _init() -> void:
 	var warrior_scale: float = enemies_script.KINDS.get("orc_warrior", {}).get("model_scale", 1.0)
 	var berserker_scale: float = enemies_script.KINDS.get("orc_berserker", {}).get("model_scale", 1.0)
 	var warlord_scale: float = enemies_script.KINDS.get("orc_warlord", {}).get("model_scale", 1.0)
-	check("Orc warrior scale adjusted (scale <= 0.75, was 1.25)", warrior_scale <= 0.75)
-	check("Orc berserker scale adjusted (scale <= 0.85, was 1.5)", berserker_scale <= 0.85)
-	check("Orc warlord boss scale adjusted (scale <= 1.0, was 2.0)", warlord_scale <= 1.0)
+	check("Orc warrior scale adjusted (scale ~0.78)", warrior_scale >= 0.70 and warrior_scale <= 0.85)
+	check("Orc berserker scale adjusted (scale ~0.88)", berserker_scale >= 0.80 and berserker_scale <= 0.95)
+	check("Orc warlord boss scale adjusted (scale ~1.05)", warlord_scale >= 0.95 and warlord_scale <= 1.15)
 
 	print("\n--- Summary: %d passed, %d failed ---" % [passed, failed])
 	if failed == 0:

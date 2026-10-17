@@ -760,7 +760,7 @@ func get_aim_target_point() -> Vector3:
 	var space := get_world_3d().direct_space_state
 	var from := cam.global_position
 	var to := from - cam.global_transform.basis.z * 120.0
-	var ray := PhysicsRayQueryParameters3D.create(from, to, 1)
+	var ray := PhysicsRayQueryParameters3D.create(from, to, 1 | 4) # Layer 1 (world) + Layer 4 (enemies)
 	var hit := space.intersect_ray(ray)
 	if not hit.is_empty():
 		return hit["position"]
@@ -775,7 +775,7 @@ func _find_ranged_assist_target() -> Node3D:
 		if not is_instance_valid(enemy):
 			continue
 		var e3d := enemy as Node3D
-		if e3d == null or ("is_dead" in enemy and enemy.get("is_dead")):
+		if e3d == null or (enemy.has_method("is_dead") and enemy.is_dead()):
 			continue
 		var diff := e3d.global_position - global_position
 		var dist := diff.length()

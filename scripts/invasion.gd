@@ -255,7 +255,7 @@ func _spawn_guards() -> void:
 	for i in count:
 		var a := TAU * float(i) / float(count) + 0.4
 		var guard := Guard.new()
-		guard.home = Vector3(cos(a) * 9.0, 0.0, sin(a) * 9.0)
+		guard.home = Vector3(cos(a) * 6.0, 0.0, sin(a) * 6.0)
 		guard.position = guard.home + Vector3(0, 0.05, 0)
 		guard.damage = 9.0 + float(count) * 1.2
 		holder.add_child(guard)

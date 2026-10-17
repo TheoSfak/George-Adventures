@@ -14,7 +14,11 @@ func check(desc: String, condition: bool) -> void:
 		print("  FAIL: %s" % desc)
 		failed += 1
 
-func _init() -> void:
+func _initialize() -> void:
+	_run()
+
+func _run() -> void:
+	await process_frame
 	print("--- Running Ranged Combat & Archery System Test ---")
 
 	# [1] Testing ShopData Ranged Weapons & Archery Shop
@@ -97,6 +101,58 @@ func _init() -> void:
 	check("Player knows volley", player.knows_skill("volley"))
 	check("Player knows fire_arrow", player.knows_skill("fire_arrow"))
 	player.free()
+
+	# [7] Testing PlayerArrow Hit Registration on Living Enemy
+	print("\n[7] Testing PlayerArrow Hit Detection against Living Enemy...")
+	var test_root := Node3D.new()
+	root.add_child(test_root)
+
+	var dummy_enemy_sc := GDScript.new()
+	dummy_enemy_sc.source_code = """
+extends CharacterBody3D
+var health := 50.0
+var _dead := false
+
+func is_dead() -> bool:
+	return _dead
+
+func take_damage(amount: float, _from: Vector3, _knock: float = 5.0) -> void:
+	health -= amount
+	if health <= 0:
+		_dead = true
+"""
+	dummy_enemy_sc.reload()
+
+	var dummy_enemy = dummy_enemy_sc.new()
+	dummy_enemy.position = Vector3(0, 0, 5)
+	dummy_enemy.add_to_group("enemies")
+	test_root.add_child(dummy_enemy)
+
+	var test_arrow: Node3D = arrow_sc.new()
+	test_arrow.set("damage", 25.0)
+	test_arrow.set("arrow_type", "normal")
+	test_arrow.set("velocity", Vector3(0, 0, 30))
+	test_root.add_child(test_arrow)
+
+	# Test line segment passing through enemy position
+	var from_p := Vector3(0, 0.9, 0)
+	var to_p := Vector3(0, 0.9, 10)
+	var did_hit: bool = test_arrow._check_enemy_hit(from_p, to_p)
+	check("PlayerArrow hits living enemy", did_hit)
+	check("Living enemy health reduced by arrow damage", dummy_enemy.health <= 25.0)
+
+	# Test that dead enemy is skipped
+	var fresh_arrow: Node3D = arrow_sc.new()
+	fresh_arrow.set("damage", 25.0)
+	test_root.add_child(fresh_arrow)
+	dummy_enemy._dead = true
+	var did_hit_dead: bool = fresh_arrow._check_enemy_hit(from_p, to_p)
+	check("PlayerArrow skips already dead enemy", not did_hit_dead)
+
+	test_arrow.free()
+	fresh_arrow.free()
+	dummy_enemy.free()
+	test_root.free()
 
 	print("\n--- Summary: %d passed, %d failed ---" % [passed, failed])
 	if failed == 0:

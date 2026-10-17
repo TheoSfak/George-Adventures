@@ -18,18 +18,18 @@ func _ready() -> void:
 	var scene := load("res://assets/animals/Cow.glb") as PackedScene
 	if scene:
 		_model = scene.instantiate() as Node3D
-		_model.scale = Vector3.ONE * 0.90
+		_model.scale = Vector3.ONE * 0.45
 		add_child(_model)
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		if _anim:
 			_anim.play("AnimalArmature|Idle")
 
-	# Add physical collider matching resized cow (3x scale)
+	# Add physical collider matching natural cow proportions
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.4, 2.2, 3.4)
+	box.size = Vector3(1.2, 2.0, 3.4)
 	col.shape = box
-	col.position = Vector3(0.0, 1.1, 0.0)
+	col.position = Vector3(0.0, 1.0, 0.0)
 	add_child(col)
 
 

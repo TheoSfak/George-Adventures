@@ -17,7 +17,7 @@ func _ready() -> void:
 	var scene := load("res://assets/animals/Deer.glb") as PackedScene
 	if scene:
 		_model = scene.instantiate() as Node3D
-		_model.scale = Vector3.ONE * 0.28
+		_model.scale = Vector3.ONE * 0.50
 		add_child(_model)
 		_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		if _anim:
@@ -25,9 +25,9 @@ func _ready() -> void:
 
 	var col := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(0.5, 1.2, 1.2)
+	box.size = Vector3(0.8, 2.0, 2.2)
 	col.shape = box
-	col.position = Vector3(0.0, 0.6, 0.0)
+	col.position = Vector3(0.0, 1.0, 0.0)
 	add_child(col)
 
 

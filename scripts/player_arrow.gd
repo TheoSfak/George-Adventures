@@ -140,7 +140,27 @@ func _physics_process(delta: float) -> void:
 			_hit_environment(hit["position"])
 		return
 
-	# Check enemies & targets along trajectory
+	# Direct physics raycast for enemies (Layer 4)
+	var enemy_ray := PhysicsRayQueryParameters3D.create(from_pos, to_pos, 4) # Layer 4 = enemies
+	var exclude: Array[RID] = []
+	if shooter != null:
+		exclude.append(shooter.get_rid())
+	for ht in _hit_targets:
+		if ht is CollisionObject3D:
+			exclude.append((ht as CollisionObject3D).get_rid())
+	enemy_ray.exclude = exclude
+	var enemy_hit := space.intersect_ray(enemy_ray)
+	if not enemy_hit.is_empty():
+		var col: Object = enemy_hit.get("collider")
+		if col is Node and (col.is_in_group("enemies") or col.has_method("take_damage")):
+			_apply_hit(col as Node)
+			if pierce_left > 0:
+				pierce_left -= 1
+			else:
+				queue_free()
+				return
+
+	# Check enemies & targets along trajectory (proximity sweep)
 	var hit_enemy := _check_enemy_hit(from_pos, to_pos)
 	if hit_enemy:
 		if pierce_left > 0:
@@ -153,9 +173,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _check_enemy_hit(from_pos: Vector3, to_pos: Vector3) -> bool:
+	var tree: SceneTree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree == null:
+		return false
+
 	var candidates: Array[Node] = []
-	candidates.append_array(get_tree().get_nodes_in_group("enemies"))
-	candidates.append_array(get_tree().get_nodes_in_group("breakables"))
+	candidates.append_array(tree.get_nodes_in_group("enemies"))
+	candidates.append_array(tree.get_nodes_in_group("breakables"))
 
 	var best_target: Node = null
 	var best_dist := 1e9
@@ -166,10 +190,11 @@ func _check_enemy_hit(from_pos: Vector3, to_pos: Vector3) -> bool:
 		var target_3d := target as Node3D
 		if target_3d == null:
 			continue
-		if "is_dead" in target and target.get("is_dead"):
+		if target.has_method("is_dead") and target.is_dead():
 			continue
 
-		var center := target_3d.global_position + Vector3.UP * 0.9
+		var m_scale: float = float(target.get("model_scale")) if "model_scale" in target else 1.0
+		var center := target_3d.global_position + Vector3.UP * (0.9 * m_scale)
 		# Approximate distance from line segment [from_pos, to_pos] to center
 		var seg_v := to_pos - from_pos
 		var seg_len := seg_v.length()
@@ -180,9 +205,7 @@ func _check_enemy_hit(from_pos: Vector3, to_pos: Vector3) -> bool:
 		var closest := from_pos + seg_dir * t
 		var d := closest.distance_to(center)
 
-		var hit_radius := 1.15
-		if "model_scale" in target:
-			hit_radius = maxf(0.8, float(target.get("model_scale")) * 1.1)
+		var hit_radius := maxf(0.9, m_scale * 1.2)
 
 		if d <= hit_radius and t < best_dist:
 			best_dist = t
@@ -205,7 +228,7 @@ func _apply_hit(target: Node) -> void:
 
 	# Apply damage
 	if target.has_method("take_damage"):
-		target.call("take_damage", final_dmg, from_dir, true)
+		target.call("take_damage", final_dmg, from_dir, 3.5)
 	elif target.has_method("hit"):
 		target.call("hit", final_dmg)
 
@@ -230,14 +253,19 @@ func _explode_fire(center: Vector3) -> void:
 	Sfx.play("skill_flame", center)
 	# AoE damage
 	var radius := 4.5
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	var tree: SceneTree = get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree == null:
+		return
+	for enemy in tree.get_nodes_in_group("enemies"):
 		if not is_instance_valid(enemy) or enemy in _hit_targets:
+			continue
+		if enemy.has_method("is_dead") and enemy.is_dead():
 			continue
 		var e3d := enemy as Node3D
 		if e3d and e3d.global_position.distance_to(center) <= radius:
 			_hit_targets.append(enemy)
 			if enemy.has_method("take_damage"):
-				enemy.call("take_damage", damage * 0.75, center, true)
+				enemy.call("take_damage", damage * 0.75, center, 4.0)
 
 	# Brief visual burst ring
 	var sphere := MeshInstance3D.new()
