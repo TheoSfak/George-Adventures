@@ -164,6 +164,7 @@ func _ready() -> void:
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_alchemy_and_flora()
+	_build_bounty_board()
 	# ------------------------------------------------------------- Island Overhaul ----
 	add_child(IslandSouthSea.new())
 	add_child(IslandRiver.new())
@@ -2037,5 +2038,24 @@ func _build_alchemy_and_flora() -> void:
 		fn.set("flora_id", spot["type"])
 		fn.position = spot["pos"]
 		holder.add_child(fn)
+
+
+func _build_bounty_board() -> void:
+	var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree != null:
+		var mgr := tree.get_first_node_in_group("bounty_manager")
+		if mgr == null:
+			var mgr_script = load("res://scripts/bounty_manager.gd")
+			var new_mgr: Node = mgr_script.new()
+			new_mgr.name = "BountyManager"
+			tree.root.call_deferred("add_child", new_mgr)
+
+	var board_script = load("res://scripts/bounty_board.gd")
+	var board: Node3D = board_script.new()
+	board.position = Vector3(-53.5, 0.0, -12.5)
+	board.rotation.y = 1.45
+	add_child(board)
+	_occupy(-53.5, -12.5, 2.5)
+
 
 

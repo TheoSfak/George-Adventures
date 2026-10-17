@@ -97,6 +97,7 @@ static func save() -> bool:
 	var rescue := tree.get_first_node_in_group("rescue")
 	var spawner := tree.get_first_node_in_group("enemy_spawner")
 	var invasion := tree.get_first_node_in_group("invasion")
+	var bounty_mgr := tree.get_first_node_in_group("bounty_manager")
 	var q := _quests_node()
 	var quests_dict: Dictionary = {"state": q.state, "progress": q.progress, "intro_seen": q.intro_seen} if q != null else {}
 	var data := {
@@ -118,6 +119,7 @@ static func save() -> bool:
 		"rescue": rescue.save_data() if rescue != null else {},
 		"enemies": spawner.save_data() if spawner != null else {},
 		"invasion": invasion.save_data() if invasion != null else {},
+		"bounties": bounty_mgr.save_data() if bounty_mgr != null else {},
 		"quests": quests_dict,
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
@@ -242,6 +244,9 @@ static func apply(d: Dictionary) -> void:
 	var rescue := tree.get_first_node_in_group("rescue")
 	if rescue != null:
 		rescue.load_data(d.get("rescue", {}))
+	var bounty_mgr := tree.get_first_node_in_group("bounty_manager")
+	if bounty_mgr != null and d.has("bounties"):
+		bounty_mgr.load_data(d.get("bounties", {}))
 
 	var wd: Dictionary = d["world"]
 	var village_spawns := tree.get_first_node_in_group("enemy_spawner")

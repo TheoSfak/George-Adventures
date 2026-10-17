@@ -188,6 +188,7 @@ const MAP_PLACES := {
 	"bridge_meadow": "Πέτρινο Γεφύρι", "highlands": "Βίγλα των Αετών", "shipwreck": "Ναυάγιο της Γοργόνας",
 	"cliffs": "Νότιοι Γκρεμοί", "barracks": "Στρατώνες & Τοξοβολία", "orc_stronghold": "Ερειπωμένο Οχυρό (Όρκ)",
 	"golden_grove": "Χρυσό Άλσος", "grotto": "Μυστικό Σπήλαιο", "lumbermill": "Υλοτομείο Γέρο-Γιάννη",
+	"bounty_board": "Πίνακας Επικηρύξεων",
 	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
 	"frontier_road": "Δρόμος της Σκιάς", "frontier_fort": "Φρούριο της Σκιάς",
 	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",

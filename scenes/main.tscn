@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/village.gd" id="1_village"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
@@ -11,6 +11,7 @@
 [ext_resource type="Script" path="res://scripts/game_menu.gd" id="9_menu"]
 [ext_resource type="Script" path="res://scripts/weather.gd" id="10_weather"]
 [ext_resource type="Script" path="res://scripts/rescue.gd" id="11_rescue"]
+[ext_resource type="Script" path="res://scripts/bounty_manager.gd" id="12_bounty"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 sky_top_color = Color(0.22, 0.48, 0.86, 1)
@@ -92,3 +93,6 @@ script = ExtResource("9_menu")
 
 [node name="Rescue" type="Node" parent="."]
 script = ExtResource("11_rescue")
+
+[node name="BountyManager" type="Node" parent="."]
+script = ExtResource("12_bounty")
