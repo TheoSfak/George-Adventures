@@ -164,6 +164,7 @@ func _ready() -> void:
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_alchemy_and_flora()
+	_build_blacksmith_forge()
 	_build_bounty_board()
 	_build_george_cottage()
 	# ------------------------------------------------------------- Island Overhaul ----
@@ -196,9 +197,9 @@ func _exit_tree() -> void:
 
 func _process(delta: float) -> void:
 	for c in _clouds:
-		c.position.x += delta * 1.6
-		if c.position.x > 340.0:
-			c.position.x = -340.0
+		c.position.x += delta * 1.8
+		if c.position.x > 400.0:
+			c.position.x = -400.0
 
 
 # ---------------------------------------------------------------- ground ----
@@ -1816,10 +1817,21 @@ func _build_clouds() -> void:
 	var holder := Node3D.new()
 	holder.name = "Clouds"
 	add_child(holder)
-	for i in 14:
+	var cloud_mat := StandardMaterial3D.new()
+	cloud_mat.albedo_color = Color(1.0, 1.0, 1.0)
+	cloud_mat.roughness = 0.95
+	cloud_mat.emission_enabled = true
+	cloud_mat.emission = Color(0.94, 0.96, 1.0)
+	cloud_mat.emission_energy_multiplier = 0.35
+	for i in 38:
 		var model := "decoration/nature/cloud_big.gltf" if i % 3 != 0 else "decoration/nature/cloud_small.gltf"
-		var c := _place(model, Vector3(_rng.randf_range(-320, 320), _rng.randf_range(110, 140),
-				_rng.randf_range(-320, 320)), _rng.randf_range(0, 360), _rng.randf_range(7.0, 13.0), holder)
+		var z_pos := _rng.randf_range(-360.0, 640.0)
+		var y_pos := _rng.randf_range(42.0, 78.0)
+		var s_val := _rng.randf_range(11.0, 22.0)
+		var c := _place(model, Vector3(_rng.randf_range(-380.0, 380.0), y_pos, z_pos),
+				_rng.randf_range(0, 360), s_val, holder)
+		for mi in c.find_children("*", "MeshInstance3D", true, false):
+			(mi as MeshInstance3D).set_surface_override_material(0, cloud_mat)
 		_clouds.append(c)
 
 
@@ -2011,6 +2023,19 @@ func _add_trimesh_collider(root: Node3D) -> void:
 		var mesh_inst := mi as MeshInstance3D
 		if mesh_inst and mesh_inst.mesh:
 			mesh_inst.create_trimesh_collision()
+
+
+func _build_blacksmith_forge() -> void:
+	var forge_script = load("res://scripts/blacksmith_forge.gd")
+	if forge_script == null:
+		return
+	var forge: Node3D = forge_script.new()
+	# Blacksmith building is at (-93.5, 29.5) facing (0,0) (rot ~107.5°).
+	# Place the outdoor forge station in the open forecourt near Nikitas:
+	forge.position = Vector3(-88.5, 0.0, 24.5)
+	forge.rotation.y = deg_to_rad(105.0)
+	add_child(forge)
+	_occupy(-88.5, 24.5, 3.2)
 
 
 func _build_alchemy_and_flora() -> void:

@@ -96,6 +96,22 @@ const REGION_DATA := {
 			"cinder_archon": Vector2(0.0, -192.0),
 		},
 	},
+	"pirate_island": {
+		"name": "Νησί των Πειρατών & Ηφαίστειο",
+		"origin": Vector3(-20.0, 0.0, 520.0),
+		"center_offset": Vector2.ZERO,
+		"half": 150.0,
+		"bg_color": Color(0.10, 0.22, 0.35),
+		"shops": [],
+		"places": [
+			["pirate_island", -20.0, 520.0],
+			["pirate_lake", -75.0, 520.0],
+			["secret_pirate_cache", 35.0, 535.0],
+		],
+		"boss_areas": {
+			"pirate_captain": Vector2(-20.0, 520.0),
+		},
+	},
 }
 
 static var world_texture: Texture2D
@@ -146,7 +162,7 @@ func _capture_world() -> void:
 	var vp := SubViewport.new()
 	vp.size = Vector2i(CAPTURE_SIZE, CAPTURE_SIZE)
 	vp.msaa_3d = Viewport.MSAA_4X
-	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	var cam := Camera3D.new()
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 	cam.size = WORLD_HALF * 2.0
@@ -178,10 +194,16 @@ func _capture_world() -> void:
 		sun.basis = Basis.looking_at(Vector3(-0.35, -1.0, -0.25).normalized(), Vector3.FORWARD)
 	if clouds:
 		clouds.visible = false
-	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var img := vp.get_texture().get_image()
+	
+	var img: Image = null
+	for attempt in 5:
+		await get_tree().process_frame
+		var tex := vp.get_texture()
+		if tex != null:
+			img = tex.get_image()
+			if img != null and not img.is_empty():
+				break
+
 	if sun and not sun_saved.is_empty():
 		sun.visible = sun_saved["visible"]
 		sun.light_energy = sun_saved["energy"]
@@ -210,6 +232,8 @@ func _current_region() -> String:
 	var interiors := tree.get_first_node_in_group("interiors")
 	if interiors != null and interiors.has_method("in_region") and interiors.in_region():
 		return String(interiors.get("current_kind"))
+	if _player != null and _player.global_position.z > 310.0:
+		return "pirate_island"
 	return ""
 
 
@@ -253,8 +277,16 @@ func _draw() -> void:
 			var centre := Vector2(_player.global_position.x, _player.global_position.z)
 			var src_half := view_half() * ppm
 			var src_centre := (centre + Vector2.ONE * WORLD_HALF) * ppm
+			var tex_sz := float(world_texture.get_width())
+			var half_size := Vector2.ONE * src_half
+			var src_pos := src_centre - half_size
+			var max_pos := Vector2(tex_sz, tex_sz) - half_size * 2.0
+			var clamped_pos := Vector2(
+				clampf(src_pos.x, 0.0, maxf(max_pos.x, 0.0)),
+				clampf(src_pos.y, 0.0, maxf(max_pos.y, 0.0))
+			)
 			draw_texture_rect_region(world_texture, Rect2(Vector2.ZERO, size),
-					Rect2(src_centre - Vector2.ONE * src_half, Vector2.ONE * src_half * 2.0))
+					Rect2(clamped_pos, half_size * 2.0))
 	elif reg != "":
 		_draw_region_terrain(reg, cfg)
 	_draw_enemies(reg, cfg)
@@ -322,6 +354,38 @@ func _draw_region_terrain(reg: String, cfg: Dictionary) -> void:
 		var flame_pulse := 0.7 + 0.3 * sin(Time.get_ticks_msec() / 1000.0 * 6.0)
 		draw_circle(flame_pos, 7.0 * flame_pulse, Color(1.0, 0.5, 0.1, 0.8))
 		draw_circle(flame_pos, 4.0 * flame_pulse, Color(1.0, 0.9, 0.4, 0.95))
+	elif reg == "pirate_island":
+		var island_center := _to_map(Vector3(-20.0, 0.0, 520.0))
+		var is_r: float = 140.0 / (float(cfg["half"]) * 2.0) * size.x if big else 140.0 / view_half() * (size.x / 2.0)
+		# 1. Golden sandy shoreline
+		draw_circle(island_center, is_r, Color(0.85, 0.78, 0.55, 0.9))
+		# 2. Lush emerald island body
+		draw_circle(island_center, is_r * 0.90, Color(0.20, 0.44, 0.22, 0.95))
+		# 3. Highland freshwater lake
+		var lake_pos := _to_map(Vector3(-75.0, 0.0, 520.0))
+		var lake_r: float = 38.0 / (float(cfg["half"]) * 2.0) * size.x if big else 38.0 / view_half() * (size.x / 2.0)
+		draw_circle(lake_pos, lake_r, Color(0.22, 0.58, 0.78, 0.9))
+		draw_arc(lake_pos, lake_r, 0.0, TAU, 24, Color(0.40, 0.75, 0.88, 0.7), 1.5)
+		# 4. Volcanic mountain & caldera
+		var volcano_pos := _to_map(Vector3(-20.0, 0.0, 520.0))
+		var volc_r: float = 52.0 / (float(cfg["half"]) * 2.0) * size.x if big else 52.0 / view_half() * (size.x / 2.0)
+		draw_circle(volcano_pos, volc_r, Color(0.24, 0.18, 0.16, 0.95))
+		draw_arc(volcano_pos, volc_r, 0.0, TAU, 32, Color(0.42, 0.32, 0.28, 0.9), 2.0)
+		# Magma caldera crater
+		var crater_r: float = 24.0 / (float(cfg["half"]) * 2.0) * size.x if big else 24.0 / view_half() * (size.x / 2.0)
+		var magma_pulse := 0.85 + 0.15 * sin(Time.get_ticks_msec() / 1000.0 * 4.0)
+		draw_circle(volcano_pos, crater_r * magma_pulse, Color(0.92, 0.35, 0.10, 0.95))
+		draw_circle(volcano_pos, crater_r * 0.55 * magma_pulse, Color(1.0, 0.78, 0.25, 0.95))
+		# 5. Pirate trails from northern cove pier to camps and summit
+		var dock_pt := _to_map(Vector3(-20.0, 0.0, 385.0))
+		var lower_camp_pt := _to_map(Vector3(-55.0, 0.0, 445.0))
+		var trail_caldera := _to_map(Vector3(-20.0, 0.0, 490.0))
+		var trail_cache := _to_map(Vector3(35.0, 0.0, 535.0))
+		var pier_trail := PackedVector2Array([dock_pt, _to_map(Vector3(-20.0, 0.0, 410.0)), lower_camp_pt, lake_pos, trail_caldera])
+		draw_polyline(pier_trail, Color(0.55, 0.42, 0.26, 0.85), 5.0 if big else 3.5)
+		draw_line(trail_caldera, trail_cache, Color(0.55, 0.42, 0.26, 0.85), 4.0 if big else 2.5)
+		# Dock pier outline
+		draw_rect(Rect2(dock_pt - Vector2(4, 12), Vector2(8, 24)), Color(0.45, 0.32, 0.18))
 
 
 func _draw_region_header(title: String) -> void:

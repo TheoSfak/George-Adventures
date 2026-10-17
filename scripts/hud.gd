@@ -1026,8 +1026,8 @@ func _update_hint() -> void:
 
 
 ## Opens a shop window (called by shopkeepers after their greeting).
-func open_shop(shop_id: String, player: Player) -> void:
-	_shop.open(shop_id, player)
+func open_shop(shop_id: String, player: Player, initial_tab: String = "") -> void:
+	_shop.open(shop_id, player, initial_tab)
 
 
 ## Starts fishing: George stands at `stand` and casts toward the water spot `target` (the dock calls this).

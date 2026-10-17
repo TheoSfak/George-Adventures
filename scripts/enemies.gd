@@ -626,10 +626,10 @@ const SPAWNS := [
 	# --- Cursed Scarecrows haunting the wheat fields and farm tracks
 	["cursed_scarecrow", -114.0, -48.0], ["cursed_scarecrow", -86.0, -62.0], ["cursed_scarecrow", -102.0, -74.0], ["cursed_scarecrow", 86.0, 112.0],
 	# --- Feature 5: Orcs, Wolves, and Spiders ---
-	# The Orc Stronghold at the eastern ruined outpost (148, 68)
-	["orc_warlord", 148.0, 72.0],
-	["orc_berserker", 144.0, 71.0], ["orc_berserker", 155.0, 73.0],
-	["orc_warrior", 138.0, 67.0], ["orc_warrior", 145.0, 58.0], ["orc_warrior", 150.0, 63.5],
+	# The Orc Stronghold at the eastern ruined outpost (148, 68) - clear open courtyard
+	["orc_warlord", 146.0, 67.5],
+	["orc_berserker", 141.0, 71.0], ["orc_berserker", 150.0, 76.5],
+	["orc_warrior", 133.0, 74.0], ["orc_warrior", 145.0, 62.5], ["orc_warrior", 153.0, 61.5],
 	# The Wolves roaming the Autumn Golden Pine Forest (112, 68)
 	["wolf", 110.0, 62.0], ["wolf", 116.0, 72.0], ["wolf", 104.0, 75.0], ["wolf", 122.0, 66.0],
 	# Giant Spiders in the eastern Quarry rocks and cave path (158, 115)

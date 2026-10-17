@@ -58,14 +58,22 @@ func is_open() -> bool:
 	return visible
 
 
-func open(shop_id: String, player: Player) -> void:
+func open(shop_id: String, player: Player, initial_tab: String = "") -> void:
 	if visible:
 		return
 	_shop_id = shop_id
 	_player = player
 	var shop: Dictionary = ShopData.SHOPS.get(shop_id, {})
 	var is_alchemy: bool = shop.get("kind", "") == "alchemy"
-	_tab = "alchemy" if is_alchemy else "buy"
+	var is_forge_station: bool = shop.get("kind", "") == "forge" or shop_id == "blacksmith_forge"
+	if initial_tab != "":
+		_tab = initial_tab
+	elif is_forge_station:
+		_tab = "upgrade"
+	elif is_alchemy:
+		_tab = "alchemy"
+	else:
+		_tab = "buy"
 	_open_time = Time.get_ticks_msec() / 1000.0
 	player.busy = true
 	visible = true
@@ -102,11 +110,11 @@ func _refresh() -> void:
 	for c in _tabs.get_children():
 		c.queue_free()
 	var kitchen: bool = shop.get("kind", "") == "kitchen"
-	var is_forge: bool = _shop_id in ["blacksmith", "ash_forge"]
+	var is_forge: bool = _shop_id in ["blacksmith", "ash_forge", "blacksmith_forge"] or shop.get("kind", "") == "forge"
 	var is_alchemy: bool = shop.get("kind", "") == "alchemy" or _shop_id == "andreas_herbs"
 	if is_alchemy:
 		_tabs.add_child(UiKit.tab_button("Αλχημεία", _tab == "alchemy", _set_tab.bind("alchemy")))
-	if not (shop.get("kind", "") == "alchemy"):
+	if not (shop.get("kind", "") in ["alchemy", "forge"]):
 		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
 	var stable: bool = shop.get("kind", "") == "stable"
 	if not stable and not (shop.get("kind", "") == "alchemy"):
@@ -115,6 +123,7 @@ func _refresh() -> void:
 		_tabs.add_child(UiKit.tab_button(Strings.SHOP_SELL, _tab == "sell", _set_tab.bind("sell")))
 	if is_forge:
 		_tabs.add_child(UiKit.tab_button(Strings.SHOP_TAB_UPGRADE, _tab == "upgrade", _set_tab.bind("upgrade")))
+		_tabs.add_child(UiKit.tab_button(Strings.SHOP_TAB_FORGE, _tab == "forge", _set_tab.bind("forge")))
 	for c in _list.get_children():
 		c.queue_free()
 	if kitchen:
@@ -123,6 +132,8 @@ func _refresh() -> void:
 		_build_alchemy_rows()
 	elif _tab == "upgrade" and is_forge:
 		_build_upgrade_rows()
+	elif _tab == "forge" and is_forge:
+		_build_forge_rows()
 	elif _tab == "buy" or stable:
 		for entry in shop["stock"]:
 			_list.add_child(_buy_row(entry))
@@ -415,8 +426,8 @@ func _upgrade_row(slot: String) -> Control:
 
 		var bonus_desc := ""
 		match slot:
-			"weapon": bonus_desc = "+12% Ζημιά, +2% Κρίσιμο"
-			"armor": bonus_desc = "+50 Ζωή, +4% Άμυνα"
+			"weapon": bonus_desc = "+12% Ζημιά, +2% Κρίσιμο, +2% Ταχύτητα"
+			"armor": bonus_desc = "+50 Ζωή, +4% Άμυνα, +0.3 Ζωή/δ"
 			"shield": bonus_desc = "+30 Ζωή, +3% Απόκρουση, +3% Άμυνα"
 
 		detail = "Επόμενη ενίσχυση (+%d): %s" % [next_lvl, bonus_desc]
@@ -436,6 +447,75 @@ func _upgrade_row(slot: String) -> Control:
 
 func _on_upgrade_click(slot: String) -> void:
 	_player.upgrade_gear(slot)
+	Sfx.play("sword_hit")
+	_refresh()
+
+
+# ------------------------------------------------------------------- forging ----
+
+func _build_forge_rows() -> void:
+	for recipe_id in ShopData.FORGE_RECIPES:
+		_list.add_child(_forge_row(recipe_id))
+
+
+func _forge_row(recipe_id: String) -> Control:
+	var rec: Dictionary = ShopData.FORGE_RECIPES[recipe_id]
+	var gid: String = rec.get("gear_id", "")
+	var gear: Dictionary = ShopData.GEAR.get(gid, {})
+	var title: String = rec["name"]
+	var icon: String = rec.get("icon", "sword")
+	var col: Color = ShopData.tier_color(gid)
+	var detail: String = rec.get("desc", "")
+	var owned: bool = _player.gear_owned.has(gid)
+
+	var stats_line := ""
+	var mods: Dictionary = gear.get("mods", {})
+	var parts: Array[String] = []
+	for k in mods:
+		parts.append(Stats.line(k, mods[k]))
+	stats_line = ", ".join(parts)
+
+	var cost: Dictionary = rec.get("cost", {})
+	var gold_cost: int = int(cost.get("gold", 0))
+	var ingredients: Dictionary = cost.get("ingredients", {})
+
+	var req_parts: Array[String] = []
+	var have_mats := true
+	for ing in ingredients:
+		var count: int = int(ingredients[ing])
+		var mat_name: String = ShopData.JUNK[ing]["name"] if ShopData.JUNK.has(ing) else ing
+		var have: int = int(_player.junk.get(ing, 0))
+		req_parts.append("%dx %s (Έχεις: %d)" % [count, mat_name, have])
+		if have < count:
+			have_mats = false
+
+	var req_text := "Υλικά: " + ", ".join(req_parts)
+	var stats_bbcode := "[color=#a0e0ff]%s[/color]\n[color=#ffd24d]%s[/color]" % [stats_line, req_text]
+
+	var buttons: Array = []
+	var price_text := Strings.SHOP_PRICE % gold_cost
+	var price_ok := _player.gold >= gold_cost and have_mats
+
+	if owned:
+		var b_owned := UiKit.button(Strings.SHOP_OWNED, func(): pass, 150)
+		b_owned.disabled = true
+		buttons.append(b_owned)
+		price_text = ""
+	else:
+		var can_f := ShopData.can_forge(recipe_id, _player.gold, _player.junk, _player.gear_owned)
+		var b := UiKit.button(Strings.SHOP_TAB_FORGE, _on_forge_click.bind(recipe_id), 150)
+		b.disabled = not can_f
+		buttons.append(b)
+
+	return _row(icon, col, title, detail, stats_bbcode, price_text, price_ok, buttons)
+
+
+func _on_forge_click(recipe_id: String) -> void:
+	if ShopData.forge_recipe(recipe_id, _player):
+		Sfx.play("craft_upgrade")
+		Sfx.play("sword_hit")
+		var rec: Dictionary = ShopData.FORGE_RECIPES[recipe_id]
+		_player.message.emit(Strings.MSG_FORGE_SUCCESS % rec["name"])
 	_refresh()
 
 

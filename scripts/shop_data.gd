@@ -201,6 +201,26 @@ const GEAR := {
 		"mods": {"block_add": 0.16, "defense": 0.20, "hp_add": 250},
 		"desc": "Βαριά ασπίδα από βασάλτη και μάγμα· αντέχει ακόμη και το χτύπημα του Πυρφόρου.",
 	},
+	"weapon_orc_cleaver": {
+		"name": "Ορκικός Μπαλτάς του Πολέμαρχου", "slot": "weapon", "weapon_type": "2h", "tier": 7, "level": 25, "price": 12000,
+		"mods": {"damage_add": 78, "crit": 0.18, "lifesteal": 0.05, "attack_speed": -0.04},
+		"desc": "Βαριά ορκική λεπίδα σφυρηλατημένη με θραύσματα από το φρούριο του Γκρομ'γκαρ. Συντρίβει οστά με απίστευτη δύναμη.",
+	},
+	"bow_wolf_stalker": {
+		"name": "Τόξο του Κυνηγού των Λύκων", "slot": "weapon", "weapon_type": "bow", "tier": 6, "level": 22, "price": 8500,
+		"mods": {"damage_add": 54, "crit": 0.18, "attack_speed": 0.15},
+		"desc": "Εύκαμπτο και θανατηφόρο τόξο από καλάμια ποταμού και σκληρυμένα κόκαλα λύκων.",
+	},
+	"armor_corsair_mail": {
+		"name": "Ενισχυμένος Θώρακας του Κουρσάρου", "slot": "armor", "tier": 7, "level": 25, "price": 14000,
+		"mods": {"hp_add": 210, "defense": 0.28, "regen": 1.2},
+		"desc": "Ατσάλινη πανοπλία με θαλασσινά καρφιά και ενισχυμένες πλάκες.",
+	},
+	"shield_bulwark": {
+		"name": "Απόρθητο Προπύργιο των Κορυφών", "slot": "shield", "tier": 7, "level": 25, "price": 11000,
+		"mods": {"block_add": 0.13, "defense": 0.16, "hp_add": 120},
+		"desc": "Βαριά ασπίδα από σίδηρο και σκληρά πετρώματα των ορεινών πλαγιών.",
+	},
 }
 
 ## Loot that only sells: dropped by skeletons, bought by the market.
@@ -389,6 +409,16 @@ const SHOPS := {
 			{"type": "gear", "id": "shield_5"}, {"type": "gear", "id": "shield_6"}, {"type": "gear", "id": "shield_7"},
 			{"type": "gear", "id": "shield_8"}, {"type": "gear", "id": "shield_9"},
 		],
+		"buys": "gear",
+	},
+	"blacksmith_forge": {
+		"title": "Αμόνι & Καμίνι του Νικήτα",
+		"keeper": "Σιδηρουργείο του Νικήτα",
+		"kind": "forge",
+		"greeting": [
+			"Το αμόνι καίει και το ατσάλι περιμένει! Ενίσχυσε τα όπλα σου ή σφυρηλάτησε θρυλικό εξοπλισμό από τα λάφυρα των μαχών.",
+		],
+		"stock": [],
 		"buys": "gear",
 	},
 	"archery": {
@@ -635,12 +665,14 @@ static func set_bonus_mods(tier: int) -> Dictionary:
 
 
 # --- Equipment Upgrades (Crafting) ---
-const MAX_UPGRADE_LEVEL := 3
+const MAX_UPGRADE_LEVEL := 5
 
 const UPGRADE_COSTS := {
 	1: {"gold": 120, "material": "iron_scrap", "count": 2},
 	2: {"gold": 350, "material": "bone_shard", "count": 3},
-	3: {"gold": 900, "material": "lava_ember", "count": 2},
+	3: {"gold": 800, "material": "lava_ember", "count": 2},
+	4: {"gold": 1600, "material": "mountain_herb", "count": 4},
+	5: {"gold": 3200, "material": "lava_ember", "count": 5},
 }
 
 static func weapon_type(id: String) -> String:
@@ -655,11 +687,13 @@ static func upgrade_mods(slot: String, level: int) -> Dictionary:
 			return {
 				"damage_mult": 0.12 * float(level),
 				"crit": 0.02 * float(level),
+				"attack_speed": 0.02 * float(level),
 			}
 		"armor":
 			return {
 				"hp_add": 50.0 * float(level),
 				"defense": 0.04 * float(level),
+				"regen": 0.3 * float(level),
 			}
 		"shield":
 			return {
@@ -688,6 +722,122 @@ static func can_upgrade_slot(slot: String, current_level: int, gold: int, junk: 
 	if int(junk.get(mat, 0)) < int(cost["count"]):
 		return false
 	return true
+
+
+# --- Special Forging Recipes (Monster Drops & Island Minerals) ---
+const FORGE_RECIPES := {
+	"forge_orc_cleaver": {
+		"id": "forge_orc_cleaver",
+		"gear_id": "weapon_orc_cleaver",
+		"name": "Ορκικός Μπαλτάς του Πολέμαρχου",
+		"slot": "weapon",
+		"icon": "sword",
+		"tier": 7,
+		"level": 25,
+		"cost": {
+			"gold": 1200,
+			"ingredients": {
+				"iron_scrap": 10,
+				"bone_shard": 8,
+			}
+		},
+		"desc": "Βαριά ορκική λεπίδα σφυρηλατημένη με θραύσματα από το φρούριο του Γκρομ'γκαρ. Συντρίβει οστά με απίστευτη δύναμη.",
+	},
+	"forge_wolf_bow": {
+		"id": "forge_wolf_bow",
+		"gear_id": "bow_wolf_stalker",
+		"name": "Τόξο του Κυνηγού των Λύκων",
+		"slot": "weapon",
+		"icon": "arrow",
+		"tier": 6,
+		"level": 22,
+		"cost": {
+			"gold": 950,
+			"ingredients": {
+				"reed": 8,
+				"bone_shard": 6,
+				"iron_scrap": 4,
+			}
+		},
+		"desc": "Εύκαμπτο και θανατηφόρο τόξο από καλάμια ποταμού και σκληρυμένα κόκαλα λύκων. Εξαιρετική ταχύτητα και κρίσιμα χτυπήματα.",
+	},
+	"forge_corsair_mail": {
+		"id": "forge_corsair_mail",
+		"gear_id": "armor_corsair_mail",
+		"name": "Ενισχυμένος Θώρακας του Κουρσάρου",
+		"slot": "armor",
+		"icon": "armor",
+		"tier": 7,
+		"level": 25,
+		"cost": {
+			"gold": 1400,
+			"ingredients": {
+				"iron_scrap": 12,
+				"waterlily": 6,
+				"mountain_herb": 5,
+			}
+		},
+		"desc": "Ατσάλινη πανοπλία με θαλασσινά καρφιά και ενισχυμένες πλάκες. Προστατεύει από τα πιο σφοδρά χτυπήματα.",
+	},
+	"forge_bulwark": {
+		"id": "forge_bulwark",
+		"gear_id": "shield_bulwark",
+		"name": "Απόρθητο Προπύργιο των Κορυφών",
+		"slot": "shield",
+		"icon": "shield",
+		"tier": 7,
+		"level": 25,
+		"cost": {
+			"gold": 1100,
+			"ingredients": {
+				"iron_scrap": 8,
+				"mountain_herb": 6,
+				"autumn_cone": 4,
+			}
+		},
+		"desc": "Βαριά ασπίδα από σίδηρο και σκληρά πετρώματα των ορεινών πλαγιών. Καμία λόγχη δεν την τρυπά.",
+	},
+}
+
+static func can_forge(recipe_id: String, gold: int, junk: Dictionary, gear_owned: Array) -> bool:
+	if not FORGE_RECIPES.has(recipe_id):
+		return false
+	var recipe: Dictionary = FORGE_RECIPES[recipe_id]
+	var gear_id: String = recipe.get("gear_id", "")
+	if gear_owned.has(gear_id):
+		return false
+	var cost: Dictionary = recipe.get("cost", {})
+	if gold < int(cost.get("gold", 0)):
+		return false
+	var ingredients: Dictionary = cost.get("ingredients", {})
+	for ing in ingredients:
+		var needed: int = int(ingredients[ing])
+		if int(junk.get(ing, 0)) < needed:
+			return false
+	return true
+
+static func forge_recipe(recipe_id: String, player: Player) -> bool:
+	if not FORGE_RECIPES.has(recipe_id) or player == null:
+		return false
+	var recipe: Dictionary = FORGE_RECIPES[recipe_id]
+	var gear_id: String = recipe.get("gear_id", "")
+	if not can_forge(recipe_id, player.gold, player.junk, player.gear_owned):
+		return false
+	var cost: Dictionary = recipe.get("cost", {})
+	var gold_cost: int = int(cost.get("gold", 0))
+	player.gold -= gold_cost
+	var ingredients: Dictionary = cost.get("ingredients", {})
+	for ing in ingredients:
+		var needed: int = int(ingredients[ing])
+		player.junk[ing] = int(player.junk.get(ing, 0)) - needed
+		if int(player.junk[ing]) <= 0:
+			player.junk.erase(ing)
+
+	player.gear_owned.append(gear_id)
+	player.inventory_changed.emit(player.gold, player.potions)
+	player.gear_changed.emit()
+	return true
+
 
 
 static func can_brew(recipe_id: String, gold: int, junk: Dictionary) -> bool:

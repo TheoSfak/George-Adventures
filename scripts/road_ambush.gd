@@ -26,7 +26,7 @@ func _process(delta: float) -> void:
 	if daynight == null or daynight.darkness() < 0.62:
 		return
 
-	if _last_ambush_day == daynight.day_count:
+	if _last_ambush_day == daynight.day_number:
 		return
 
 	var invasion = tree.get_first_node_in_group("invasion")

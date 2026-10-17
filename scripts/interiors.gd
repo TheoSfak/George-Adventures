@@ -222,42 +222,58 @@ const DEFS := {
 		"npcs": [[C + "Knight.glb", 0.0, -1.8, 180, "stand"]],
 	},
 	"orc_castle": {
-		"size": Vector2(26, 20), "height": 6.2,
-		"floor_color": Color(0.24, 0.22, 0.21), "wall_color": Color(0.30, 0.28, 0.28),
-		"trim_color": Color(0.18, 0.16, 0.15), "ceiling_color": Color(0.14, 0.11, 0.10),
-		"light_color": Color(1.0, 0.50, 0.20), "light_energy": 3.2,
+		"size": Vector2(32, 24), "height": 7.2,
+		"floor_color": Color(0.18, 0.17, 0.16), "wall_color": Color(0.24, 0.22, 0.22),
+		"trim_color": Color(0.14, 0.12, 0.12), "ceiling_color": Color(0.12, 0.10, 0.09),
+		"light_color": Color(1.0, 0.45, 0.15), "light_energy": 3.4,
 		"furniture": [
-			[I + "column.gltf.glb", -7.5, -5.0, 0, 2.6],
-			[I + "column.gltf.glb", 7.5, -5.0, 0, 2.6],
-			[I + "column.gltf.glb", -7.5, 3.5, 0, 2.6],
-			[I + "column.gltf.glb", 7.5, 3.5, 0, 2.6],
-			[G + "bench_decorated.gltf", 0.0, -8.2, 0, 1.8],
-			[I + "banner_red.gltf.glb", -3.5, -9.6, 0, 2.2, 1.2],
-			[I + "banner_red.gltf.glb", 3.5, -9.6, 0, 2.2, 1.2],
-			[G + "post_skull.gltf", -2.8, -7.5, 0, 1.6],
-			[G + "post_skull.gltf", 2.8, -7.5, 0, 1.6],
-			[F + "table_medium_long.gltf", 0.0, -1.0, 0, 1.4],
-			[G + "skull_candle.gltf", 0.0, -1.0, 0, 1.3, 1.1],
-			[F + "chair_A_wood.gltf", -2.5, -1.0, 90, 1.2],
-			[F + "chair_A_wood.gltf", 2.5, -1.0, 270, 1.2],
-			[F + "rug_rectangle_B.gltf", 0.0, -4.5, 0, 2.2],
-			[I + "crates_stacked.gltf.glb", -11.2, -6.5, 90, 1.2],
-			[I + "barrel_large.gltf.glb", -11.5, -3.5, 0, 0.8],
-			[I + "keg_decorated.gltf.glb", -10.0, -1.5, 45, 0.7],
-			[P + "weaponrack.gltf", 11.4, -6.5, 270, 1.8],
-			[P + "weaponrack.gltf", 11.4, -2.5, 270, 1.8],
-			[P + "resource_stone.gltf", 10.5, 6.0, 0, 1.5],
-			[G + "skull.gltf", -5.0, 5.0, 45, 1.5],
-			[G + "ribcage.gltf", 5.5, 5.5, 120, 1.4],
-			[G + "bone_A.gltf", -6.5, 6.5, 30, 1.5],
-			[I + "torch_mounted.gltf.glb", -12.6, -2.0, 90, 2.2, 3.0],
-			[I + "torch_mounted.gltf.glb", 12.6, -2.0, 270, 2.2, 3.0],
-			[I + "torch_mounted.gltf.glb", -6.0, 9.6, 180, 2.2, 3.0],
-			[I + "torch_mounted.gltf.glb", 6.0, 9.6, 180, 2.2, 3.0],
+			# Imposing barbarian columns framing the outer perimeter (aisles at X = +/-11.0, leaving central hall 100% wide open)
+			[I + "column.gltf.glb", -11.0, -7.0, 0, 3.0],
+			[I + "column.gltf.glb", 11.0, -7.0, 0, 3.0],
+			[I + "column.gltf.glb", -11.0, 0.0, 0, 3.0],
+			[I + "column.gltf.glb", 11.0, 0.0, 0, 3.0],
+			[I + "column.gltf.glb", -11.0, 7.0, 0, 3.0],
+			[I + "column.gltf.glb", 11.0, 7.0, 0, 3.0],
+			# The High Barbarian Throne of Grom'gar atop the dais at back wall
+			[G + "bench_decorated.gltf", 0.0, -10.2, 0, 2.4, 0.4],
+			[G + "post_skull.gltf", -3.2, -9.6, 0, 2.0, 0.4],
+			[G + "post_skull.gltf", 3.2, -9.6, 0, 2.0, 0.4],
+			[I + "banner_red.gltf.glb", -5.5, -11.6, 0, 2.8, 1.8],
+			[I + "banner_red.gltf.glb", 5.5, -11.6, 0, 2.8, 1.8],
+			[I + "banner_red.gltf.glb", 0.0, -11.6, 0, 3.2, 2.2],
+			[G + "skull_candle.gltf", -1.8, -9.8, 45, 1.4, 0.4],
+			[G + "skull_candle.gltf", 1.8, -9.8, -45, 1.4, 0.4],
+			[G + "shrine_candles.gltf", -7.5, -10.5, 25, 2.0],
+			[G + "shrine_candles.gltf", 7.5, -10.5, -25, 2.0],
+			# West Armoury & Training: weapon racks, training target, barrels and war supplies
+			[P + "weaponrack.gltf", -14.6, -7.5, 90, 2.0],
+			[P + "weaponrack.gltf", -14.6, -3.0, 90, 2.0],
+			[P + "weaponrack.gltf", -14.6, 2.5, 90, 2.0],
+			[P + "target.gltf", -14.6, 7.0, 90, 1.8],
+			[P + "bucket_arrows.gltf", -13.5, 8.5, 0, 1.6],
+			[I + "crates_stacked.gltf.glb", -13.5, -10.5, 0, 1.4],
+			[I + "barrel_large.gltf.glb", -14.2, 5.0, 0, 1.0],
+			[I + "keg_decorated.gltf.glb", -12.5, -10.5, 45, 0.9],
+			# East Wing: War Council & Spoils: heavy war planning crates, stone and timber reserves
+			[P + "crate_long_A.gltf", 13.5, -2.0, 90, 1.8],
+			[P + "crate_open.gltf", 13.5, 1.2, 0, 1.6],
+			[P + "resource_stone.gltf", 14.0, 5.5, 0, 1.8],
+			[P + "resource_lumber.gltf", 13.5, 8.5, 90, 1.5],
+			[I + "barrel_large.gltf.glb", 14.2, -6.0, 0, 1.0],
+			[I + "keg.gltf.glb", 12.8, -6.0, 0, 0.8],
+			# Torchlit perimeter & exit portal framing
+			[I + "torch_mounted.gltf.glb", -15.6, -4.0, 90, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", -15.6, 4.0, 90, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", 15.6, -4.0, 270, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", 15.6, 4.0, 270, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", -8.0, 11.6, 180, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", 8.0, 11.6, 180, 2.2, 3.2],
+			[I + "torch_mounted.gltf.glb", -2.4, 11.6, 180, 2.2, 3.0],
+			[I + "torch_mounted.gltf.glb", 2.4, 11.6, 180, 2.2, 3.0],
 		],
 		"chests": [
-			[11.0, -8.2, 270, true, 250, 450, 3],
-			[-11.2, 5.0, 90, false, 60, 130, 1],
+			[13.8, -9.8, 270, true, 300, 550, 3],
+			[-14.0, 9.8, 90, false, 80, 180, 2],
 		],
 	},
 	"shadow_castle": {
@@ -312,6 +328,16 @@ func _ready() -> void:
 	_hook_player.call_deferred()
 
 
+func _process(_delta: float) -> void:
+	if _inside:
+		var player := get_tree().get_first_node_in_group("player") as Player
+		if player != null and player.global_position.x < 1000.0 and player.global_position.z > -1500.0:
+			_inside = false
+			current_kind = ""
+			current_door = ""
+			_set_indoor_light(false)
+
+
 ## When George dies in the catacombs he wakes up in the village: put the outdoor light back.
 func _hook_player() -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
@@ -334,6 +360,18 @@ func _on_player_respawned(player: Player) -> void:
 
 
 func is_inside() -> bool:
+	if not _inside:
+		return false
+	var player := get_tree().get_first_node_in_group("player") as Player
+	if player != null:
+		# Sanity check: All interior rooms are at FAR_AWAY (X >= 1500) or Catacombs (X >= 5000).
+		# If player is in the village, islands, or outdoor regions (X < 1000), they are physically outdoors!
+		if player.global_position.x < 1000.0 and player.global_position.z > -1500.0:
+			_inside = false
+			current_kind = ""
+			current_door = ""
+			_set_indoor_light(false)
+			return false
 	return _inside
 
 
@@ -487,15 +525,22 @@ func _exit_room(door_id: String, player: Player) -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	Sfx.ui("door_close")
 	await hud.fade_out(0.3)
-	var room: Dictionary = _rooms[door_id]
 	_set_indoor_light(false)
 	player.get_node("CameraRig/SpringArm3D").spring_length = _saved_zoom
-	player.teleport(room["outside_pos"] + Vector3(0, 0.05, 0), room["outside_heading"])
+	var out_pos := Vector3(0, 0.05, 16)
+	var out_heading := 0.0
+	var reg := ""
+	if _rooms.has(door_id):
+		var room: Dictionary = _rooms[door_id]
+		out_pos = room.get("outside_pos", out_pos)
+		out_heading = float(room.get("outside_heading", out_heading))
+		reg = room.get("region", "")
+	player.teleport(out_pos + Vector3(0, 0.05, 0), out_heading)
 	_inside = false
 	current_door = ""
-	if room.get("region", "") != "":
+	if reg != "":
 		_in_region = true
-		current_kind = room["region"]
+		current_kind = reg
 		_report_reach(current_kind)
 	else:
 		_in_region = false
@@ -655,6 +700,14 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 		keeper.position = origin + Vector3(k[1], 0.05, k[2])
 		root.add_child(keeper)
 
+	if kind == "blacksmith":
+		var forge_script = load("res://scripts/blacksmith_forge.gd")
+		if forge_script != null:
+			var forge: Node3D = forge_script.new()
+			forge.position = origin + Vector3(-3.8, 0.0, 2.0)
+			forge.rotation_degrees.y = 45.0
+			root.add_child(forge)
+
 	# Prayer spot where George can take his talent points back: [x, z]
 	if def.has("respec"):
 		var spot := InteractSpot.make("", func(p): p.respec(), 3.0)
@@ -703,13 +756,26 @@ func _build_room(door_id: String, kind: String, outside_pos: Vector3, outside_he
 		bed_spot.position = origin + Vector3(-5.2, 0.5, -3.8)
 		root.add_child(bed_spot)
 
+	if kind == "orc_castle":
+		# Elevated stone throne dais for Warlord Grom'gar
+		var dais_mat := _material(Color(0.25, 0.23, 0.23), 0.95)
+		var dais_trim := _material(Color(0.14, 0.12, 0.12), 0.85)
+		_box(root, origin + Vector3(0.0, 0.2, -10.2), Vector3(9.2, 0.4, 4.2), dais_mat, true)
+		_box(root, origin + Vector3(0.0, 0.4, -10.4), Vector3(7.4, 0.4, 3.4), dais_trim, true)
+		# Crimson ceremonial runner leading down the central aisle
+		var runner_mat := _material(Color(0.44, 0.12, 0.08), 0.9)
+		_box(root, origin + Vector3(0.0, 0.01, 0.0), Vector3(3.8, 0.02, 17.0), runner_mat, false)
+
 	# The way out
 	var door_z := size.y / 2
-	_box(root, origin + Vector3(0, 1.7, door_z - 0.15), Vector3(2.6, 3.4, 0.3), _material(Color(0.30, 0.18, 0.09), 0.8), false)
-	_box(root, origin + Vector3(0, 3.55, door_z - 0.15), Vector3(3.2, 0.3, 0.4), trim_mat, false)
-	_box(root, origin + Vector3(-1.45, 1.75, door_z - 0.15), Vector3(0.3, 3.5, 0.4), trim_mat, false)
-	_box(root, origin + Vector3(1.45, 1.75, door_z - 0.15), Vector3(0.3, 3.5, 0.4), trim_mat, false)
-	var exit_spot := InteractSpot.make(Strings.PROMPT_EXIT, func(p): _exit_room(door_id, p), 2.4)
+	var is_castle := kind in ["orc_castle", "shadow_castle", "tower"]
+	var door_w := 3.6 if is_castle else 2.6
+	var door_h := 4.4 if is_castle else 3.4
+	_box(root, origin + Vector3(0, door_h / 2.0, door_z - 0.15), Vector3(door_w, door_h, 0.3), _material(Color(0.24, 0.14, 0.08), 0.8), false)
+	_box(root, origin + Vector3(0, door_h + 0.15, door_z - 0.15), Vector3(door_w + 0.6, 0.3, 0.4), trim_mat, false)
+	_box(root, origin + Vector3(-door_w / 2.0 - 0.15, door_h / 2.0, door_z - 0.15), Vector3(0.3, door_h + 0.1, 0.4), trim_mat, false)
+	_box(root, origin + Vector3(door_w / 2.0 + 0.15, door_h / 2.0, door_z - 0.15), Vector3(0.3, door_h + 0.1, 0.4), trim_mat, false)
+	var exit_spot := InteractSpot.make(Strings.PROMPT_EXIT, func(p): _exit_room(door_id, p), 3.8 if is_castle else 2.4)
 	exit_spot.position = origin + Vector3(0, 0, door_z - 0.6)
 	root.add_child(exit_spot)
 

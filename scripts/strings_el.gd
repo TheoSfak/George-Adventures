@@ -352,13 +352,16 @@ const MSG_MEAL_OVER := "Η δύναμη του φαγητού πέρασε: %s"
 
 # --- crafting & upgrades
 const SHOP_TAB_UPGRADE := "Αναβάθμιση"
+const SHOP_TAB_FORGE := "Σφυρηλάτηση"
 const UPGRADE_TITLE := "Σιδηρουργείο: Ενίσχυση Εξοπλισμού"
 const UPGRADE_BUTTON := "Ενίσχυση (+%d)"
-const UPGRADE_MAXED := "Μέγιστο Επίπεδο (+3)"
+const UPGRADE_MAXED := "Μέγιστο Επίπεδο (+5)"
 const UPGRADE_NEEDS := "Απαιτούνται: %s και %d χρυσά"
 const UPGRADE_HAVE := "Διαθέτεις: %d %s, %d χρυσά"
 const MSG_UPGRADED := "Το αντικείμενο αναβαθμίστηκε σε: %s!"
 const MSG_NO_UPGRADE_MATS := "Δεν έχεις τα απαραίτητα υλικά για αναβάθμιση!"
+const MSG_FORGE_SUCCESS := "Σφυρηλατήθηκε με επιτυχία: %s!"
+const MSG_NO_FORGE_MATS := "Δεν έχεις τα απαραίτητα υλικά για σφυρηλάτηση!"
 
 # --- weapon types
 const WEAPON_TYPE_1H := "Μονοχείριο"

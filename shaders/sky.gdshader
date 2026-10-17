@@ -19,6 +19,23 @@ float hash13(vec3 p) {
 	return fract((p.x + p.y) * p.z);
 }
 
+float sky_cloud_hash(vec2 p) {
+	p = fract(p * vec2(123.34, 456.21));
+	p += dot(p, p + 45.32);
+	return fract(p.x * p.y);
+}
+
+float sky_cloud_noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = sky_cloud_hash(i);
+	float b = sky_cloud_hash(i + vec2(1.0, 0.0));
+	float c = sky_cloud_hash(i + vec2(0.0, 1.0));
+	float d = sky_cloud_hash(i + vec2(1.0, 1.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 void sky() {
 	vec3 d = normalize(EYEDIR);
 	float h = d.y;
@@ -42,6 +59,21 @@ void sky() {
 	float moon_up = smoothstep(-0.1, 0.1, md.y);
 	col += moon_color * pow(max(moon_cos, 0.0), 80.0) * 0.12 * moon_up * clear;
 	col = mix(col, moon_color * 1.4, smoothstep(0.99935, 0.9996, moon_cos) * moon_up * clear);
+
+	// procedural drifting clouds in the sky dome
+	if (h > 0.02) {
+		vec2 cuv = (d.xz / max(h + 0.12, 0.12)) * 0.35 + vec2(TIME * 0.004, TIME * 0.002);
+		float n = sky_cloud_noise(cuv * 2.8) * 0.65 + sky_cloud_noise(cuv * 5.6) * 0.35;
+		float cloud = smoothstep(0.48, 0.72, n);
+		if (cloud > 0.001) {
+			vec3 day_cloud = mix(vec3(0.93, 0.95, 0.98), vec3(1.0, 1.0, 1.0), n);
+			vec3 night_cloud = mix(vec3(0.12, 0.15, 0.22), vec3(0.24, 0.28, 0.36), n);
+			vec3 base_cloud = mix(night_cloud, day_cloud, clamp(sd.y * 2.5 + 0.3, 0.0, 1.0));
+			base_cloud = mix(base_cloud, vec3(0.34, 0.36, 0.40), overcast * 0.85);
+			float cloud_alpha = cloud * 0.80 * smoothstep(0.02, 0.18, h) * (1.0 - star_amount * 0.5);
+			col = mix(col, base_cloud, cloud_alpha);
+		}
+	}
 
 	// stars: a jittered grid on the sphere
 	if (star_amount > 0.001 && h > -0.02) {

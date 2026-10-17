@@ -48,7 +48,7 @@ signal aim_changed(aiming: bool, charge: float)
 @export var mouse_sensitivity := 0.0025
 @export var stick_sensitivity := 2.8
 @export var pitch_min := -1.1   # camera high, looking down
-@export var pitch_max := 0.45   # camera low, looking up
+@export var pitch_max := 0.85   # camera low, looking up at the sky and clouds
 @export var camera_height := 1.7
 @export var camera_follow := 14.0
 @export var zoom_min := 2.0
@@ -72,6 +72,20 @@ const CAMERA_MIN_DISTANCE := 0.7       # ... but never closer to George than thi
 # The KayKit model ships with every weapon/shield visible. Hide the ones we don't use.
 const HIDDEN_NODES: Array[String] = [
 	"1H_Sword_Offhand", "2H_Sword", "Badge_Shield", "Rectangle_Shield", "Spike_Shield",
+]
+
+## Visual enchantment glow aura colors for equipment upgrade tiers (+1 to +5):
+## +1: Radiant Silver / Honed Steel
+## +2: Blazing Fire / Ember Orange
+## +3: Tempest Electric Blue
+## +4: Abyssal Shadow Void Purple
+## +5: Celestial Solar Radiance Gold
+const UPGRADE_GLOW_COLORS: Array[Color] = [
+	Color(0.85, 0.92, 1.0),
+	Color(1.0, 0.45, 0.12),
+	Color(0.35, 0.65, 1.0),
+	Color(0.75, 0.25, 0.95),
+	Color(1.0, 0.85, 0.20),
 ]
 
 const LOOPED: Array[String] = [
@@ -719,9 +733,12 @@ func _fire_ranged_attack(skill: String = "") -> void:
 
 	var atype := "normal"
 	var arrow_spd := 40.0
+	var up_weapon := int(gear_upgrades.get("weapon", 0))
+	if up_weapon > 0:
+		arrow_spd += float(up_weapon) * 3.5
 	var dmg := sword_damage * _damage_mult()
 	if wtype == "crossbow":
-		arrow_spd = 48.0
+		arrow_spd = 48.0 + float(up_weapon) * 3.5
 		dmg *= 1.15
 
 	if skill == "power_shot":
@@ -1083,7 +1100,12 @@ func _restore(amount: float) -> void:
 ## Why George cannot mount right now ("" = he can); see MountRules.block_reason.
 func mount_block_reason() -> String:
 	var interiors := get_tree().get_first_node_in_group("interiors")
-	var indoors: bool = interiors != null and interiors.is_inside()
+	var indoors: bool = false
+	if interiors != null and interiors.is_inside():
+		if global_position.x < 1000.0 and global_position.z > -1500.0:
+			indoors = false
+		else:
+			indoors = true
 	return MountRules.block_reason(horse_owned, indoors, busy, is_dead, _stun > 0.0, _chased())
 
 
@@ -1431,6 +1453,7 @@ func upgrade_gear(slot: String) -> bool:
 		junk.erase(mat)
 	gear_upgrades[slot] = next_lvl
 	_recalc()
+	_update_equipment_visuals()
 	Sfx.ui("craft_upgrade")
 	var slot_label: String = ShopData.SLOT_NAMES.get(slot, slot)
 	message.emit(Strings.MSG_UPGRADED % (slot_label + " +" + str(next_lvl)))
@@ -1572,38 +1595,65 @@ func _update_equipment_visuals() -> void:
 	var armor_tier := _gear_tier("armor")
 	var shield_tier := _gear_tier("shield")
 	var shield_name := SHIELD_NODES[mini(shield_tier, SHIELD_NODES.size() - 1)]
+
+	var up_weapon: int = int(gear_upgrades.get("weapon", 0))
+	var up_armor: int = int(gear_upgrades.get("armor", 0))
+	var up_shield: int = int(gear_upgrades.get("shield", 0))
+
+	# Upgrade visual aura glow materials (+1 to +5)
+	var up_weapon_mat: StandardMaterial3D = null
+	if up_weapon >= 1:
+		var glow_col := UPGRADE_GLOW_COLORS[clampi(up_weapon - 1, 0, UPGRADE_GLOW_COLORS.size() - 1)]
+		up_weapon_mat = _glow_overlay(glow_col, 0.35 + float(up_weapon) * 0.05, 0.6 + float(up_weapon) * 0.35)
+	elif weapon_tier >= 2:
+		up_weapon_mat = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30)
+
+	var up_shield_mat: StandardMaterial3D = null
+	if up_shield >= 1:
+		var glow_col := UPGRADE_GLOW_COLORS[clampi(up_shield - 1, 0, UPGRADE_GLOW_COLORS.size() - 1)]
+		up_shield_mat = _glow_overlay(glow_col, 0.32 + float(up_shield) * 0.04, 0.5 + float(up_shield) * 0.30)
+	elif shield_tier >= 4:
+		up_shield_mat = _glow_overlay(ShopData.TIER_COLORS[shield_tier - 1], 0.28)
+
+	var up_armor_mat: StandardMaterial3D = null
+	if up_armor >= 1:
+		var glow_col := UPGRADE_GLOW_COLORS[clampi(up_armor - 1, 0, UPGRADE_GLOW_COLORS.size() - 1)]
+		up_armor_mat = _glow_overlay(glow_col, 0.08 + float(up_armor) * 0.03, 0.15 + float(up_armor) * 0.12)
+	elif armor_tier >= 2:
+		up_armor_mat = _glow_overlay(ShopData.TIER_COLORS[armor_tier - 1], 0.07, 0.12)
+
 	for n in _model.find_children("*", "MeshInstance3D", true, false):
 		var mi := n as MeshInstance3D
 		if mi.name in ["Round_Shield", "Badge_Shield", "Rectangle_Shield", "Spike_Shield"]:
 			mi.visible = (wtype == "1h") and (mi.name == shield_name)
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[shield_tier - 1], 0.28) if shield_tier >= 4 and mi.visible else null
+			mi.material_overlay = up_shield_mat if mi.visible else null
 		elif mi.name == "1H_Sword":
 			if wtype == "dual":
 				mi.visible = true
-				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+				mi.material_overlay = up_weapon_mat
 			elif wtype in ["2h", "bow", "crossbow"]:
 				mi.visible = false
 			else:
 				mi.visible = weapon_tier < 3
-				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier == 2 else null
+				mi.material_overlay = up_weapon_mat if (up_weapon >= 1 or weapon_tier == 2) else null
 		elif mi.name == "2H_Sword":
 			if wtype == "2h":
 				mi.visible = true
-				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+				mi.material_overlay = up_weapon_mat
 			elif wtype in ["dual", "bow", "crossbow"]:
 				mi.visible = false
 			else:
 				mi.visible = weapon_tier >= 3
-				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 3 else null
+				mi.material_overlay = up_weapon_mat if (up_weapon >= 1 or weapon_tier >= 3) else null
 		elif mi.name == "1H_Sword_Offhand":
 			mi.visible = (wtype == "dual")
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 and mi.visible else null
+			mi.material_overlay = up_weapon_mat if mi.visible else null
 		elif mi.name in ARMOR_NODES:
-			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[armor_tier - 1], 0.07, 0.12) if armor_tier >= 2 else null
-	_update_ranged_models(wtype, weapon_tier)
+			mi.material_overlay = up_armor_mat
+	_update_ranged_models(wtype, weapon_tier, up_weapon_mat)
 
 
-func _update_ranged_models(wtype: String, weapon_tier: int) -> void:
+func _update_ranged_models(wtype: String, weapon_tier: int, up_weapon_mat: StandardMaterial3D = null) -> void:
 	if _model == null:
 		return
 	var handslot := _model.find_child("handslot_r", true, false) as Node3D
@@ -1636,7 +1686,7 @@ func _update_ranged_models(wtype: String, weapon_tier: int) -> void:
 		if _crossbow_instance != null:
 			_crossbow_instance.visible = true
 			for mi in _crossbow_instance.find_children("*", "MeshInstance3D", true, false):
-				(mi as MeshInstance3D).material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+				(mi as MeshInstance3D).material_overlay = up_weapon_mat if (up_weapon_mat != null or weapon_tier >= 2) else null
 		if _bow_instance != null:
 			_bow_instance.visible = false
 	elif wtype == "bow":
@@ -1645,7 +1695,7 @@ func _update_ranged_models(wtype: String, weapon_tier: int) -> void:
 			_crossbow_instance.visible = false
 		if _bow_instance != null:
 			_bow_instance.visible = true
-			_bow_instance.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+			_bow_instance.material_overlay = up_weapon_mat if (up_weapon_mat != null or weapon_tier >= 2) else null
 	else:
 		_ranged_weapon_anchor.visible = false
 
@@ -2312,6 +2362,13 @@ func unstuck() -> void:
 	_landing = false
 	set_heading(PI, true)
 	_play("Idle", 0.2, true)
+	var interiors := get_tree().get_first_node_in_group("interiors")
+	if interiors != null:
+		interiors.set("_inside", false)
+		interiors.set("current_kind", "")
+		interiors.set("current_door", "")
+		if interiors.has_method("_set_indoor_light"):
+			interiors.call("_set_indoor_light", false)
 	Sfx.ui("heal")
 	message.emit(Strings.MSG_UNSTUCK)
 
