@@ -112,6 +112,7 @@ var _bar: Sprite3D
 var _blocked_time := 0.0              # trying to move but not getting anywhere
 var _detour_time := 0.0               # walking around an obstacle
 var _detour_sign := 1.0
+var _detour_dir := Vector3.ZERO
 var _nav := NavFollower.new()          # walks around houses and trees on the region's NavGrid (nav_grid.gd)
 var _lost_time := 0.0                 # chasing without a line of sight (dungeon enemies)
 var _summon_timer := 5.0
@@ -132,6 +133,10 @@ func _ready() -> void:
 	_home = global_position
 	_patrol_target = _home
 	_patrol_wait = randf_range(0.5, 3.0)
+	floor_stop_on_slope = true
+	floor_constant_speed = true
+	floor_max_angle = 0.959931
+	floor_snap_length = 0.35
 	add_to_group("enemies")
 	if invader:
 		add_to_group("invaders")
@@ -311,19 +316,40 @@ func _physics_process(delta: float) -> void:
 
 
 ## Skeletons have no navigation mesh: if one pushes against a wall or tree without
-## getting anywhere it sidesteps for a moment, which gets it around most obstacles.
+## getting anywhere it sidesteps along the obstacle tangent, which smoothly guides it around.
 func _check_blocked(target_velocity: Vector3, delta: float) -> void:
 	if _detour_time > 0.0:
 		_detour_time -= delta
+		if _detour_time <= 0.0:
+			_detour_dir = Vector3.ZERO
 		return
 	var want := Vector2(target_velocity.x, target_velocity.z).length()
 	var real := get_real_velocity()
 	var got := Vector2(real.x, real.z).length()
-	if want > 0.5 and got < want * 0.25:
+	if want > 0.5 and (got < want * 0.25 or is_on_wall()):
 		_blocked_time += delta
-		if _blocked_time > 0.45:
-			_detour_time = 1.3
-			_detour_sign = -1.0 if randf() < 0.5 else 1.0
+		if _blocked_time > 0.35:
+			_detour_time = 1.1
+			var want_dir := Vector3(target_velocity.x, 0.0, target_velocity.z).normalized()
+			if is_on_wall():
+				var n := get_wall_normal()
+				n.y = 0.0
+				if n.length_squared() > 0.01:
+					n = n.normalized()
+					var tangent := Vector3(-n.z, 0.0, n.x)
+					# Choose the tangent direction closest to our intended movement
+					if want_dir.dot(tangent) < 0.0:
+						tangent = -tangent
+					_detour_dir = (tangent + n * 0.25).normalized()
+					# Micro-unstuck nudge away from concave corners if held for longer
+					if _blocked_time > 0.75:
+						global_position += n * 0.12
+				else:
+					_detour_sign = -1.0 if randf() < 0.5 else 1.0
+					_detour_dir = want_dir.rotated(Vector3.UP, deg_to_rad(65.0) * _detour_sign)
+			else:
+				_detour_sign = -1.0 if randf() < 0.5 else 1.0
+				_detour_dir = want_dir.rotated(Vector3.UP, deg_to_rad(65.0) * _detour_sign)
 			_blocked_time = 0.0
 	else:
 		_blocked_time = 0.0
@@ -331,7 +357,9 @@ func _check_blocked(target_velocity: Vector3, delta: float) -> void:
 
 func _detour(dir: Vector3) -> Vector3:
 	if _detour_time > 0.0:
-		return dir.rotated(Vector3.UP, deg_to_rad(80.0) * _detour_sign)
+		if _detour_dir != Vector3.ZERO:
+			return _detour_dir
+		return dir.rotated(Vector3.UP, deg_to_rad(65.0) * _detour_sign)
 	return dir
 
 

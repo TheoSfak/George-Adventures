@@ -45,7 +45,7 @@ func direction(from: Vector3, to: Vector3, clearance: float, delta: float) -> Ve
 		active = false
 		return Vector3.ZERO
 	var grid := NavGrid.at(from)
-	if grid == null or not grid.is_ready(clearance) or dist < NEAR:
+	if grid == null or not grid.is_ready(clearance) or dist < 0.6:
 		active = false
 		_path = PackedVector3Array()
 		return straight / dist

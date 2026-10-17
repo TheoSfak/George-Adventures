@@ -946,7 +946,7 @@ func _build_crypt() -> void:
 		_add_box_collider(n, 0.7)
 	for p in [Vector2(-24, -150), Vector2(26, -152), Vector2(-30, -182), Vector2(31, -190), Vector2(-16, -204), Vector2(18, -206)]:
 		var tree := _place_abs(GRAVE + "tree_dead_large.gltf", Vector3(p.x, 0, p.y), _rng.randf() * 360.0, _rng.randf_range(2.6, 3.4), holder)
-		_add_cylinder_collider(tree, 1.0, 12.0, Vector3.ZERO)
+		_add_cylinder_collider(tree, 0.45, 12.0, Vector3.ZERO)
 	for p in [Vector2(-18, -165), Vector2(19, -172), Vector2(-14, -196)]:
 		var coffin := _place_abs(GRAVE + ("coffin_decorated.gltf" if p.x < 0 else "coffin.gltf"), Vector3(p.x, 0, p.y), _rng.randf_range(-30.0, 30.0), 1.5, holder)
 		_add_box_collider(coffin, 0.9)
@@ -1778,13 +1778,13 @@ func _build_scatter() -> void:
 
 
 func _try_tree(p: Vector2, holder: Node3D) -> bool:
-	if _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 2.0) or _terrain.near_path(p, 3.0):
+	if _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 2.8) or _terrain.near_path(p, 3.0):
 		return false
 	var scale := TS * _rng.randf_range(0.85, 1.3)
 	var node := _place(TREES[_rng.randi() % TREES.size()], Vector3(p.x, 0, p.y),
 			_rng.randf_range(0.0, 360.0), scale, holder)
-	_add_cylinder_collider(node, 0.1 * scale, 8.0, Vector3.ZERO)
-	_occupy(p.x, p.y, 2.2)
+	_add_cylinder_collider(node, 0.048 * scale, 8.0, Vector3.ZERO)
+	_occupy(p.x, p.y, 2.8)
 	return true
 
 

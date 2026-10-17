@@ -273,6 +273,9 @@ func _blocked(p: Vector2) -> bool:
 	for s in SYMBOLS:
 		if s.distance_to(p) < 7.0:
 			return true
+	for sp in SPAWNS:
+		if Vector2(sp[1], sp[2]).distance_to(p) < 4.5:
+			return true
 	return false
 
 
@@ -291,7 +294,7 @@ func _build_pass() -> void:
 		placed += 1
 		if _rng.randf() < 0.7:
 			_prop(trees[_rng.randi() % trees.size()], p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(2.6, 3.4))
-			_trunk(p, 0.9)
+			_trunk(p, 0.45)
 		else:
 			var rock := _prop(W + "decoration/nature/rock_single_%s.gltf" % rocks[_rng.randi() % rocks.size()],
 					p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(7.0, 14.0))

@@ -201,6 +201,10 @@ var _crossbow_instance: Node3D
 
 func _ready() -> void:
 	add_to_group("player")
+	floor_stop_on_slope = true
+	floor_constant_speed = true
+	floor_max_angle = 0.959931
+	floor_snap_length = 0.35
 	base_max_health = max_health
 	base_damage = sword_damage
 	_recalc()

@@ -461,7 +461,7 @@ func _build_valley() -> void:
 		if _rng.randf() < 0.65:
 			var tree := _prop(trees[_rng.randi() % trees.size()], p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(2.6, 3.4))
 			_wash_over(tree)
-			_trunk(p, 0.9)
+			_trunk(p, 0.45)
 		else:
 			var rock := _prop(W + "decoration/nature/rock_single_%s.gltf" % rocks[_rng.randi() % rocks.size()],
 					p.x, p.y, _rng.randf() * 360.0, _rng.randf_range(7.0, 14.0))

@@ -43,6 +43,13 @@ static func set_region(id: String, grid: NavGrid) -> void:
 
 
 static func clear_regions() -> void:
+	var current_id := OS.get_thread_caller_id()
+	for id in _regions:
+		var g := _regions[id] as NavGrid
+		if g != null:
+			for t in g._threads:
+				if t.is_alive() and str(t.get_id()) != str(current_id):
+					t.wait_to_finish()
 	_regions.clear()
 
 
@@ -102,8 +109,9 @@ func is_ready(clearance: float = CLEARANCES[0]) -> bool:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
+		var current_id := OS.get_thread_caller_id()
 		for t in _threads:
-			if t.is_started():
+			if t.is_alive() and str(t.get_id()) != str(current_id):
 				t.wait_to_finish()
 
 
@@ -284,17 +292,31 @@ func _rasterize(clearance: float) -> PackedByteArray:
 		var x1 := mini(int(floor((hi.x + clearance - ox) / FINE)), _w - 1)
 		var z0 := maxi(int(floor((lo.y - clearance - oz) / FINE)), 0)
 		var z1 := mini(int(floor((hi.y + clearance - oz) / FINE)), _h - 1)
+		var n := pts.size()
 		for iz in range(z0, z1 + 1):
 			var row := iz * _w
 			var pz := oz + (iz + 0.5) * FINE
 			for ix in range(x0, x1 + 1):
-				if _poly_dist2(pts, Vector2(ox + (ix + 0.5) * FINE, pz)) <= c2:
+				var p := Vector2(ox + (ix + 0.5) * FINE, pz)
+				var inside := true
+				var best := INF
+				for i in n:
+					var a := pts[i]
+					var ab := pts[(i + 1) % n] - a
+					var ap := p - a
+					if ab.x * ap.y - ab.y * ap.x < 0.0:
+						inside = false
+					var len2 := ab.length_squared()
+					var t := 0.0 if len2 <= 0.0000001 else clampf(ap.dot(ab) / len2, 0.0, 1.0)
+					best = minf(best, (a + ab * t).distance_squared_to(p))
+				var d2 := 0.0 if inside else best
+				if d2 <= c2:
 					fine[row + ix] = 1
 	return fine
 
 
 ## Squared distance from p to a counter-clockwise convex polygon (0 inside).
-static func _poly_dist2(pts: PackedVector2Array, p: Vector2) -> float:
+func _poly_dist2(pts: PackedVector2Array, p: Vector2) -> float:
 	var inside := true
 	var best := INF
 	var n := pts.size()

@@ -56,27 +56,27 @@ const ROOM_LIGHT := {
 
 # [kind, x, y]  (enemies.gd KINDS)
 const SPAWNS := [
-	# the great hall
-	["cguard", 24.0, 24.0], ["cguard", 35.0, 24.0], ["cguard", 29.5, 22.5],
-	["minion", 24.0, 30.0], ["minion", 35.0, 30.0], ["minion", 29.0, 27.0],
-	["acolyte", 22.5, 22.0], ["acolyte", 37.5, 22.0],
+	# the great hall (placed in open aisles clear of columns and sarcophagi)
+	["cguard", 25.2, 27.0], ["cguard", 34.8, 27.0], ["cguard", 30.0, 23.5],
+	["minion", 28.5, 31.5], ["minion", 31.5, 31.5], ["minion", 30.0, 27.0],
+	["acolyte", 22.0, 26.0], ["acolyte", 38.0, 27.0],
 	# corridors
 	["minion", 14.0, 26.8], ["minion", 45.0, 26.8], ["minion", 29.5, 37.0],
 	["minion", 5.5, 17.0], ["minion", 53.5, 17.0], ["minion", 29.5, 16.0],
 	# west wing (bones)
 	["cguard", 5.0, 25.0], ["cguard", 7.5, 28.0], ["acolyte", 4.0, 30.0], ["minion", 7.0, 24.0],
-	["warden_bone", 7.0, 8.0], ["cguard", 3.5, 6.0], ["cguard", 10.5, 11.0],
+	["warden_bone", 7.0, 8.0], ["cguard", 4.5, 7.5], ["cguard", 9.5, 8.5],
 	# east wing (flame)
 	["acolyte", 53.0, 25.0], ["acolyte", 55.5, 29.0], ["rogue", 52.0, 29.5], ["rogue", 56.0, 24.0], ["brute", 54.0, 27.0],
 	["warden_flame", 53.0, 8.0], ["acolyte", 49.5, 5.0], ["acolyte", 56.5, 11.0],
-	# shadow chamber
-	["warden_shadow", 19.5, 14.5], ["acolyte", 16.5, 12.5], ["acolyte", 23.0, 17.0], ["rogue", 16.5, 17.0], ["rogue", 23.0, 12.5],
+	# shadow chamber (spaced clear of the 4 ring pillars)
+	["warden_shadow", 20.0, 14.5], ["acolyte", 18.0, 14.5], ["acolyte", 22.0, 14.5], ["rogue", 20.0, 12.8], ["rogue", 20.0, 16.2],
 	# the vault
-	["cguard", 37.0, 14.0], ["cguard", 41.0, 16.5], ["cguard", 42.5, 12.5], ["brute", 39.0, 12.5],
+	["cguard", 37.0, 14.0], ["cguard", 41.0, 15.0], ["cguard", 41.5, 13.5], ["brute", 39.5, 14.0],
 	# alcoves
 	["minion", 15.0, 31.0], ["minion", 17.0, 32.0], ["minion", 43.0, 31.0], ["cguard", 45.0, 32.0],
 	# the abbot
-	["necromancer", 30.0, 4.5],
+	["necromancer", 30.0, 4.8],
 ]
 
 # [x, y, rotation in degrees, golden, gold_min, gold_max, potions]
