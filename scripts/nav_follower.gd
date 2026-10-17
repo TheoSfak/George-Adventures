@@ -75,14 +75,29 @@ func direction(from: Vector3, to: Vector3, clearance: float, delta: float) -> Ve
 	if _path.is_empty() or _index >= _path.size():
 		active = false
 		return straight / dist
-	while _index < _path.size() - 1 and Vector2(_path[_index].x - from.x, _path[_index].z - from.z).length() < REACH:
+	while _index < _path.size() and Vector2(_path[_index].x - from.x, _path[_index].z - from.z).length() < REACH:
 		_index += 1
-	var way := Vector3(_path[_index].x - from.x, 0.0, _path[_index].z - from.z)
-	if way.length() < 0.05:
+	if _index >= _path.size():
 		active = false
+		_path = PackedVector3Array()
+		_index = 0
 		return straight / dist
+	var way := Vector3(_path[_index].x - from.x, 0.0, _path[_index].z - from.z)
+	var way_len := Vector2(way.x, way.z).length()
+	if way_len < 0.15:
+		_index += 1
+		if _index >= _path.size():
+			active = false
+			_path = PackedVector3Array()
+			_index = 0
+			return straight / dist
+		way = Vector3(_path[_index].x - from.x, 0.0, _path[_index].z - from.z)
+		way_len = Vector2(way.x, way.z).length()
+		if way_len < 0.01:
+			active = false
+			return straight / dist
 	active = true
-	return way.normalized()
+	return Vector3(way.x, 0.0, way.z) / way_len
 
 
 ## Distance from the walker to the path it follows (the polyline from where the search started through the waypoints).

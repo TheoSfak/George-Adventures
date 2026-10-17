@@ -113,6 +113,8 @@ var _blocked_time := 0.0              # trying to move but not getting anywhere
 var _detour_time := 0.0               # walking around an obstacle
 var _detour_sign := 1.0
 var _detour_dir := Vector3.ZERO
+var _stuck_accumulator := 0
+var _patrol_time := 0.0
 var _nav := NavFollower.new()          # walks around houses and trees on the region's NavGrid (nav_grid.gd)
 var _lost_time := 0.0                 # chasing without a line of sight (dungeon enemies)
 var _summon_timer := 5.0
@@ -326,12 +328,21 @@ func _check_blocked(target_velocity: Vector3, delta: float) -> void:
 	var want := Vector2(target_velocity.x, target_velocity.z).length()
 	var real := get_real_velocity()
 	var got := Vector2(real.x, real.z).length()
-	if want > 0.5 and (got < want * 0.25 or is_on_wall()):
+	var wall := is_on_wall()
+	var blocked := want > 0.5 and (got < want * 0.25 or (wall and got < want * 0.55))
+	if blocked:
 		_blocked_time += delta
+		if _state == State.PATROL and _blocked_time > 0.45:
+			_patrol_wait = randf_range(1.5, 3.5)
+			_patrol_target = _home
+			_detour_time = 0.0
+			_detour_dir = Vector3.ZERO
+			_blocked_time = 0.0
+			return
 		if _blocked_time > 0.35:
-			_detour_time = 1.1
+			_detour_time = 0.65
 			var want_dir := Vector3(target_velocity.x, 0.0, target_velocity.z).normalized()
-			if is_on_wall():
+			if wall:
 				var n := get_wall_normal()
 				n.y = 0.0
 				if n.length_squared() > 0.01:
@@ -340,10 +351,12 @@ func _check_blocked(target_velocity: Vector3, delta: float) -> void:
 					# Choose the tangent direction closest to our intended movement
 					if want_dir.dot(tangent) < 0.0:
 						tangent = -tangent
-					_detour_dir = (tangent + n * 0.25).normalized()
-					# Micro-unstuck nudge away from concave corners if held for longer
-					if _blocked_time > 0.75:
-						global_position += n * 0.12
+					_detour_dir = (tangent + n * 0.30).normalized()
+					# Micro-unstuck nudge away from concave corners if repeatedly blocked
+					_stuck_accumulator += 1
+					if _stuck_accumulator >= 3:
+						global_position += n * 0.15
+						_stuck_accumulator = 0
 				else:
 					_detour_sign = -1.0 if randf() < 0.5 else 1.0
 					_detour_dir = want_dir.rotated(Vector3.UP, deg_to_rad(65.0) * _detour_sign)
@@ -353,6 +366,7 @@ func _check_blocked(target_velocity: Vector3, delta: float) -> void:
 			_blocked_time = 0.0
 	else:
 		_blocked_time = 0.0
+		_stuck_accumulator = 0
 
 
 func _detour(dir: Vector3) -> Vector3:
@@ -423,12 +437,25 @@ func _patrol(delta: float) -> Vector3:
 		_patrol_wait -= delta
 		_play("Idle", 0.2)
 		if _patrol_wait <= 0.0:
-			var angle := randf() * TAU
-			_patrol_target = _home + Vector3(cos(angle), 0.0, sin(angle)) * randf_range(2.0, patrol_radius)
+			var grid := NavGrid.at(_home)
+			var clr := NavGrid.clearance_for(0.4 * model_scale)
+			var chosen := _home
+			for attempt in 6:
+				var angle := randf() * TAU
+				var cand := _home + Vector3(cos(angle), 0.0, sin(angle)) * randf_range(2.0, patrol_radius)
+				if grid == null or (not grid.blocked(cand, clr) and grid.line_clear(_home, cand, clr)):
+					chosen = cand
+					break
+			_patrol_target = chosen
+			_patrol_time = 0.0
 		return Vector3.ZERO
+	_patrol_time += delta
 	var to_target := _flat(_patrol_target - global_position)
-	if to_target.length() < 0.6:
+	if to_target.length() < 0.7 or _patrol_time > 5.5:
 		_patrol_wait = randf_range(1.5, 4.0)
+		_patrol_target = _home
+		_detour_time = 0.0
+		_detour_dir = Vector3.ZERO
 		return Vector3.ZERO
 	var dir := _detour(_path_dir(_patrol_target))
 	_face(dir, delta)

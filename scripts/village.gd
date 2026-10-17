@@ -190,6 +190,10 @@ func _build_nav() -> void:
 	NavGrid.set_region("village", grid)
 
 
+func _exit_tree() -> void:
+	NavGrid.clear_regions()
+
+
 func _process(delta: float) -> void:
 	for c in _clouds:
 		c.position.x += delta * 1.6

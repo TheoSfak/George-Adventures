@@ -398,6 +398,10 @@ func find_path(a: Vector3, b: Vector3, clearance: float = CLEARANCES[0]) -> Pack
 	var gi := _fine_index(goal.x, goal.y)
 	if ids[ids.size() - 1] != cb or gi < 0 or fine[gi] != 0:
 		goal = _coarse_center(ids[ids.size() - 1])
+	if ids.size() == 1 and ids[0] == ca:
+		return out
+	if Vector2(a.x, a.z).distance_to(goal) < 0.6:
+		return out
 	if _line_free(fine, Vector2(a.x, a.z), goal):
 		out.append(Vector3(goal.x, 0.0, goal.y))
 		return out

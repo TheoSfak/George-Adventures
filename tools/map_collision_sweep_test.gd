@@ -239,4 +239,7 @@ func _run() -> void:
 	print("==================================================")
 	if failed == 0:
 		print("ALL MAP SWEEP TESTS PASSED!")
+	var navgrid_script = load("res://scripts/nav_grid.gd")
+	if navgrid_script:
+		navgrid_script.clear_regions()
 	quit(0 if failed == 0 else 1)

@@ -555,11 +555,11 @@ const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king",
 const SPAWNS := [
 	# --- around the stolen wine barrels (quest "Τα Κλεμμένα Βαρέλια")
 	["minion", -38.0, -138.0], ["minion", -22.0, -146.0],
-	["minion", 112.0, -22.0], ["warrior", 110.0, -38.0],
+	["minion", 110.5, -22.0], ["warrior", 110.0, -38.0],
 	["minion", 18.0, 78.0], ["warrior", 34.0, 80.0],
 	["warrior", -128.0, 76.0], ["minion", -116.0, 74.0],
 	# --- wandering around the village outskirts
-	["minion", 80.0, -112.0], ["warrior", 58.0, -118.0],
+	["minion", 80.0, -112.0], ["warrior", 59.5, -118.0],
 	["minion", -82.0, 75.0], ["minion", 96.0, 104.0],
 	["warrior", -60.0, -110.0], ["minion", 146.0, 52.0],
 	["minion", -150.0, -40.0],
@@ -573,7 +573,7 @@ const SPAWNS := [
 	["rogue", -150.0, 36.0], ["rogue", -190.0, 40.0], ["rogue", -176.0, -14.0], ["rogue", -140.0, 4.0],
 	["rogue", 42.0, -118.0], ["rogue", 112.0, 80.0], ["rogue", -96.0, -112.0],
 	["brute", 132.0, 100.0], ["brute", 158.0, 118.0], ["brute", 68.0, 84.0], ["brute", -126.0, 75.0],
-	["mage", 140.0, 134.0], ["mage", -34.0, -158.0], ["mage", 34.0, -158.0], ["mage", -34.0, -198.0], ["mage", 34.0, -198.0],
+	["mage", 140.0, 132.5], ["mage", -34.0, -158.0], ["mage", 34.0, -158.0], ["mage", -34.0, -198.0], ["mage", 34.0, -198.0],
 	["mage", -168.0, 22.0], ["mage", 100.0, -150.0],
 	# --- the old crypt in the north (quest "Ο Βασιλιάς των Οστών")
 	["king", 0.0, -182.0],
@@ -582,15 +582,15 @@ const SPAWNS := [
 	# --- the bandits' hideout in the north-west forest (bandit_camp.gd, centre (-140, -90)) and patrols on the roads
 	["bandit_chief", -140.0, -98.0],
 	["bandit_thug", -148.0, -88.0], ["bandit_thug", -132.0, -87.0], ["bandit_thug", -140.0, -81.0],
-	["bandit_archer", -149.0, -95.0], ["bandit_archer", -131.0, -96.0], ["bandit_thief", -136.0, -84.0],
+	["bandit_archer", -150.5, -95.0], ["bandit_archer", -130.0, -94.5], ["bandit_thief", -136.0, -84.0],
 	["bandit_thug", 140.0, 10.0], ["bandit_archer", 143.0, 12.0],
-	["bandit_thug", -20.0, 76.0], ["bandit_archer", -17.0, 78.0],
+	["bandit_thug", -20.0, 76.0], ["bandit_archer", -17.5, 76.5],
 	["bandit_thug", 60.0, -160.0], ["bandit_archer", 63.0, -158.0],
 	# --- creatures made from props: a pumpkin patch beside the crypt road, haunted trees at the graveyard, boulders that
 	# stand up in the quarry, heaps of bones in the west and on the way to the bandits
 	["pumpkin", 66.0, -172.0], ["pumpkin", 74.0, -168.0], ["pumpkin", 70.0, -177.0], ["pumpkin", 64.0, -166.0], ["pumpkin", 76.0, -175.0],
 	["haunted_tree", -62.0, -186.0], ["haunted_tree", -52.0, -190.0], ["haunted_tree", 60.0, -190.0],
-	["golem", 120.0, 130.0], ["golem", 144.0, 144.0], ["golem", 166.0, 116.0],
+	["golem", 120.0, 130.0], ["golem", 148.0, 150.0], ["golem", 166.0, 116.0],
 	["bone_heap", -166.0, 32.0], ["bone_heap", -192.0, 2.0], ["bone_heap", -112.0, -104.0], ["bone_heap", -30.0, -100.0],
 	# --- the cult's ritual circle (cult_site.gd, centre (-80, -140)): five followers and the high priest
 	["cult_priest", -80.0, -147.0],
@@ -606,8 +606,8 @@ const SPAWNS := [
 	# --- Feature 5: Orcs, Wolves, and Spiders ---
 	# The Orc Stronghold at the eastern ruined outpost (148, 68)
 	["orc_warlord", 148.0, 72.0],
-	["orc_berserker", 142.0, 68.0], ["orc_berserker", 154.0, 74.0],
-	["orc_warrior", 136.0, 68.0], ["orc_warrior", 145.0, 58.0], ["orc_warrior", 154.0, 62.0],
+	["orc_berserker", 144.0, 71.0], ["orc_berserker", 155.0, 73.0],
+	["orc_warrior", 138.0, 67.0], ["orc_warrior", 145.0, 58.0], ["orc_warrior", 150.0, 63.5],
 	# The Wolves roaming the Autumn Golden Pine Forest (112, 68)
 	["wolf", 110.0, 62.0], ["wolf", 116.0, 72.0], ["wolf", 104.0, 75.0], ["wolf", 122.0, 66.0],
 	# Giant Spiders in the eastern Quarry rocks and cave path (158, 115)
