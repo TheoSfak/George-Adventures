@@ -6,6 +6,8 @@ extends CanvasLayer
 ## Settings: volumes, audio device and key re-binding (game_settings.gd).
 ## Also autosaves on quest completion, level up and at dawn (save_game.gd).
 
+const IntroVideoClass := preload("res://scripts/intro_video.gd")
+
 enum Page { MAIN, SETTINGS, HELP, CREDITS }
 
 var _title := true                   # the title menu (true) or the pause menu (false)
@@ -28,6 +30,7 @@ var _update_bar: FancyBar
 var _update_label: Label
 var _creators_label: Label
 var _version_label: Label
+static var intro_played := false
 
 
 func _ready() -> void:
@@ -54,8 +57,7 @@ func _ready() -> void:
 			SaveGame.start_action = ""
 			_new_game()
 		_:
-			_show_title()
-			_updater.check()
+			_start_with_intro_or_title()
 	var quests = get_node_or_null("/root/Quests")
 	if quests:
 		quests.quest_done.connect(func(_id): autosave())
@@ -138,6 +140,43 @@ func _heading(text: String) -> void:
 
 
 # -------------------------------------------------------------------- pages ----
+
+func _start_with_intro_or_title() -> void:
+	if not intro_played and not _is_headless_or_test():
+		intro_played = true
+		_play_intro_video(func():
+			_show_title()
+			_updater.check()
+		)
+	else:
+		_show_title()
+		_updater.check()
+
+
+func _play_intro_video(on_done: Callable = Callable()) -> void:
+	_open = true
+	get_tree().paused = true
+	if _hud:
+		_hud.visible = false
+	var intro = IntroVideoClass.new()
+	add_child(intro)
+	intro.intro_finished.connect(func():
+		if on_done.is_valid():
+			on_done.call()
+		else:
+			_show_title()
+	)
+
+
+func _is_headless_or_test() -> bool:
+	if DisplayServer.get_name() == "headless":
+		return true
+	if SaveGame.menu_in_tests:
+		return true
+	if not ResourceLoader.exists(IntroVideoClass.VIDEO_PATH):
+		return true
+	return false
+
 
 func _show_title() -> void:
 	_title = true
@@ -342,7 +381,11 @@ func _build_credits() -> void:
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_box.add_child(version)
 	var center := CenterContainer.new()
-	center.add_child(UiKit.button(Strings.MENU_BACK, func(): _show_page(Page.MAIN), 160.0, 18))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	row.add_child(UiKit.button("Προβολή Εισαγωγής", func(): _play_intro_video(), 200.0, 18))
+	row.add_child(UiKit.button(Strings.MENU_BACK, func(): _show_page(Page.MAIN), 160.0, 18))
+	center.add_child(row)
 	_box.add_child(center)
 
 
