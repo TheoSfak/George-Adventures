@@ -42,6 +42,7 @@ func _ready() -> void:
 	_build_pirate_cove_and_dock()
 	_build_forest_groves()
 	_build_wildlife()
+	_build_buried_chests()
 	_build_encampments()
 	_build_secret_treasure_grotto()
 	_build_crater_arena()
@@ -484,64 +485,312 @@ func _build_forest_groves() -> void:
 	forest_holder.name = "IslandForest"
 	add_child(forest_holder)
 
-	var tree_models: Array[String] = [
+	var tree_large_models: Array[String] = [
 		"res://assets/world/decoration/nature/trees_A_large.gltf",
-		"res://assets/world/decoration/nature/trees_A_medium.gltf",
 		"res://assets/world/decoration/nature/trees_B_large.gltf",
-		"res://assets/world/decoration/nature/trees_B_medium.gltf",
 		"res://assets/world/decoration/nature/tree_single_A.gltf",
 		"res://assets/world/decoration/nature/tree_single_B.gltf",
 	]
+	var tree_med_models: Array[String] = [
+		"res://assets/world/decoration/nature/trees_A_medium.gltf",
+		"res://assets/world/decoration/nature/trees_B_medium.gltf",
+		"res://assets/world/decoration/nature/trees_A_small.gltf",
+		"res://assets/world/decoration/nature/trees_B_small.gltf",
+	]
+	var rock_models: Array[String] = [
+		"res://assets/world/decoration/nature/rock_single_A.gltf",
+		"res://assets/world/decoration/nature/rock_single_B.gltf",
+		"res://assets/world/decoration/nature/rock_single_C.gltf",
+		"res://assets/world/decoration/nature/rock_single_D.gltf",
+		"res://assets/world/decoration/nature/rock_single_E.gltf",
+	]
+	var cut_models: Array[String] = [
+		"res://assets/world/decoration/nature/trees_A_cut.gltf",
+		"res://assets/world/decoration/nature/trees_B_cut.gltf",
+		"res://assets/world/decoration/nature/tree_single_A_cut.gltf",
+		"res://assets/world/decoration/nature/tree_single_B_cut.gltf",
+	]
 
-	# Scatter 65 trees across the lush green hills and lake valleys (radius 48m to 120m)
-	var tree_offsets: Array[Vector2] = []
-	for i in 65:
-		var angle := (float(i) / 65.0) * TAU + randf_range(-0.08, 0.08)
-		var dist := randf_range(52.0, 118.0)
+	# Scatter 140+ towering tropical trees across the green hills and lake valleys (radius 44m to 128m)
+	for i in 145:
+		var angle := (float(i) / 145.0) * TAU + randf_range(-0.06, 0.06)
+		var dist := randf_range(44.0, 126.0)
 		var lx := cos(angle) * dist
 		var lz := sin(angle) * dist
 
 		# Don't place trees in the lake center
 		var lake_d := sqrt((lx + 55.0) * (lx + 55.0) + lz * lz)
-		if lake_d < 24.0:
+		if lake_d < 22.0:
 			continue
-		# Don't place trees in the north cove trail
-		if lz < -80.0 and absf(lx) < 30.0:
+		# Don't place trees in the north cove trail / pier
+		if lz < -75.0 and absf(lx) < 28.0:
+			continue
+		# Don't place trees inside the high volcanic crater caldera (radius < 32m)
+		var crater_d := sqrt(lx * lx + lz * lz)
+		if crater_d < 32.0:
 			continue
 
 		var ly := _calc_island_height(lx, lz)
-		if ly > 2.5: # only on solid ground above sea
+		if ly > 2.2: # only on solid ground above sea
 			var t_pos := ISLAND_CENTER + Vector3(lx, ly, lz)
-			var m_path: String = tree_models[i % tree_models.size()]
-			var sc := randf_range(1.1, 1.7)
+			var is_large := (i % 3 != 0)
+			var m_path: String = tree_large_models[i % tree_large_models.size()] if is_large else tree_med_models[i % tree_med_models.size()]
+			# Scale trees grand and tall: KayKit tree models require scale 8.0 - 13.5 to reach 9m - 15m height!
+			var sc := randf_range(8.5, 13.5) if is_large else randf_range(7.0, 10.5)
 			var t_inst := _place_prop(m_path, t_pos, randf() * 360.0, sc, forest_holder)
 			if t_inst:
-				_add_tree_collider(t_inst)
+				_add_tree_collider(t_inst, sc)
+
+	# Scatter 36 coastal & basalt boulders across rocky ridges
+	for i in 36:
+		var angle := randf() * TAU
+		var dist := randf_range(48.0, 135.0)
+		var rx := cos(angle) * dist
+		var rz := sin(angle) * dist
+		var ry := _calc_island_height(rx, rz)
+		if ry > 1.2:
+			var r_pos := ISLAND_CENTER + Vector3(rx, ry, rz)
+			var r_path: String = rock_models[i % rock_models.size()]
+			var r_scale := randf_range(4.5, 8.5)
+			var r_inst := _place_prop(r_path, r_pos, randf() * 360.0, r_scale, forest_holder)
+			if r_inst:
+				_add_rock_collider(r_inst, r_scale)
+
+	# Scatter 20 weathered tree stumps and fallen logs in deep groves
+	for i in 20:
+		var angle := randf() * TAU
+		var dist := randf_range(52.0, 115.0)
+		var cx := cos(angle) * dist
+		var cz := sin(angle) * dist
+		var cy := _calc_island_height(cx, cz)
+		if cy > 3.0:
+			var c_pos := ISLAND_CENTER + Vector3(cx, cy, cz)
+			var c_path: String = cut_models[i % cut_models.size()]
+			var c_scale := randf_range(4.5, 7.5)
+			_place_prop(c_path, c_pos, randf() * 360.0, c_scale, forest_holder)
+
+	# Place 14 harvestable wild flora herbs (waterlilies around the lake, reeds, mountain herbs)
+	var flora_class := preload("res://scripts/wild_flora_node.gd")
+	for i in 6:
+		# Waterlilies floating near lake perimeter
+		var fang := (float(i) / 6.0) * TAU
+		var fx := -55.0 + cos(fang) * randf_range(11.0, 18.0)
+		var fz := sin(fang) * randf_range(11.0, 18.0)
+		var flora := flora_class.new() as WildFloraNode
+		flora.flora_id = "waterlily"
+		flora.position = ISLAND_CENTER + Vector3(fx, 7.55, fz)
+		forest_holder.add_child(flora)
+
+	for i in 4:
+		# Reeds on lake shore
+		var rang := (float(i) / 4.0) * TAU + 0.4
+		var rx := -55.0 + cos(rang) * 19.5
+		var rz := sin(rang) * 19.5
+		var flora := flora_class.new() as WildFloraNode
+		flora.flora_id = "reed"
+		flora.position = ISLAND_CENTER + Vector3(rx, 7.6, rz)
+		forest_holder.add_child(flora)
+
+	for i in 4:
+		# Mountain herbs along volcanic mountain path
+		var mang := (float(i) / 4.0) * TAU + 0.8
+		var mx := cos(mang) * 58.0
+		var mz := sin(mang) * 58.0
+		var my := _calc_island_height(mx, mz)
+		var flora := flora_class.new() as WildFloraNode
+		flora.flora_id = "mountain_herb"
+		flora.position = ISLAND_CENTER + Vector3(mx, my + 0.1, mz)
+		forest_holder.add_child(flora)
 
 
 # =========================================================================
-# 7. WILDLIFE: GRACEFUL ISLAND DEER
+# 7. WILDLIFE: MAJESTIC TROPICAL DEER & PASTURE CATTLE
 # =========================================================================
 func _build_wildlife() -> void:
 	var wildlife_holder := Node3D.new()
 	wildlife_holder.name = "IslandWildlife"
 	add_child(wildlife_holder)
 
-	# 5 wild deer roaming the green valleys and drinking near the lake
+	# 8 Majestic Wild Deer roaming the green valleys, shores and glades
+	# Scaled 2.2x to be grand, tall, imposing island stags & does!
 	var deer_offsets: Array[Vector2] = [
-		Vector2(-85.0, -25.0), # Western glade
-		Vector2(-68.0, 28.0),  # Lake south bank
+		Vector2(-85.0, -25.0), # Western forest glade
+		Vector2(-68.0, 28.0),  # Lake southern bank
 		Vector2(-48.0, -65.0), # Northern forest clearing
 		Vector2(65.0, -35.0),  # Eastern green hillside
 		Vector2(75.0, 42.0),   # Southeastern meadow
+		Vector2(-88.0, 15.0),  # Lake north-western bank
+		Vector2(-60.0, 75.0),  # South-western peaceful valley
+		Vector2(50.0, 20.0),   # Eastern ridge plateau
 	]
 
 	for off in deer_offsets:
 		var deer := VillageDeer.new()
+		# Grand wildlife scale: 2.2x makes them 2.4m tall magnificent stags!
+		deer.scale = Vector3.ONE * 2.2
 		var dy := _calc_island_height(off.x, off.y)
 		deer.position = ISLAND_CENTER + Vector3(off.x, dy, off.y)
 		deer.rotation.y = randf() * TAU
 		wildlife_holder.add_child(deer)
+
+	# 3 Highland Pasture Cattle grazing on the lush tropical hills
+	var cow_offsets: Array[Vector2] = [
+		Vector2(-35.0, -45.0), # Northern green pasture
+		Vector2(85.0, -15.0),  # Eastern coastal grass
+		Vector2(30.0, 65.0),   # Southern highland meadow
+	]
+
+	for off in cow_offsets:
+		var cow := VillageCow.new()
+		cow.scale = Vector3.ONE * 1.55 # Grand highland cattle
+		var cy := _calc_island_height(off.x, off.y)
+		cow.position = ISLAND_CENTER + Vector3(off.x, cy, off.y)
+		cow.rotation.y = randf() * TAU
+		wildlife_holder.add_child(cow)
+
+
+# =========================================================================
+# 7b. BURIED PIRATE CHESTS & UNEARTHED TREASURE
+# =========================================================================
+func _build_buried_chests() -> void:
+	var chests_holder := Node3D.new()
+	chests_holder.name = "BuriedChests"
+	add_child(chests_holder)
+
+	# 5 secret pirate caches buried across beaches, ridges and crags
+	var buried_spots: Array[Dictionary] = [
+		{
+			"pos": Vector2(-105.0, -20.0),
+			"name": "Θαμμένο Σεντούκι: Ακτή των Ναυαγών",
+			"gold_min": 350,
+			"gold_max": 580,
+			"potions": 3,
+			"rot": -15.0
+		},
+		{
+			"pos": Vector2(-95.0, 48.0),
+			"name": "Θαμμένο Σεντούκι: Όχθη της Λίμνης",
+			"gold_min": 420,
+			"gold_max": 700,
+			"potions": 4,
+			"rot": 35.0
+		},
+		{
+			"pos": Vector2(85.0, 35.0),
+			"name": "Θαμμένο Σεντούκι: Βράχοι των Κουρσάρων",
+			"gold_min": 400,
+			"gold_max": 650,
+			"potions": 3,
+			"rot": -40.0
+		},
+		{
+			"pos": Vector2(62.0, -72.0),
+			"name": "Θαμμένο Σεντούκι: Βόρεια Κορυφογραμμή",
+			"gold_min": 380,
+			"gold_max": 620,
+			"potions": 3,
+			"rot": 60.0
+		},
+		{
+			"pos": Vector2(-42.0, 85.0),
+			"name": "Θαμμένο Σεντούκι: Ηφαιστειακή Στάχτη",
+			"gold_min": 500,
+			"gold_max": 850,
+			"potions": 5,
+			"rot": 10.0
+		},
+	]
+
+	for data in buried_spots:
+		var off: Vector2 = data["pos"]
+		var ground_y := _calc_island_height(off.x, off.y)
+		var center := ISLAND_CENTER + Vector3(off.x, ground_y, off.y)
+
+		var spot_node := Node3D.new()
+		spot_node.name = "BuriedSpot_%d" % chests_holder.get_child_count()
+		spot_node.position = center
+		spot_node.add_to_group("buried_chests")
+
+		# 1. Earth / Sand Mound (Freshly unearthed excavation mound)
+		var mound := MeshInstance3D.new()
+		var m_cyl := CylinderMesh.new()
+		m_cyl.top_radius = 1.3
+		m_cyl.bottom_radius = 2.4
+		m_cyl.height = 0.45
+		mound.mesh = m_cyl
+		var m_mat := StandardMaterial3D.new()
+		m_mat.albedo_color = Color(0.52, 0.39, 0.24)
+		m_mat.roughness = 0.95
+		mound.material_override = m_mat
+		mound.position = Vector3(0.0, 0.15, 0.0)
+		spot_node.add_child(mound)
+
+		# 2. Buried Chest sunken partially into the earth mound
+		var chest := Chest.new()
+		chest.golden = (randf() > 0.4)
+		chest.gold_min = data["gold_min"]
+		chest.gold_max = data["gold_max"]
+		chest.potions = data["potions"]
+		chest.position = Vector3(0.0, 0.08, 0.0) # slightly protruding from the mound
+		chest.rotation_degrees = Vector3(randf_range(-6.0, 6.0), float(data["rot"]), randf_range(-8.0, 8.0))
+		chest.add_to_group("buried_chests")
+		spot_node.add_child(chest)
+
+		# 3. Old Iron Shovel stuck into the mound
+		var shovel := Node3D.new()
+		shovel.position = Vector3(1.1, 0.2, 0.4)
+		shovel.rotation_degrees = Vector3(18.0, 45.0, -12.0)
+
+		# Wooden Shovel Handle
+		var handle := MeshInstance3D.new()
+		var h_cyl := CylinderMesh.new()
+		h_cyl.top_radius = 0.035
+		h_cyl.bottom_radius = 0.035
+		h_cyl.height = 1.25
+		handle.mesh = h_cyl
+		var wood_mat := StandardMaterial3D.new()
+		wood_mat.albedo_color = Color(0.42, 0.26, 0.14)
+		wood_mat.roughness = 0.9
+		handle.material_override = wood_mat
+		handle.position = Vector3(0.0, 0.55, 0.0)
+		shovel.add_child(handle)
+
+		# Shovel Grip Top
+		var grip := MeshInstance3D.new()
+		var g_box := BoxMesh.new()
+		g_box.size = Vector3(0.18, 0.04, 0.04)
+		grip.mesh = g_box
+		grip.material_override = wood_mat
+		grip.position = Vector3(0.0, 1.15, 0.0)
+		shovel.add_child(grip)
+
+		# Iron Shovel Blade stuck in the dirt
+		var blade := MeshInstance3D.new()
+		var b_box := BoxMesh.new()
+		b_box.size = Vector3(0.22, 0.28, 0.03)
+		blade.mesh = b_box
+		var iron_mat := StandardMaterial3D.new()
+		iron_mat.albedo_color = Color(0.28, 0.30, 0.33)
+		iron_mat.metallic = 0.8
+		iron_mat.roughness = 0.35
+		blade.material_override = iron_mat
+		blade.position = Vector3(0.0, 0.08, 0.0)
+		shovel.add_child(blade)
+
+		spot_node.add_child(shovel)
+
+		# 4. Skull Marker post marking the illicit pirate burial
+		_place_prop("res://assets/graveyard/post_skull.gltf", center + Vector3(-1.6, 0.0, -0.6), randf() * 360.0, 1.25, spot_node)
+
+		# 5. Warm golden beacon glint
+		var glint := OmniLight3D.new()
+		glint.light_color = Color(1.0, 0.82, 0.35)
+		glint.light_energy = 1.8
+		glint.omni_range = 6.0
+		glint.position = Vector3(0.0, 0.8, 0.0)
+		spot_node.add_child(glint)
+
+		chests_holder.add_child(spot_node)
 
 
 # =========================================================================
@@ -633,7 +882,9 @@ func _build_secret_treasure_grotto() -> void:
 		_place_prop(r_path, rp, randf() * 360.0, randf_range(7.5, 10.5), grotto_holder)
 
 	# Overhanging ancient tree
-	_place_prop("res://assets/world/decoration/nature/trees_A_large.gltf", grotto_pos + Vector3(3.2, 0.0, -3.2), 40.0, 1.5, grotto_holder)
+	var g_tree := _place_prop("res://assets/world/decoration/nature/trees_A_large.gltf", grotto_pos + Vector3(3.2, 0.0, -3.2), 40.0, 11.5, grotto_holder)
+	if g_tree:
+		_add_tree_collider(g_tree, 11.5)
 
 	# The Hidden Golden Pirate Treasure Cache
 	var secret_chest := Chest.new()
@@ -728,16 +979,29 @@ func _place_prop(path: String, pos: Vector3, rot_deg: float, sc: float, parent: 
 	return null
 
 
-func _add_tree_collider(root: Node3D) -> void:
+func _add_tree_collider(root: Node3D, sc: float = 1.0) -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = 1
 	body.collision_mask = 0
 	var col := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
-	cyl.radius = 0.45
-	cyl.height = 3.5
+	cyl.radius = clampf(0.052 * sc, 0.45, 0.95)
+	cyl.height = maxf(sc * 0.75, 4.5)
 	col.shape = cyl
-	col.position.y = 1.75
+	col.position.y = cyl.height * 0.5
+	body.add_child(col)
+	root.add_child(body)
+
+
+func _add_rock_collider(root: Node3D, sc: float = 1.0) -> void:
+	var body := StaticBody3D.new()
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var col := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(sc * 0.75, sc * 0.55, sc * 0.75)
+	col.shape = box
+	col.position.y = box.size.y * 0.5
 	body.add_child(col)
 	root.add_child(body)
 

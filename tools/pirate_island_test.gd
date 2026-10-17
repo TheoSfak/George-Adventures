@@ -160,19 +160,54 @@ func _test_pirate_island_geography_and_volcano() -> void:
 				break
 		_check(has_bridge, "Highland lake has crossing footbridge")
 
-	# Verify Island Forest (Trees with collision)
+	# Verify Island Forest (Trees with collision, boulders, flora)
 	var forest = island.get_node_or_null("IslandForest")
 	_check(forest != null, "IslandForest node exists")
 	if forest:
-		var tree_count := forest.get_child_count()
-		_check(tree_count >= 40, "Island forest has dense tree groves (%d trees >= 40)" % tree_count)
+		var prop_count := forest.get_child_count()
+		_check(prop_count >= 100, "Island forest has abundant nature (%d nature items >= 100)" % prop_count)
 
-	# Verify Wildlife
+	# Verify Wildlife: Majestic Grand Deer & Highland Pasture Cattle
 	var wildlife = island.get_node_or_null("IslandWildlife")
 	_check(wildlife != null, "IslandWildlife node exists")
 	if wildlife:
-		var deer_count := wildlife.get_child_count()
-		_check(deer_count >= 4, "Island wildlife has roaming deer (%d deer >= 4)" % deer_count)
+		var animal_count := wildlife.get_child_count()
+		_check(animal_count >= 10, "Island wildlife has abundant roaming fauna (%d animals >= 10)" % animal_count)
+		var deer_found := 0
+		var cow_found := 0
+		var large_scale_ok := true
+		for a in wildlife.get_children():
+			if a is VillageDeer:
+				deer_found += 1
+				if a.scale.x < 2.0:
+					large_scale_ok = false
+			elif a is VillageCow:
+				cow_found += 1
+				if a.scale.x < 1.5:
+					large_scale_ok = false
+		_check(deer_found >= 6, "Island has 6+ majestic wild deer (found %d)" % deer_found)
+		_check(cow_found >= 2, "Island has 2+ highland pasture cattle (found %d)" % cow_found)
+		_check(large_scale_ok, "Island animals are scaled large (deer >= 2.0x, cattle >= 1.5x)")
+
+	# Verify Buried Pirate Chests
+	var buried = island.get_node_or_null("BuriedChests")
+	_check(buried != null, "BuriedChests node exists under PirateIsland")
+	if buried:
+		var spot_count := buried.get_child_count()
+		_check(spot_count == 5, "Island has exactly 5 buried pirate treasure caches (found %d)" % spot_count)
+		var valid_chests := 0
+		var has_shovels := 0
+		for spot in buried.get_children():
+			for sc in spot.get_children():
+				if sc is ChestClass:
+					valid_chests += 1
+					_check(sc.is_in_group("buried_chests"), "Buried chest is in 'buried_chests' group")
+					_check(sc.gold_min >= 300, "Buried chest has rich loot (min gold >= 300)")
+				elif sc.name.begins_with("@") or sc is Node3D:
+					if sc.get_child_count() >= 3: # Handle, Grip, Blade of shovel
+						has_shovels += 1
+		_check(valid_chests == 5, "All 5 buried spots contain functional Chest instances")
+		_check(has_shovels >= 5, "All 5 buried spots feature iron excavation shovels")
 
 	# Verify Secret Smuggler's Grotto & Hidden Treasure
 	var grotto = island.get_node_or_null("SecretSmugglersGrotto")
