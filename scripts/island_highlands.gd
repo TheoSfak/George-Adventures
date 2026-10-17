@@ -72,6 +72,7 @@ func _build_mountain_trail() -> void:
 		var frac := float(i) / 9.0
 		var pos := Vector3(lerpf(56.0, 62.0, frac), frac * 4.5, lerpf(-118.0, -126.0, frac))
 		_make_stair_step(pos, Vector3(3.2, 0.35, 1.2), -52.0, stone_mat, trail_holder)
+	_make_ramp(Vector3(56.0, 0.0, -118.0), Vector3(62.0, 4.5, -126.0), 3.4, trail_holder)
 
 	# Flight 2: Ascent from Terrace 1 (Y=4.5) to Terrace 2 (Y=9.0)
 	# 9 steps switchback
@@ -79,6 +80,7 @@ func _build_mountain_trail() -> void:
 		var frac := float(i) / 9.0
 		var pos := Vector3(lerpf(64.0, 72.0, frac), 4.5 + frac * 4.5, lerpf(-128.0, -138.0, frac))
 		_make_stair_step(pos, Vector3(3.2, 0.35, 1.2), -52.0, stone_mat, trail_holder)
+	_make_ramp(Vector3(64.0, 4.5, -128.0), Vector3(72.0, 9.0, -138.0), 3.4, trail_holder)
 
 	# Flight 3: Ascent from Terrace 2 (Y=9.0) to Summit (Y=13.5)
 	# 9 steps final approach to the Eagle's Vista
@@ -86,6 +88,7 @@ func _build_mountain_trail() -> void:
 		var frac := float(i) / 9.0
 		var pos := Vector3(lerpf(74.0, 80.0, frac), 9.0 + frac * 4.5, lerpf(-142.0, -152.0, frac))
 		_make_stair_step(pos, Vector3(3.2, 0.35, 1.2), -55.0, stone_mat, trail_holder)
+	_make_ramp(Vector3(74.0, 9.0, -142.0), Vector3(80.0, 13.5, -152.0), 3.4, trail_holder)
 
 	# Signpost at the foot of the mountain trail
 	_add_signpost("Μονοπάτι των Αετών  ↑\nΠρος το Οροπέδιο (14μ)", TRAIL_START + Vector3(2.5, 0.1, 1.5), 15.0, trail_holder)
@@ -320,9 +323,29 @@ func _make_stair_step(pos: Vector3, size: Vector3, yaw_deg: float, mat: Material
 
 	var col := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
-	bs.size = size
+	bs.size = Vector3(size.x, 0.12, size.z)
+	col.shape = bs
+	col.position.y = -0.1
+	body.add_child(col)
+	parent.add_child(body)
+
+
+func _make_ramp(from: Vector3, to: Vector3, width: float, parent: Node) -> void:
+	var mid := (from + to) * 0.5
+	var body := StaticBody3D.new()
+	body.position = mid
+	body.collision_layer = 1
+	body.collision_mask = 0
+	var col := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	var d := to - from
+	var horiz := Vector2(d.x, d.z).length()
+	var total_len := d.length()
+	bs.size = Vector3(width, 0.25, total_len + 1.2)
 	col.shape = bs
 	body.add_child(col)
+	body.rotation.y = atan2(d.x, d.z)
+	body.rotation.x = -atan2(d.y, horiz)
 	parent.add_child(body)
 
 

@@ -317,12 +317,14 @@ func _build_lighthouse() -> void:
 
 	# 2. Winding Stone Staircase from beach up to cliff top
 	var stair_steps := 12
+	var step_positions: Array[Vector3] = []
 	for i in stair_steps:
 		var frac := float(i) / stair_steps
 		var s_angle := lerpf(PI * 0.4, -PI * 0.15, frac)
 		var s_r := lerpf(9.8, 7.8, frac)
 		var s_y := lerpf(0.2, 5.2, frac)
 		var s_pos := LIGHTHOUSE_POS + Vector3(cos(s_angle) * s_r, s_y, sin(s_angle) * s_r)
+		step_positions.append(s_pos)
 
 		var step := StaticBody3D.new()
 		step.position = s_pos
@@ -335,10 +337,32 @@ func _build_lighthouse() -> void:
 		step.add_child(s_mesh)
 		var s_col := CollisionShape3D.new()
 		var sb_box := BoxShape3D.new()
-		sb_box.size = Vector3(2.4, 0.35, 1.2)
+		sb_box.size = Vector3(2.4, 0.12, 1.2)
 		s_col.shape = sb_box
+		s_col.position.y = -0.1
 		step.add_child(s_col)
 		lh_holder.add_child(step)
+
+	# Smooth transitional ramp colliders connecting consecutive winding steps
+	for i in stair_steps - 1:
+		var p0 := step_positions[i]
+		var p1 := step_positions[i + 1]
+		var mid := (p0 + p1) * 0.5
+		var ramp := StaticBody3D.new()
+		ramp.position = mid
+		ramp.collision_layer = 1
+		ramp.collision_mask = 0
+		var r_col := CollisionShape3D.new()
+		var r_box := BoxShape3D.new()
+		var seg_len := (p1 - p0).length()
+		r_box.size = Vector3(2.4, 0.15, seg_len * 1.1)
+		r_col.shape = r_box
+		ramp.add_child(r_col)
+		var flat_dir := Vector2(p1.x - p0.x, p1.z - p0.z)
+		ramp.rotation.y = atan2(flat_dir.x, flat_dir.y)
+		var pitch := atan2(p1.y - p0.y, flat_dir.length())
+		ramp.rotation.x = -pitch
+		lh_holder.add_child(ramp)
 
 	# 3. Main Lighthouse Tower (3 Tapered Cylinders from Y = 5.2 to Y = 20.0m)
 	var tower_base_y := 5.2
@@ -807,7 +831,7 @@ func _build_southeast_cliffs() -> void:
 	# 1. Main Promontory Cliff Tiers running south along X in [52, 74], Z in [112, 208]
 	# Rising from seabed (Y = -2.0) up to high panoramic shelf (Y = 5.2 - 6.8m)
 	var cliff_sections: Array[Dictionary] = [
-		{"pos": Vector3(62.0, 1.8, 130.0), "size": Vector3(20.0, 7.6, 38.0), "grass": true},  # North promontory (Z: 111 - 149)
+		{"pos": Vector3(62.0, 1.8, 133.5), "size": Vector3(20.0, 7.6, 31.0), "grass": true},  # North promontory (Z: 118 - 149, meeting stair landing)
 		{"pos": Vector3(64.0, 2.3, 165.0), "size": Vector3(22.0, 8.6, 34.0), "grass": true},  # Mid lookout cape (Z: 148 - 182)
 		{"pos": Vector3(61.0, 1.9, 195.0), "size": Vector3(20.0, 7.8, 30.0), "grass": true},  # South cape bluff (Z: 180 - 210)
 		# Lower wave-cut rocky shelves along the water line (X ~ 53)
@@ -871,10 +895,25 @@ func _build_southeast_cliffs() -> void:
 
 		var s_col := CollisionShape3D.new()
 		var s_bs := BoxShape3D.new()
-		s_bs.size = Vector3(5.5, 0.6, 2.0)
+		s_bs.size = Vector3(5.5, 0.15, 2.0)
 		s_col.shape = s_bs
+		s_col.position.y = -0.2
 		step_body.add_child(s_col)
 		cliff_holder.add_child(step_body)
+
+	# Continuous smooth ramp collider over Southeast Cliffs stairs to eliminate vertical riser collisions
+	var ramp_body := StaticBody3D.new()
+	ramp_body.name = "StairRamp"
+	ramp_body.position = Vector3(54.5, 2.75, 112.0)
+	ramp_body.rotation = Vector3(-0.432, 0.245, 0.0)
+	ramp_body.collision_layer = 1
+	ramp_body.collision_mask = 0
+	var ramp_col := CollisionShape3D.new()
+	var ramp_box := BoxShape3D.new()
+	ramp_box.size = Vector3(5.8, 0.35, 14.5)
+	ramp_col.shape = ramp_box
+	ramp_body.add_child(ramp_col)
+	cliff_holder.add_child(ramp_body)
 
 	# 3. Dramatic Sea Stacks & Boulders standing in the coastal waters at the cliff foot
 	var sea_stacks: Array[Dictionary] = [
@@ -917,7 +956,7 @@ func _build_southeast_cliffs() -> void:
 			t_body.collision_mask = 0
 			var t_col := CollisionShape3D.new()
 			var t_cyl := CylinderShape3D.new()
-			t_cyl.radius = 0.75
+			t_cyl.radius = 0.48
 			t_cyl.height = 8.0
 			t_col.shape = t_cyl
 			t_col.position.y = 4.0

@@ -722,7 +722,9 @@ func _on_extra_died(enemy: Enemy, kind: String, home: Vector3) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
 		player.gain_xp(int(round(enemy.xp_reward * LevelScaling.xp_mult(player.level))))
-	Quests.report_kill(enemy.kind_id)
+	var q := get_node_or_null("/root/Quests")
+	if q:
+		q.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
 	if KINDS[kind].get("respawn", true):
 		await get_tree().create_timer(KINDS[kind].get("respawn_after", respawn_time * 2.0)).timeout
@@ -750,7 +752,9 @@ func _on_enemy_died(enemy: Enemy, index: int) -> void:
 	var player := get_tree().get_first_node_in_group("player") as Player
 	if player:
 		player.gain_xp(int(round(enemy.xp_reward * LevelScaling.xp_mult(player.level))))
-	Quests.report_kill(enemy.kind_id)
+	var q := get_node_or_null("/root/Quests")
+	if q:
+		q.report_kill(enemy.kind_id)
 	_drop_loot(enemy)
 	if index >= 0:
 		_spawned.erase(index)

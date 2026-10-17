@@ -445,6 +445,19 @@ func _build_stage_1_tavern() -> void:
 		var h: float = (i + 1) * 0.45
 		_make_box(Vector3(-49.5, 0.0, sz), Vector3(2.4, h, 1.3), wood)
 
+	# Smooth ramp collider over tavern stairs for fluid walking traversal
+	var stair_ramp := StaticBody3D.new()
+	stair_ramp.position = Vector3(-49.5, 2.15, -7.9)
+	stair_ramp.rotation.x = 0.3055
+	stair_ramp.collision_layer = 1
+	stair_ramp.collision_mask = 0
+	var sr_col := CollisionShape3D.new()
+	var sr_box := BoxShape3D.new()
+	sr_box.size = Vector3(2.45, 0.25, 12.8)
+	sr_col.shape = sr_box
+	stair_ramp.add_child(sr_col)
+	add_child(stair_ramp)
+
 	# High Landing Terrace 1
 	_make_box(Vector3(-49.5, 0.0, -15.0), Vector3(2.8, 4.05, 2.5), wood)
 

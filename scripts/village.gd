@@ -164,6 +164,8 @@ func _ready() -> void:
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
 	_build_alchemy_and_flora()
+	_build_bounty_board()
+	_build_george_cottage()
 	# ------------------------------------------------------------- Island Overhaul ----
 	add_child(IslandSouthSea.new())
 	add_child(IslandRiver.new())
@@ -944,7 +946,7 @@ func _build_crypt() -> void:
 		_add_box_collider(n, 0.7)
 	for p in [Vector2(-24, -150), Vector2(26, -152), Vector2(-30, -182), Vector2(31, -190), Vector2(-16, -204), Vector2(18, -206)]:
 		var tree := _place_abs(GRAVE + "tree_dead_large.gltf", Vector3(p.x, 0, p.y), _rng.randf() * 360.0, _rng.randf_range(2.6, 3.4), holder)
-		_add_cylinder_collider(tree, 1.0, 12.0, Vector3.ZERO)
+		_add_cylinder_collider(tree, 0.45, 12.0, Vector3.ZERO)
 	for p in [Vector2(-18, -165), Vector2(19, -172), Vector2(-14, -196)]:
 		var coffin := _place_abs(GRAVE + ("coffin_decorated.gltf" if p.x < 0 else "coffin.gltf"), Vector3(p.x, 0, p.y), _rng.randf_range(-30.0, 30.0), 1.5, holder)
 		_add_box_collider(coffin, 0.9)
@@ -1776,13 +1778,13 @@ func _build_scatter() -> void:
 
 
 func _try_tree(p: Vector2, holder: Node3D) -> bool:
-	if _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 2.0) or _terrain.near_path(p, 3.0):
+	if _outside_map(p) or _is_in_sea(p) or _is_occupied(p.x, p.y, 2.8) or _terrain.near_path(p, 3.0):
 		return false
 	var scale := TS * _rng.randf_range(0.85, 1.3)
 	var node := _place(TREES[_rng.randi() % TREES.size()], Vector3(p.x, 0, p.y),
 			_rng.randf_range(0.0, 360.0), scale, holder)
-	_add_cylinder_collider(node, 0.1 * scale, 8.0, Vector3.ZERO)
-	_occupy(p.x, p.y, 2.2)
+	_add_cylinder_collider(node, 0.048 * scale, 8.0, Vector3.ZERO)
+	_occupy(p.x, p.y, 2.8)
 	return true
 
 
@@ -2037,5 +2039,90 @@ func _build_alchemy_and_flora() -> void:
 		fn.set("flora_id", spot["type"])
 		fn.position = spot["pos"]
 		holder.add_child(fn)
+
+
+func _build_bounty_board() -> void:
+	var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree != null:
+		var mgr := tree.get_first_node_in_group("bounty_manager")
+		if mgr == null:
+			var mgr_script = load("res://scripts/bounty_manager.gd")
+			var new_mgr: Node = mgr_script.new()
+			new_mgr.name = "BountyManager"
+			tree.root.call_deferred("add_child", new_mgr)
+
+	var board_script = load("res://scripts/bounty_board.gd")
+	var board: Node3D = board_script.new()
+	board.position = Vector3(-53.5, 0.0, -12.5)
+	board.rotation.y = 1.45
+	add_child(board)
+	_occupy(-53.5, -12.5, 2.5)
+
+
+func _build_george_cottage() -> void:
+	var holder := Node3D.new()
+	holder.name = "GeorgeCottageComplex"
+	add_child(holder)
+
+	var cottage_pos := Vector3(-28.0, 0.0, -28.0)
+	var heading := 2.35
+	var forward := Vector3(sin(heading), 0.0, cos(heading))
+	var right := Vector3(-cos(heading), 0.0, sin(heading))
+
+	# 1. Main Cottage Building Model
+	var bnode := _place("buildings/yellow/building_home_B_yellow.gltf", cottage_pos, rad_to_deg(heading), PS, holder)
+	_add_box_collider(bnode, 0.8)
+	_occupy(cottage_pos.x, cottage_pos.z, 6.0)
+
+	# 2. Door spot & Interactive Entrance / Purchase
+	var door_front := cottage_pos + forward * 5.0
+	var door_spot := InteractSpot.make("", func(player: Player):
+		if not player.cottage_owned:
+			if player.gold >= 500:
+				player.gold -= 500
+				player.cottage_owned = true
+				player.inventory_changed.emit(player.gold, player.potions)
+				player.message.emit("Συγχαρητήρια! Απέκτησες & επισκεύασες το Σπίτι σου στον Άγιο Βλάση!")
+				Sfx.ui("quest_complete")
+				var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+				if interiors != null:
+					interiors.enter("george_cottage_0", "george_cottage", door_front, heading, player)
+			else:
+				player.message.emit("Χρειάζεσαι 500 Χρυσό για την αγορά & επισκευή της καλύβας!")
+				Sfx.ui("error")
+		else:
+			var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
+			if interiors != null:
+				interiors.enter("george_cottage_0", "george_cottage", door_front, heading, player)
+	, 4.5)
+
+	door_spot.prompt_func = func() -> String:
+		var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		var p := tree.get_first_node_in_group("player") as Player if tree != null else null
+		if p != null and p.cottage_owned:
+			return "[R] Είσοδος: Το Σπίτι του Γιώργου"
+		return "[R] Αγορά & Επισκευή Καλύβας (500 Χρυσός)"
+
+	door_spot.position = door_front
+	holder.add_child(door_spot)
+
+	# 3. Cottage Signpost on path
+	var sign_pos := door_front + right * 2.8 + forward * 0.8
+	_signpost("Το Σπίτι του Γιώργου  🏡\nΠροσωπική Καλύβα & Κήπος", sign_pos, rad_to_deg(heading) - 20.0, holder)
+
+	# 4. Cottage Herb Garden in the side yard
+	var garden_pos := cottage_pos + right * 5.8 + forward * 0.5
+	var garden_script = load("res://scripts/cottage_garden.gd")
+	var garden_node: Node3D = garden_script.new()
+	garden_node.position = garden_pos
+	garden_node.rotation.y = heading
+	holder.add_child(garden_node)
+	_occupy(garden_pos.x, garden_pos.z, 4.0)
+
+	# 5. Welcoming Entrance Lantern Post
+	var lp := door_front + right * -2.2
+	_place("res://assets/graveyard/post_lantern.gltf", lp, rad_to_deg(heading), 1.2, holder)
+
+
 
 

@@ -221,4 +221,4 @@ func _run() -> void:
 	print("\n--- Summary: %d passed, %d failed ---" % [passed, failed])
 	if failed == 0:
 		print("ALL TESTS PASSED!")
-	quit()
+	quit(0 if failed == 0 else 1)
