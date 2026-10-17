@@ -221,6 +221,11 @@ const GEAR := {
 		"mods": {"block_add": 0.13, "defense": 0.16, "hp_add": 120},
 		"desc": "Βαριά ασπίδα από σίδηρο και σκληρά πετρώματα των ορεινών πλαγιών.",
 	},
+	"armor_gladiator_champion": {
+		"name": "Θώρακας του Πρωταθλητή των Μονομάχων", "slot": "armor", "tier": 10, "level": 38, "price": 35000,
+		"mods": {"hp_add": 380, "defense": 0.25, "regen": 2.0},
+		"desc": "Ο θρυλικός επίχρυσος θώρακας με τον πορφυρό μανδύα, που απονέμεται αποκλειστικά στον αδιαμφισβήτητο Πρωταθλητή της Αρένας του Αγίου Βλάση.",
+	},
 }
 
 ## Loot that only sells: dropped by skeletons, bought by the market.
@@ -231,6 +236,11 @@ const JUNK := {
 	"bone_shard": {"name": "Θραύσμα Οστού", "price": 8, "color": Color(0.90, 0.88, 0.82), "icon": "bone", "desc": "Σκληρό οστό κατάλληλο για ενίσχυση εξοπλισμού.", "material": true},
 	"iron_scrap": {"name": "Κομμάτι Σιδήρου", "price": 18, "color": Color(0.72, 0.74, 0.80), "icon": "sword", "desc": "Ακατέργαστο σίδερο για σφυρηλάτηση και ενίσχυση.", "material": true},
 	"lava_ember": {"name": "Αναμμένο Κάρβουνο", "price": 45, "color": Color(1.0, 0.45, 0.12), "icon": "star", "desc": "Ηφαιστειακό κάρβουνο που πάλλεται με μαγική θερμότητα.", "material": true},
+	"trophy_arena_bronze": {"name": "Χάλκινο Έπαθλο Μονομάχου", "price": 100, "color": Color(0.85, 0.55, 0.30), "icon": "star", "desc": "Αναμνηστικό έπαθλο από τη νίκη στη Χάλκινη Δοκιμασία της Αρένας.", "trophy": true},
+	"trophy_arena_silver": {"name": "Ασημένιο Έπαθλο Μονομάχου", "price": 250, "color": Color(0.85, 0.90, 0.95), "icon": "star", "desc": "Αναμνηστικό έπαθλο από τη νίκη στην Ασημένια Δοκιμασία της Αρένας.", "trophy": true},
+	"trophy_arena_gold": {"name": "Χρυσό Έπαθλο Μονομάχου", "price": 500, "color": Color(1.0, 0.85, 0.25), "icon": "star", "desc": "Αναμνηστικό έπαθλο από τη νίκη στη Χρυσή Δοκιμασία της Αρένας.", "trophy": true},
+	"trophy_arena_heroic": {"name": "Ηρωικό Έπαθλο Μονομάχου", "price": 1000, "color": Color(0.75, 0.35, 0.95), "icon": "star", "desc": "Αναμνηστικό έπαθλο από τη νίκη στην Ηρωική Δοκιμασία της Αρένας.", "trophy": true},
+	"trophy_arena_mythic": {"name": "Μυθικό Έπαθλο Υπέρτατου Πρωταθλητή", "price": 2500, "color": Color(1.0, 0.30, 0.15), "icon": "star", "desc": "Το υπέρτατο δάφνινο στεφάνι του Αδιαμφισβήτητου Πρωταθλητή του Αγίου Βλάση.", "trophy": true},
 	# --- fish of the pond (fishing.gd). "zone" = share of the catch bar that counts as a hit, "speed" = bar widths
 	# per second of the marker, "weight" = how often it bites, "only" = "day" or "night" (missing = always).
 	"goby": {"name": "Γοβιός", "price": 6, "color": Color(0.75, 0.85, 0.95), "icon": "fish", "desc": "Μικρό και γρήγορο, ζει στα ρηχά.",

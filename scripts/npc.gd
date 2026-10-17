@@ -122,11 +122,13 @@ func interact_prompt() -> String:
 		if q and q.has_method("marker_for") and q.marker_for(npc_id) != "":
 			return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
 		return Strings.PROMPT_TRADE % QuestData.NPCS[npc_id]["name"]
+	if QuestData.NPCS[npc_id].has("arena"):
+		return "[R] %s (Δοκιμασίες Μονομάχων)" % QuestData.NPCS[npc_id]["name"]
 	return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
 
 
 func interact_range() -> float:
-	return 5.5 if QuestData.NPCS[npc_id].has("shop") else 4.0   # shopkeepers stand behind a counter
+	return 5.5 if (QuestData.NPCS[npc_id].has("shop") or QuestData.NPCS[npc_id].has("arena")) else 4.0
 
 
 func interact(player: Player) -> void:
@@ -138,6 +140,12 @@ func interact(player: Player) -> void:
 	if shop_id != "" and (q == null or not q.has_method("marker_for") or q.marker_for(npc_id) == ""):
 		var shop: Dictionary = ShopData.SHOPS[shop_id]
 		hud.show_dialogue(QuestData.NPCS[npc_id]["name"], shop["greeting"], func(): hud.open_shop(shop_id, player))
+		return
+	var arena_id: String = QuestData.NPCS[npc_id].get("arena", "")
+	if arena_id != "" and (q == null or not q.has_method("marker_for") or q.marker_for(npc_id) == ""):
+		var arena := get_tree().get_first_node_in_group("gladiator_arena")
+		var greeting: Array = QuestData.NPCS[npc_id].get("greeting", ["Καλωσόρισες στην Αρένα!"])
+		hud.show_dialogue(QuestData.NPCS[npc_id]["name"], greeting, func(): hud.open_arena(arena, player))
 		return
 	if q and q.has_method("dialogue_for"):
 		var plan: Dictionary = q.dialogue_for(npc_id)

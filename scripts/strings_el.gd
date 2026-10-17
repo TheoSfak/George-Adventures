@@ -192,7 +192,7 @@ const MAP_PLACES := {
 	"bridge_meadow": "Πέτρινο Γεφύρι", "highlands": "Βίγλα των Αετών", "shipwreck": "Ναυάγιο της Γοργόνας",
 	"cliffs": "Νότιοι Γκρεμοί", "barracks": "Στρατώνες & Τοξοβολία", "orc_stronghold": "Ερειπωμένο Οχυρό (Όρκ)",
 	"golden_grove": "Χρυσό Άλσος", "grotto": "Μυστικό Σπήλαιο", "lumbermill": "Υλοτομείο Γέρο-Γιάννη",
-	"bounty_board": "Πίνακας Επικηρύξεων", "george_cottage": "Το Σπίτι του Γιώργου",
+	"bounty_board": "Πίνακας Επικηρύξεων", "george_cottage": "Το Σπίτι του Γιώργου", "arena": "Αρένα Μονομάχων",
 	"pirate_island": "Νησί των Πειρατών (Ηφαίστειο)", "camp_babis": "Καταυλισμός Καπετάν-Μπάμπη",
 	"secret_pirate_cache": "Μυστική Κρύπτη Κουρσάρων", "pirate_lake": "Λίμνη της Ζούγκλας",
 	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
@@ -200,6 +200,13 @@ const MAP_PLACES := {
 	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",
 	"ash_bridge": "Γέφυρα της Λάβας", "ash_temple": "Ναός της Φλόγας",
 }
+
+const ARENA_TITLE := "Αρένα Μονομάχων & Δοκιμασίες"
+const ARENA_SIGNPOST := "Αρένα Μονομάχων του Αγίου Βλάση  ⚔️\nΣτίβος Δοκιμασιών & Πρωταθλητών"
+const ARENA_WAVE_BANNER := "⚔️ %s — Κύμα %d/%d"
+const ARENA_VICTORY_BANNER := "🏆 ΝΙΚΗ ΣΤΗΝ ΑΡΕΝΑ! Ολοκληρώθηκε: %s"
+const ARENA_DEFEAT_BANNER := "💀 Ηττήθηκες στην Αρένα! Προσπάθησε ξανά."
+const ARENA_REMAINING := "⚔️ Εχθροί: %d"
 
 const MAP_REGION_VILLAGE := "Άγιος Βλάσης"
 const MAP_REGION_FRONTIER := "Τα Σύνορα"

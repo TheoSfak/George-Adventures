@@ -123,6 +123,7 @@ static func save() -> bool:
 		"invasion": invasion.save_data() if invasion != null else {},
 		"bounties": bounty_mgr.save_data() if bounty_mgr != null else {},
 		"cottage_garden": tree.get_first_node_in_group("cottage_garden").save_data() if tree.get_first_node_in_group("cottage_garden") != null else {},
+		"arena": tree.get_first_node_in_group("gladiator_arena").save_data() if tree.get_first_node_in_group("gladiator_arena") != null else {},
 		"quests": quests_dict,
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
@@ -264,6 +265,9 @@ static func apply(d: Dictionary) -> void:
 	var garden := tree.get_first_node_in_group("cottage_garden")
 	if garden != null and d.has("cottage_garden"):
 		garden.load_data(d.get("cottage_garden", {}))
+	var arena := tree.get_first_node_in_group("gladiator_arena")
+	if arena != null and d.has("arena"):
+		arena.load_data(d.get("arena", {}))
 
 	var wd: Dictionary = d["world"]
 	var village_spawns := tree.get_first_node_in_group("enemy_spawner")

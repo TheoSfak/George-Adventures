@@ -26,7 +26,7 @@ const PLACES := [
 	["bridge_meadow", 70.0, -66.0], ["highlands", 82.0, -155.0], ["shipwreck", -72.0, 168.0],
 	["cliffs", 64.0, 160.0], ["barracks", 78.0, -84.0], ["orc_stronghold", 150.0, 68.0],
 	["golden_grove", 55.0, 25.0], ["grotto", -15.0, 142.0], ["bounty_board", -53.5, -12.5],
-	["george_cottage", -28.0, -28.0], ["pirate_island", -20.0, 520.0], ["camp_babis", -22.0, 92.0],
+	["george_cottage", -28.0, -28.0], ["arena", 122.0, -75.0], ["pirate_island", -20.0, 520.0], ["camp_babis", -22.0, 92.0],
 	["pirate_lake", -75.0, 520.0], ["secret_pirate_cache", 35.0, 535.0],
 ]
 const SHOPS := [

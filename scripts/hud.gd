@@ -50,9 +50,12 @@ var _buff_box: HBoxContainer
 var _buff_labels := {}
 var _hero: HeroWindow
 var _shop: ShopWindow
+const ArenaWindowClass := preload("res://scripts/arena_window.gd")
+
 var _fishing: Fishing
 var _bounty_window: BountyWindow
 var _stash_window: StashWindow
+var _arena_window: PanelContainer
 var _hint: Label
 var _clock_label: Label
 var _clock_icon: Control
@@ -1008,6 +1011,8 @@ func _build_windows() -> void:
 	add_child(_bounty_window)
 	_stash_window = StashWindow.new()
 	add_child(_stash_window)
+	_arena_window = ArenaWindowClass.new()
+	add_child(_arena_window)
 	if _player:
 		_player.talents_changed.connect(_update_hint)
 		_player.leveled_up.connect(func(_l): _update_hint())
@@ -1071,6 +1076,26 @@ func open_stash(player: Player) -> void:
 
 func is_stash_open() -> bool:
 	return _stash_window != null and _stash_window.is_open()
+
+
+## Opens the Gladiator Arena & Proving Grounds window.
+func open_arena(arena: Node, player: Player) -> void:
+	if _shop != null and _shop.is_open():
+		_shop.close()
+	if _hero != null and _hero.visible:
+		_hero.visible = false
+	if _bounty_window != null and _bounty_window.visible:
+		_bounty_window.close()
+	if _stash_window != null and _stash_window.visible:
+		_stash_window.close()
+	if _dlg_panel != null and _dlg_panel.visible:
+		_dlg_panel.visible = false
+	if _arena_window != null:
+		_arena_window.open(arena, player)
+
+
+func is_arena_open() -> bool:
+	return _arena_window != null and _arena_window.visible
 
 
 # ------------------------------------------------------------------- fading ----

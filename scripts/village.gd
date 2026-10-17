@@ -167,6 +167,7 @@ func _ready() -> void:
 	_build_blacksmith_forge()
 	_build_bounty_board()
 	_build_george_cottage()
+	_build_gladiator_arena()
 	# ------------------------------------------------------------- Island Overhaul ----
 	add_child(IslandSouthSea.new())
 	add_child(IslandRiver.new())
@@ -2167,5 +2168,9 @@ func _build_george_cottage() -> void:
 	_place("res://assets/graveyard/post_lantern.gltf", lp, rad_to_deg(heading), 1.2, holder)
 
 
-
-
+func _build_gladiator_arena() -> void:
+	var arena_script = load("res://scripts/gladiator_arena.gd")
+	var arena: Node3D = arena_script.new()
+	arena.name = "GladiatorArena"
+	add_child(arena)
+	_occupy(122.0, -75.0, 22.0)

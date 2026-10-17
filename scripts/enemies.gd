@@ -568,10 +568,89 @@ const KINDS := {
 		"aggro_range": 17.0, "leash_range": 32.0, "patrol_radius": 5.0,
 		"xp_reward": 32, "gold_min": 3, "gold_max": 7, "potion_chance": 0.3,
 	},
+	# --- Gladiator Arena Competitors & Boss Champions ---
+	"gladiator_recruit": {
+		"kind_id": "gladiator_recruit", "human": true, "walk_anim": "Walking_A",
+		"display_name": "Εκπαιδευόμενος Μονομάχος",
+		"model_path": CHAR + "Barbarian.glb", "show_nodes": ["1H_Axe"],
+		"max_health": 95.0, "attack_damage": 14.0, "chase_speed": 4.3, "attack_range": 2.2,
+		"attack_hit_time": 0.5, "attack_cooldown": 1.4, "aggro_range": 25.0, "leash_range": 60.0,
+		"xp_reward": 50, "gold_min": 8, "gold_max": 18, "potion_chance": 0.4,
+	},
+	"gladiator_skeleton": {
+		"kind_id": "gladiator_skeleton", "display_name": "Σκελετός Μονομάχος",
+		"tint_color": Color(0.85, 0.45, 0.15, 0.35),
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Blade.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Small_A.gltf",
+		"max_health": 135.0, "attack_damage": 18.0, "chase_speed": 4.6, "attack_range": 2.4,
+		"attack_hit_time": 0.5, "attack_cooldown": 1.4, "aggro_range": 25.0, "leash_range": 60.0,
+		"xp_reward": 70, "gold_min": 10, "gold_max": 22, "potion_chance": 0.45,
+	},
+	"arena_gorgor": {
+		"kind_id": "arena_gorgor", "respawn_after": 60.0, "human": true, "walk_anim": "Walking_A",
+		"display_name": "«Βράχος» ο Αήττητος", "model_scale": 1.6,
+		"tint_color": Color(0.75, 0.35, 0.12, 0.40),
+		"model_path": CHAR + "Barbarian.glb", "show_nodes": ["2H_Axe"],
+		"max_health": 620.0, "attack_damage": 28.0, "chase_speed": 4.2, "attack_range": 3.2,
+		"attack_hit_time": 0.65, "attack_cooldown": 1.6, "attack_anim": "2H_Melee_Attack_Chop",
+		"aggro_range": 30.0, "leash_range": 60.0, "patrol_radius": 2.0,
+		"xp_reward": 400, "gold_min": 80, "gold_max": 150, "potion_chance": 1.0,
+	},
+	"arena_drake": {
+		"kind_id": "arena_drake", "respawn_after": 60.0, "human": true, "walk_anim": "Walking_A",
+		"display_name": "Αρχικουρσάρος Σιδηρόχερος", "model_scale": 1.55,
+		"tint_color": Color(0.95, 0.25, 0.05, 0.45),
+		"model_path": CHAR + "Rogue_Hooded.glb", "show_nodes": ["Knife", "Knife_Offhand"],
+		"max_health": 1350.0, "attack_damage": 38.0, "chase_speed": 5.2, "attack_range": 2.4,
+		"attack_hit_time": 0.35, "attack_cooldown": 0.95,
+		"aggro_range": 30.0, "leash_range": 60.0, "patrol_radius": 2.0,
+		"xp_reward": 850, "gold_min": 150, "gold_max": 280, "potion_chance": 1.0,
+	},
+	"arena_vorgthul": {
+		"kind_id": "arena_vorgthul", "respawn_after": 60.0, "model_scale": 1.25,
+		"tint_color": Color(0.90, 0.12, 0.05, 0.45), "display_name": "Ορκ Μονομάχος Βοργκ'θουλ",
+		"model_path": CHAR + "Orc.glb",
+		"walk_anim": "CharacterArmature|Walk", "idle_anim": "CharacterArmature|Idle",
+		"run_anim": "CharacterArmature|Run", "attack_anim": "CharacterArmature|Weapon",
+		"hit_anim": "CharacterArmature|HitReact", "death_anim": "CharacterArmature|Death",
+		"sound_set": "orc",
+		"max_health": 2600.0, "attack_damage": 52.0, "chase_speed": 4.6, "attack_range": 3.4,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.6, "aggro_range": 30.0, "leash_range": 60.0,
+		"enrage_below": 0.45, "enrage_summon": "orc_warrior", "summon_interval": 12.0, "summon_max": 2,
+		"xp_reward": 1800, "gold_min": 300, "gold_max": 500, "potion_chance": 1.0,
+	},
+	"arena_titan": {
+		"kind_id": "arena_titan", "respawn_after": 60.0, "model_scale": 2.6,
+		"tint_color": Color(0.30, 0.15, 0.50, 0.45), "glow_color": Color(0.65, 0.25, 0.95, 0.7),
+		"display_name": "Σκελετός Τιτάνας των Κατακομβών",
+		"model_path": CHAR + "Skeleton_Warrior.glb",
+		"weapon_path": WEAPONS + "Skeleton_Axe.gltf",
+		"offhand_path": WEAPONS + "Skeleton_Shield_Large_A.gltf",
+		"max_health": 5200.0, "attack_damage": 72.0, "chase_speed": 3.8, "attack_range": 4.4,
+		"attack_hit_time": 0.8, "attack_cooldown": 2.0, "attack_anim": "1H_Melee_Attack_Chop",
+		"stomp_slow": 2.2, "aggro_range": 30.0, "leash_range": 60.0,
+		"xp_reward": 3500, "gold_min": 600, "gold_max": 950, "potion_chance": 1.0,
+	},
+	"arena_balthazar": {
+		"kind_id": "arena_balthazar", "respawn_after": 60.0, "human": true, "walk_anim": "Walking_A",
+		"display_name": "Βαλθάζαρ ο Αιώνιος Μονομάχος", "model_scale": 1.85,
+		"tint_color": Color(1.0, 0.85, 0.20, 0.65), "glow_color": Color(1.0, 0.85, 0.20, 0.85),
+		"model_path": CHAR + "Knight.glb", "show_nodes": ["2H_Sword", "Knight_Helmet", "Knight_Cape"],
+		"max_health": 9200.0, "attack_damage": 88.0, "chase_speed": 4.8, "attack_range": 3.8,
+		"attack_hit_time": 0.6, "attack_cooldown": 1.5, "attack_anim": "2H_Melee_Attack_Spin",
+		"aggro_range": 35.0, "leash_range": 60.0, "patrol_radius": 2.0,
+		"enrage_below": 0.5, "enrage_summon": "dark_knight", "summon_interval": 14.0, "summon_max": 2,
+		"xp_reward": 6000, "gold_min": 1200, "gold_max": 2000, "potion_chance": 1.0,
+	},
 }
 
 # Bosses always drop buff potions and a charm.
-const BOSSES: Array[String] = ["cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow", "necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord", "cinder_archon", "orc_warlord"]
+const BOSSES: Array[String] = [
+	"cult_priest", "bandit_chief", "captain", "king", "warden_bone", "warden_flame", "warden_shadow",
+	"necromancer", "giant_skeleton", "malakar", "night_lord", "pyrforos", "ash_lord", "cinder_archon",
+	"orc_warlord", "arena_gorgor", "arena_drake", "arena_vorgthul", "arena_titan", "arena_balthazar",
+]
 
 # [kind, x, z]   (village houses stand within ~125 m of the well)
 const SPAWNS := [

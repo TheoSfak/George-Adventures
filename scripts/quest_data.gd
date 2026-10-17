@@ -14,7 +14,7 @@ class_name QuestData
 
 ## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
 ## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
-const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider", "warband_totem", "orc_catapult", "pirate_corsair", "pirate_captain"]
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider", "warband_totem", "orc_catapult", "pirate_corsair", "pirate_captain", "gladiator_recruit", "arena_gorgor", "arena_drake", "arena_vorgthul", "arena_titan", "arena_balthazar"]
 
 
 static func is_skeleton(kind: String) -> bool:
@@ -240,6 +240,22 @@ const NPCS := {
 			"Αχ, η θάλασσα… Σε καλεί κι εσένα, παλικάρι μου; Πρόσεχε όμως τα βαθιά νερά.",
 			"Ένα τέτοιο ηφαίστειο στη μέση του πελάγους δεν κοιμάται ποτέ ήσυχο.",
 			"Οι πειρατές του Μαυροδόντη δεν έχουν μπέσα. Αν πας στο νησί τους, κράτα γερά το σπαθί σου!",
+		],
+	},
+	"kassandros": {
+		"name": "Κάσσανδρος ο Επιστάτης της Αρένας",
+		"model": "res://assets/characters/Barbarian.glb",
+		"show": ["2H_Axe"],
+		"arena": "gladiator_arena",
+		"greeting": [
+			"Καλωσόρισες στην Αρένα Μονομάχων του Αγίου Βλάση, παλικάρι!",
+			"Εδώ δοκιμάζονται οι αληθινοί ήρωες. Πέντε δοκιμασίες περιμένουν όσους τολμούν να μπουν στον στίβο.",
+			"Από τους νεοσύλλεκτους μέχρι τον Αιώνιο Μονομάχο, μόνο οι άξιοι κερδίζουν δάφνες, χρυσό και τον τίτλο του Πρωταθλητή!",
+		],
+		"idle": [
+			"Ο στίβος της αρένας δεν συγχωρεί δισταγμούς. Μόνο το ατσάλι και το θάρρος μετρούν εδώ μέσα.",
+			"Έχεις ακούσει για τον Βαλθάζαρ; Λένε πως κανείς θνητός δεν έχει σταθεί όρθιος απέναντί του για πάνω από ένα λεπτό.",
+			"Ακόνισε τις λεπίδες σου και ετοίμασε τα φίλτρα σου πριν πατήσεις στην άμμο της μάχης.",
 		],
 	},
 }
