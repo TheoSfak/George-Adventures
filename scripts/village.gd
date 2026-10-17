@@ -33,7 +33,7 @@ const BUILDINGS := [
 	["buildings/yellow/building_home_A_yellow.gltf", -41.0, -47.6, "home", 1.0, ""],
 	["buildings/green/building_home_B_green.gltf", 41.0, -47.6, "home", 1.0, ""],
 	["buildings/blue/building_blacksmith_blue.gltf", -93.5, 29.5, "blacksmith", 1.0, "nikitas"],
-	["buildings/red/building_lumbermill_red.gltf", 95.1, 39.4, "", 1.0, "giannis"],
+	["buildings/red/building_lumbermill_red.gltf", 96.0, 40.0, "", 1.0, ""],
 	["buildings/yellow/building_windmill_yellow.gltf", -100.0, -54.1, "", 1.0, "stelios"],
 	["buildings/blue/building_tower_A_blue.gltf", 95.1, -78.7, "", 1.0, "vasilis"],
 	["buildings/blue/building_well_blue.gltf", 0.0, 0.0, "", 0.6, ""],
@@ -57,8 +57,6 @@ const BUILDING_PROPS := {
 	8: [["decoration/props/crate_A_small.gltf", -6.5, 8.0, 10, 1.0], ["decoration/props/bucket_empty.gltf", 6.5, 8.5, 0, 1.0]],
 	9: [["decoration/props/weaponrack.gltf", -11.0, 9.0, 0, 1.6], ["decoration/props/target.gltf", 13.0, 9.5, 20, 1.6],
 		["decoration/props/resource_stone.gltf", 11.0, 11.0, 30, 1.0], ["decoration/props/barrel.gltf", -9.0, 11.0, 0, 1.0]],
-	10: [["decoration/props/resource_lumber.gltf", -12.0, 10.0, 20, 1.0], ["decoration/props/resource_lumber.gltf", 12.0, 12.0, 100, 1.0],
-		["decoration/props/pallet.gltf", 0.0, 14.0, 0, 1.0], ["decoration/props/crate_long_A.gltf", 15.0, 9.0, 30, 1.0]],
 }
 
 # [quest item id, x, z]   (see quest_data.gd; they only appear while their quest is active)
@@ -165,6 +163,7 @@ func _ready() -> void:
 	_build_pumpkin_patch()
 	_occupy(RescueEvent.SITE.x, RescueEvent.SITE.y, 14.0)      # the meadow of the rescue event stays open
 	_build_great_tree()
+	_build_alchemy_and_flora()
 	# ------------------------------------------------------------- Island Overhaul ----
 	add_child(IslandSouthSea.new())
 	add_child(IslandRiver.new())
@@ -257,6 +256,7 @@ func _build_ground() -> void:
 	_terrain.add_patch(CAMP, 34.0, Color(0.58, 0.47, 0.30))
 	_terrain.add_patch(QUARRY, 38.0, Color(0.60, 0.60, 0.57), false, Color(0.38, 0.38, 0.36))
 	_terrain.add_patch(CRYPT + Vector2(0, -2), 46.0, Color(0.38, 0.43, 0.38), false, Color(0.25, 0.29, 0.25))
+	_terrain.add_patch(Vector2(92.0, 36.0), 24.0, Color(0.52, 0.42, 0.28), false, Color(0.35, 0.28, 0.19))
 
 
 func _build_border() -> void:
@@ -345,7 +345,10 @@ func _build_village() -> void:
 		var pos := Vector3(b[1], 0.0, b[2])
 		var rot := rad_to_deg(atan2(-pos.x, -pos.z))  # face the well
 		var node := _place(b[0], pos, rot, BS * b[4], holder)
-		_add_box_collider(node)
+		if b[0].find("lumbermill") >= 0:
+			_add_trimesh_collider(node)
+		else:
+			_add_box_collider(node)
 		var aabb := _local_aabb(node)
 		_occupy(pos.x, pos.z, Vector2(aabb.size.x, aabb.size.z).length() / 2.0 + 4.0)
 		var heading := deg_to_rad(rot)
@@ -601,33 +604,165 @@ func _build_quarry() -> void:
 	_occupy(QUARRY.x, QUARRY.y, 42)
 
 
-## The working timber mill of Giannis the woodcutter in the eastern forest edge.
+## The working timber mill of Gero-Giannis the woodcutter in the eastern forest edge.
+## Features a dedicated open-air carpenter workbench, chopping block with embedded woodcutter's axe,
+## sawdust mounds, woodcutter's tools, timber seasoning shelter, perimeter log stacks, rustic fencing,
+## entrance gate with signpost, and warm lantern lighting with zero clutter clipping.
 func _build_lumbermill() -> void:
 	var holder := Node3D.new()
 	holder.name = "Lumbermill"
 	add_child(holder)
 
-	var center := Vector3(95.0, 0.0, 38.0)
-	# Covered timber seasoning and storage shelter next to Giannis's mill
-	var shed := _place("buildings/neutral/building_scaffolding.gltf", center + Vector3(-8.5, 0.0, -4.0), 25.0, BS * 0.9, holder)
+	# 1. GERO-GIANNIS'S MASTER CARPENTER WORKSTATION
+	# Open, elevated, prominent woodcutter foreman platform with clear 10m line of sight to village road
+	var giannis_pos := Vector3(85.5, 0.0, 26.5)
+	var giannis := Npc.new()
+	giannis.name = "Giannis"
+	giannis.npc_id = "giannis"
+	giannis.rest_yaw = deg_to_rad(-115.0) # Faces WNW towards the incoming village path & entrance gate
+	giannis.position = giannis_pos
+	var npcs := get_node_or_null("Npcs")
+	(npcs if npcs else holder).add_child(giannis)
+
+	# Heavy carpenter's workbench placed in front of Giannis as his work counter
+	var bench_pos := Vector3(84.3, 0.0, 25.4)
+	var bench := _place("decoration/props/crate_long_A.gltf", bench_pos, 65.0, PS * 1.15, holder)
+	_add_box_collider(bench, 0.85)
+
+	# Lit warm lantern on Giannis's workbench
+	var bench_lamp := _place_abs(ITEMS + "torch_lit.gltf.glb", Vector3(84.0, 0.82, 24.8), 0.0, 1.5, holder)
+	var bench_light := OmniLight3D.new()
+	bench_light.name = "GiannisWorkLight"
+	bench_light.light_color = Color(1.0, 0.82, 0.48)
+	bench_light.light_energy = 1.8
+	bench_light.omni_range = 6.5
+	bench_light.position = Vector3(84.0, 1.45, 24.8)
+	holder.add_child(bench_light)
+
+	# Water quench / blade cooling bucket beside the workbench
+	var bucket := _place("decoration/props/bucket_water.gltf", Vector3(83.1, 0.0, 26.4), 20.0, PS * 1.1, holder)
+	_add_box_collider(bucket, 0.7)
+
+	# 2. CHOPPING BLOCK & EMBEDDED WOODCUTTER'S AXE
+	# Sturdy tree stump chopping block positioned to Giannis's left
+	var stump_pos := Vector3(86.2, 0.0, 29.8)
+	var stump := _place("decoration/nature/tree_single_A_cut.gltf", stump_pos, 35.0, 1.35, holder)
+	_add_cylinder_collider(stump, 0.65, 0.85, Vector3.ZERO)
+
+	# Real Woodcutter's Axe embedded firmly in the top center of the chopping block
+	var axe_root := Node3D.new()
+	axe_root.name = "WoodcutterAxe"
+	axe_root.position = Vector3(86.2, 0.82, 29.8)
+	axe_root.rotation_degrees = Vector3(-18.0, 40.0, 8.0)
+	var axe_scene = load("res://assets/characters/skeleton_weapons/Skeleton_Axe.gltf")
+	if axe_scene:
+		var axe_model: Node3D = axe_scene.instantiate()
+		axe_model.scale = Vector3.ONE * 1.1
+		axe_root.add_child(axe_model)
+	holder.add_child(axe_root)
+
+	# Sawdust wood shavings mound under the chopping block
+	var sawdust := MeshInstance3D.new()
+	sawdust.name = "SawdustShavings"
+	var cyl_mesh := CylinderMesh.new()
+	cyl_mesh.top_radius = 1.4
+	cyl_mesh.bottom_radius = 1.8
+	cyl_mesh.height = 0.03
+	var sawdust_mat := StandardMaterial3D.new()
+	sawdust_mat.albedo_color = Color(0.76, 0.62, 0.38)
+	sawdust_mat.roughness = 0.95
+	sawdust.mesh = cyl_mesh
+	sawdust.material_override = sawdust_mat
+	sawdust.position = Vector3(86.2, 0.02, 29.8)
+	holder.add_child(sawdust)
+
+	# Stack of freshly split firewood logs beside the chopping block
+	var split_logs := _place("decoration/nature/tree_single_B_cut.gltf", Vector3(87.6, 0.0, 30.6), -25.0, 1.15, holder)
+	_add_box_collider(split_logs, 0.7)
+
+	# Woodcutter's wheelbarrow loaded with split firewood
+	var barrow := _place("decoration/props/wheelbarrow.gltf", Vector3(89.2, 0.0, 25.0), 115.0, PS * 1.2, holder)
+	_add_box_collider(barrow, 0.75)
+
+	# 3. TIMBER SEASONING & DRYING SHED (SCAFFOLDING SHELTER)
+	# Relocated south to clear Giannis and the main road; open walkthrough with Trimesh Collider
+	var shed_pos := Vector3(82.0, 0.0, 48.0)
+	var shed := _place("buildings/neutral/building_scaffolding.gltf", shed_pos, 15.0, BS * 0.75, holder)
 	_add_trimesh_collider(shed)
 
-	# Timber logs, cut tree stumps, stacks of wood
-	var props: Array = [
-		["decoration/props/resource_lumber.gltf", center + Vector3(-6.5, 0.0, 4.0), 40.0, 1.4],
-		["decoration/props/resource_lumber.gltf", center + Vector3(-8.0, 0.0, 1.5), 10.0, 1.5],
-		["decoration/nature/trees_A_cut.gltf", center + Vector3(7.0, 0.0, -5.0), 0.0, 1.3],
-		["decoration/nature/tree_single_A_cut.gltf", center + Vector3(5.5, 0.0, 4.5), 60.0, 1.4],
-		["decoration/nature/tree_single_B_cut.gltf", center + Vector3(-5.0, 0.0, -6.0), -35.0, 1.3],
-		["decoration/props/wheelbarrow.gltf", center + Vector3(-3.5, 0.0, 6.0), 120.0, 1.2],
-		["decoration/props/crate_long_A.gltf", center + Vector3(4.0, 0.0, -3.0), -20.0, 1.2],
-	]
-	for p in props:
-		var n := _place(p[0], p[1], p[2], PS * p[3], holder)
-		_add_box_collider(n, 0.75)
+	# Seasoned timber neatly stacked under the shelter against rear posts
+	var shed_lumber_1 := _place("decoration/props/resource_lumber.gltf", shed_pos + Vector3(-1.4, 0.0, 1.8), 15.0, PS * 1.35, holder)
+	_add_box_collider(shed_lumber_1, 0.8)
+	var shed_lumber_2 := _place("decoration/props/resource_lumber.gltf", shed_pos + Vector3(1.6, 0.0, 1.0), 15.0, PS * 1.35, holder)
+	_add_box_collider(shed_lumber_2, 0.8)
 
-	_signpost("Υλοτομείο Αγίου Βλάση  →\nΕργαστήρι Γιάννη", center + Vector3(-7.5, 0.0, -6.0), 135.0, holder)
-	_occupy(center.x, center.z, 16.0)
+	# Hanging lantern under seasoning shed roof
+	var shed_lamp := _place_abs(ITEMS + "torch_lit.gltf.glb", shed_pos + Vector3(0.0, 2.7, 0.0), 0.0, 1.5, holder)
+	var shed_light := OmniLight3D.new()
+	shed_light.name = "ShedLight"
+	shed_light.light_color = Color(1.0, 0.80, 0.45)
+	shed_light.light_energy = 1.3
+	shed_light.omni_range = 6.0
+	shed_light.position = shed_pos + Vector3(0.0, 2.5, 0.0)
+	holder.add_child(shed_light)
+
+	# 4. SAWMILL BUILDING DECK & ACCESSORIES
+	# Pallet of freshly planed boards on the mill approach ramp
+	var mill_pallet := _place("decoration/props/pallet.gltf", Vector3(91.8, 0.0, 36.8), 25.0, PS * 1.25, holder)
+	_add_box_collider(mill_pallet, 0.8)
+	var mill_planks := _place("decoration/props/resource_lumber.gltf", Vector3(91.8, 0.35, 36.8), 25.0, PS * 1.15, holder)
+	_add_box_collider(mill_planks, 0.8)
+
+	# Heavy carpenter tool crate and pitch barrel beside the mill
+	var mill_crate := _place("decoration/props/crate_long_B.gltf", Vector3(97.5, 0.0, 34.0), -15.0, PS * 1.1, holder)
+	_add_box_collider(mill_crate, 0.75)
+	var resin_barrel := _place("decoration/props/barrel.gltf", Vector3(101.5, 0.0, 37.0), 10.0, PS * 1.15, holder)
+	_add_box_collider(resin_barrel, 0.75)
+
+	# 5. FOREST PERIMETER TIMBER STORAGE & TREE STUMPS
+	# Heavy tree trunks stacked along the forest border
+	var log_stack_1 := _place("decoration/props/resource_lumber.gltf", Vector3(104.5, 0.0, 27.5), -75.0, PS * 1.5, holder)
+	_add_box_collider(log_stack_1, 0.8)
+	var log_stack_2 := _place("decoration/props/resource_lumber.gltf", Vector3(105.0, 0.0, 47.0), 10.0, PS * 1.5, holder)
+	_add_box_collider(log_stack_2, 0.8)
+
+	# Tall wooden ladder leaning against the timber stack
+	var ladder := _place("decoration/props/ladder.gltf", Vector3(103.2, 0.0, 29.5), 105.0, PS * 1.35, holder)
+	_add_box_collider(ladder, 0.6)
+
+	# Harvested stump cluster in the clearing
+	var stumps := _place("decoration/nature/trees_A_cut.gltf", Vector3(100.0, 0.0, 21.0), 20.0, 1.35, holder)
+	_add_box_collider(stumps, 0.8)
+
+	# 6. RUSTIC WOODEN FENCING & WELCOMING ENTRANCE GATE
+	# Boundary fences with wide 6.5m open entrance passage connecting to village road
+	var fence_1 := _place("buildings/neutral/fence_wood_straight.gltf", Vector3(75.5, 0.0, 19.5), 80.0, BS * 0.85, holder)
+	_add_box_collider(fence_1, 0.6)
+	var fence_2 := _place("buildings/neutral/fence_wood_straight.gltf", Vector3(75.5, 0.0, 34.0), 100.0, BS * 0.85, holder)
+	_add_box_collider(fence_2, 0.6)
+	var fence_3 := _place("buildings/neutral/fence_wood_straight.gltf", Vector3(76.5, 0.0, 42.5), 105.0, BS * 0.85, holder)
+	_add_box_collider(fence_3, 0.6)
+
+	# Entrance Signpost right by the gateway post facing the village road
+	_signpost("Υλοτομείο Αγίου Βλάση  →\nΕργαστήρι Γέρο-Γιάννη", Vector3(74.5, 0.0, 23.8), 110.0, holder)
+
+	# Standing lantern at the entrance gate
+	var gate_lamp := _place_abs(GRAVE + "lantern_standing.gltf", Vector3(74.2, 0.0, 22.6), 0.0, 2.2, holder)
+	var gate_light := OmniLight3D.new()
+	gate_light.name = "GateLampLight"
+	gate_light.light_color = Color(1.0, 0.85, 0.52)
+	gate_light.light_energy = 1.4
+	gate_light.omni_range = 5.5
+	gate_light.position = Vector3(74.2, 2.2, 22.6)
+	holder.add_child(gate_light)
+
+	# 7. OCCUPATION GRIDS
+	# Reserve areas to keep random trees, rocks and flora clear of the lumber yard
+	_occupy(85.5, 26.5, 4.0)   # Giannis workstation & clearing
+	_occupy(96.0, 40.0, 15.0)  # Main lumbermill building
+	_occupy(82.0, 48.0, 10.0)  # Seasoning shed
+	_occupy(104.0, 36.0, 12.0) # Forest perimeter timber stacks
+	_occupy(75.5, 27.0, 5.0)   # Entrance gate & approach path
 
 
 ## The ruined eastern fortress now occupied by the Orc Warband.
@@ -668,6 +803,11 @@ func _build_ruined_outpost() -> void:
 
 	_signpost("Ερειπωμένο Προπύργιο  ↖\nΠροσοχή: Πολεμική Συμμορία Όρκ!", center + Vector3(-16.0, 0.0, -5.0), 75.0, holder)
 	_occupy(center.x, center.z, 22.0)
+
+	# Story Part 6: The Siege of the Orc Stronghold Raid Controller
+	var raid_sc := preload("res://scripts/orc_stronghold_raid.gd")
+	var raid := raid_sc.new()
+	holder.add_child(raid)
 
 
 ## Autumn golden and orange pine forest grove on the eastern ridge.
@@ -712,6 +852,12 @@ func _build_golden_grove() -> void:
 
 	_signpost("Άλσος των Χρυσών Πεύκων  ↗\nΠροσοχή στους Άγριους Λύκους!", center + Vector3(-14.0, 0.0, -10.0), 45.0, holder)
 	_occupy(center.x, center.z, 20.0)
+
+	# Wilderness Pet: Trapped Silver Wolf Pup companion
+	var wolf_pup_sc := preload("res://scripts/wolf_pup_companion.gd")
+	var wolf_pup := wolf_pup_sc.new()
+	wolf_pup.position = center + Vector3(6.0, 0.0, -5.0)
+	holder.add_child(wolf_pup)
 
 
 ## Archery training grounds and village defense barracks.
@@ -1845,4 +1991,51 @@ func _add_trimesh_collider(root: Node3D) -> void:
 		var mesh_inst := mi as MeshInstance3D
 		if mesh_inst and mesh_inst.mesh:
 			mesh_inst.create_trimesh_collision()
+
+
+func _build_alchemy_and_flora() -> void:
+	var holder := Node3D.new()
+	holder.name = "AlchemyAndFlora"
+	add_child(holder)
+
+	# 1. Andreas' Alchemy Crafting Bench in Village Square
+	# Andreas stands at Vector3(-7.0, 0.05, 9.0) post-rescue; place the bench right beside him
+	var bench_script = load("res://scripts/alchemy_bench.gd")
+	var bench: Node3D = bench_script.new()
+	bench.position = Vector3(-4.8, 0.0, 9.2)
+	bench.rotation.y = PI * 0.15
+	holder.add_child(bench)
+	_occupy(-4.8, 9.2, 2.5)
+
+	# 2. Scattered Wild Flora across Island (Waterlilies, Reeds, Mountain Herbs, Autumn Cones)
+	var flora_spots: Array[Dictionary] = [
+		# Waterlilies (floating in shallows / lake / sea coast)
+		{"type": "waterlily", "pos": Vector3(-30.0, 0.02, 115.0)},
+		{"type": "waterlily", "pos": Vector3(-48.0, 0.02, 130.0)},
+		{"type": "waterlily", "pos": Vector3(12.0, 0.02, 140.0)},
+		{"type": "waterlily", "pos": Vector3(-22.0, 0.02, -18.0)},
+		# River Reeds (along banks and streams)
+		{"type": "reed", "pos": Vector3(-18.0, 0.05, -15.0)},
+		{"type": "reed", "pos": Vector3(-26.0, 0.05, -22.0)},
+		{"type": "reed", "pos": Vector3(-15.0, 0.05, 105.0)},
+		{"type": "reed", "pos": Vector3(25.0, 0.05, 125.0)},
+		# Mountain Herbs (high rocky terrain, ridges, ruins)
+		{"type": "mountain_herb", "pos": Vector3(65.0, 4.5, -45.0)},
+		{"type": "mountain_herb", "pos": Vector3(-55.0, 6.0, -85.0)},
+		{"type": "mountain_herb", "pos": Vector3(85.0, 12.0, 35.0)},
+		{"type": "mountain_herb", "pos": Vector3(-38.0, 5.0, -110.0)},
+		# Autumn Pine Cones (Golden Grove forest floor)
+		{"type": "autumn_cone", "pos": Vector3(45.0, 0.05, 15.0)},
+		{"type": "autumn_cone", "pos": Vector3(52.0, 0.05, 28.0)},
+		{"type": "autumn_cone", "pos": Vector3(38.0, 0.05, 32.0)},
+		{"type": "autumn_cone", "pos": Vector3(60.0, 0.05, 18.0)},
+	]
+
+	var flora_script = load("res://scripts/wild_flora_node.gd")
+	for spot in flora_spots:
+		var fn: Node3D = flora_script.new()
+		fn.set("flora_id", spot["type"])
+		fn.position = spot["pos"]
+		holder.add_child(fn)
+
 

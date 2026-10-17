@@ -8,6 +8,7 @@ const COAST_CENTER := Vector3(-55.0, 0.0, 135.0)
 const LIGHTHOUSE_POS := Vector3(-115.0, 0.0, 138.0)
 const PIER_POS := Vector3(-35.0, 0.0, 96.0)
 const SHIPWRECK_POS := Vector3(-72.0, -0.6, 168.0)
+const SailingBoatClass := preload("res://scripts/sailing_boat.gd")
 
 var _beacon_light: SpotLight3D
 var _beacon_beam: MeshInstance3D
@@ -22,6 +23,7 @@ func _ready() -> void:
 	_build_pier()
 	_build_shipwreck()
 	_build_southeast_cliffs()
+	_build_underwater_cave()
 
 
 func _process(delta: float) -> void:
@@ -586,17 +588,11 @@ func _build_pier() -> void:
 		var lp: Vector3 = PIER_POS + Vector3(-pier_w * 0.45 - 0.2, 0.7, lz)
 		var _lantern_post = _place_prop("res://assets/graveyard/post_lantern.gltf", lp, 90.0, 1.2, pier_holder)
 
-	# Moored Wooden Boat beside the pier
-	var boat := Node3D.new()
-	boat.position = PIER_POS + Vector3(2.8, -0.15, 26.0)
-	boat.rotation_degrees = Vector3(3.0, -10.0, -4.0)
-	var b_hull := MeshInstance3D.new()
-	var b_box := BoxMesh.new()
-	b_box.size = Vector3(1.8, 0.8, 4.5)
-	b_hull.mesh = b_box
-	b_hull.material_override = piling_mat
-	boat.add_child(b_hull)
-	pier_holder.add_child(boat)
+	# Moored Sailable Skiff beside the pier
+	var skiff := SailingBoatClass.new()
+	skiff.position = PIER_POS + Vector3(3.4, -0.15, 26.0)
+	skiff.rotation_degrees.y = 10.0
+	pier_holder.add_child(skiff)
 
 	# Fishing spot interaction sign on dry sand at pier entrance
 	_add_signpost("Ψαρολίμανο Αγίου Βλάση  ⚓\nΑποβάθρα Ψαρέματος", PIER_POS + Vector3(2.8, 0.05, -2.0), -20.0, pier_holder)
@@ -944,4 +940,130 @@ func _build_southeast_cliffs() -> void:
 
 	# Coastal Signpost at the foot of the cliff trail
 	_add_signpost("Νότιοι Γκρεμοί", Vector3(51.0, 0.0, 107.0), 15.0, cliff_holder)
+
+
+# =========================================================================
+# 7. UNDERWATER SEA CAVE & GROTTO (Σμαραγδένιο Σπήλαιο Βυθού)
+# =========================================================================
+func _build_underwater_cave() -> void:
+	var cave_holder := Node3D.new()
+	cave_holder.name = "UnderwaterSeaCave"
+	add_child(cave_holder)
+
+	var cave_mat := StandardMaterial3D.new()
+	cave_mat.albedo_color = Color(0.18, 0.22, 0.20) # dark aquatic basalt
+	cave_mat.roughness = 0.95
+
+	var sand_mat := StandardMaterial3D.new()
+	sand_mat.albedo_color = Color(0.82, 0.78, 0.65) # fine white grotto sand
+	sand_mat.roughness = 0.85
+
+	var coral_mat := StandardMaterial3D.new()
+	coral_mat.albedo_color = Color(0.20, 0.85, 0.70) # bioluminescent emerald cyan
+	coral_mat.emission_enabled = true
+	coral_mat.emission = Color(0.15, 0.80, 0.65)
+	coral_mat.emission_energy_multiplier = 1.6
+
+	# 1. Submerged Cave Entrance Tunnel Archway (Y = -2.2m to 0.5m, X ~ 52, Z ~ 174)
+	var arch_pos := Vector3(52.0, -1.2, 174.0)
+	for a: float in [-2.5, 2.5]:
+		var pillar := MeshInstance3D.new()
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 1.4
+		cyl.bottom_radius = 1.8
+		cyl.height = 3.8
+		pillar.mesh = cyl
+		pillar.position = arch_pos + Vector3(a, 0.4, 0.0)
+		pillar.material_override = cave_mat
+		cave_holder.add_child(pillar)
+
+	var arch_lintel := MeshInstance3D.new()
+	var l_box := BoxMesh.new()
+	l_box.size = Vector3(6.5, 1.2, 2.5)
+	arch_lintel.mesh = l_box
+	arch_lintel.position = arch_pos + Vector3(0.0, 2.2, 0.0)
+	arch_lintel.material_override = cave_mat
+	cave_holder.add_child(arch_lintel)
+
+	# 2. Spacious Vaulted Grotto Chamber inside the cliff (X = 66.0, Z = 175.0, Y = 0.0 to 6.5m)
+	var grotto_center := Vector3(66.0, 1.5, 175.0)
+
+	# Grotto dry sand beach inside
+	var beach_body := StaticBody3D.new()
+	beach_body.position = grotto_center + Vector3(0.0, -0.8, 0.0)
+	beach_body.collision_layer = 1
+	beach_body.collision_mask = 0
+	var b_mesh := MeshInstance3D.new()
+	var b_box := BoxMesh.new()
+	b_box.size = Vector3(14.0, 1.2, 16.0)
+	b_mesh.mesh = b_box
+	b_mesh.material_override = sand_mat
+	beach_body.add_child(b_mesh)
+	var b_col := CollisionShape3D.new()
+	var bc_box := BoxShape3D.new()
+	bc_box.size = Vector3(14.0, 1.2, 16.0)
+	b_col.shape = bc_box
+	beach_body.add_child(b_col)
+	cave_holder.add_child(beach_body)
+
+	# Grotto Cave Walls & Vault
+	var wall_offsets: Array[Vector3] = [
+		Vector3(0.0, 2.0, 8.0), Vector3(0.0, 2.0, -8.0),
+		Vector3(7.0, 2.0, 0.0)
+	]
+	for woff: Vector3 in wall_offsets:
+		var wall := StaticBody3D.new()
+		wall.position = grotto_center + woff
+		wall.collision_layer = 1
+		wall.collision_mask = 0
+		var wm := MeshInstance3D.new()
+		var wbox := BoxMesh.new()
+		wbox.size = Vector3(16.0 if woff.x == 0.0 else 2.5, 6.0, 2.5 if woff.x == 0.0 else 18.0)
+		wm.mesh = wbox
+		wm.material_override = cave_mat
+		wall.add_child(wm)
+		var wc := CollisionShape3D.new()
+		var wcs := BoxShape3D.new()
+		wcs.size = wbox.size
+		wc.shape = wcs
+		wall.add_child(wc)
+		cave_holder.add_child(wall)
+
+	# 3. Bioluminescent Sea Flora & Aquatic Crystals
+	for cx: float in [-4.0, 0.0, 4.0]:
+		for cz: float in [-5.0, 5.0]:
+			var crystal := MeshInstance3D.new()
+			var prism := PrismMesh.new()
+			prism.size = Vector3(0.6, 2.2, 0.6)
+			crystal.mesh = prism
+			crystal.position = grotto_center + Vector3(cx, -0.2, cz)
+			crystal.rotation_degrees = Vector3(randf_range(-15, 15), randf() * 360, randf_range(-15, 15))
+			crystal.material_override = coral_mat
+			cave_holder.add_child(crystal)
+
+	# Grotto emerald water lighting
+	var grotto_glow := OmniLight3D.new()
+	grotto_glow.light_color = Color(0.2, 0.9, 0.75)
+	grotto_glow.light_energy = 2.4
+	grotto_glow.omni_range = 14.0
+	grotto_glow.position = grotto_center + Vector3(0.0, 2.5, 0.0)
+	cave_holder.add_child(grotto_glow)
+
+	# 4. Hidden Pirate's Treasure Cache inside the Grotto
+	var grotto_chest := Chest.new()
+	grotto_chest.golden = true
+	grotto_chest.gold_min = 500
+	grotto_chest.gold_max = 850
+	grotto_chest.potions = 4
+	grotto_chest.position = grotto_center + Vector3(3.5, -0.2, -3.0)
+	grotto_chest.rotation_degrees.y = -45.0
+	cave_holder.add_child(grotto_chest)
+
+	# Coin Stacks & Crates
+	_place_prop("res://assets/items/coin_stack_medium.gltf.glb", grotto_center + Vector3(2.5, -0.2, -2.8), 20.0, 1.2, cave_holder)
+	_place_prop("res://assets/items/crates_stacked.gltf.glb", grotto_center + Vector3(4.2, -0.2, -1.8), -30.0, 1.1, cave_holder)
+
+	# Grotto Ancient Inscription
+	_add_signpost("Σπήλαιο των Σμαραγδένιων Νερών  🌊\nΑρχαίο Καταφύγιο Πειρατών", grotto_center + Vector3(-2.0, -0.2, 4.0), 160.0, cave_holder)
+
 

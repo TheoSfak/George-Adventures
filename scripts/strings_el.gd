@@ -186,7 +186,8 @@ const MAP_PLACES := {
 	"stable": "Στάβλος", "bandits": "Κρησφύγετο Ληστών", "cult": "Ξέφωτο της Σέκτας",
 	"lighthouse": "Πέτρινος Φάρος", "harbor": "Ψαρολίμανο", "waterfall": "Καταρράκτης Νυμφών",
 	"bridge_meadow": "Πέτρινο Γεφύρι", "highlands": "Βίγλα των Αετών", "shipwreck": "Ναυάγιο της Γοργόνας",
-	"cliffs": "Νότιοι Γκρεμοί",
+	"cliffs": "Νότιοι Γκρεμοί", "barracks": "Στρατώνες & Τοξοβολία", "orc_stronghold": "Ερειπωμένο Οχυρό (Όρκ)",
+	"golden_grove": "Χρυσό Άλσος", "grotto": "Μυστικό Σπήλαιο", "lumbermill": "Υλοτομείο Γέρο-Γιάννη",
 	"frontier_pass": "Πέρασμα των Βουνών", "frontier_camp": "Καταυλισμός Προσφύγων",
 	"frontier_road": "Δρόμος της Σκιάς", "frontier_fort": "Φρούριο της Σκιάς",
 	"ash_entry": "Πύλη της Στάχτης", "ash_shelter": "Το Καταφύγιο",
@@ -356,6 +357,9 @@ const MSG_NO_UPGRADE_MATS := "Δεν έχεις τα απαραίτητα υλι
 const WEAPON_TYPE_1H := "Μονοχείριο"
 const WEAPON_TYPE_2H := "Δίχειρο"
 const WEAPON_TYPE_DUAL := "Δίδυμες Λεπίδες"
+const WEAPON_TYPE_BOW := "Τόξο"
+const WEAPON_TYPE_CROSSBOW := "Βαλλίστρα"
+const MSG_RANGED_NEEDS_WEAPON := "Χρειάζεσαι εξοπλισμένο Τόξο ή Βαλλίστρα!"
 
 # --- Story Part 5: Temple Sanctum
 const SANCTUM_SEALED := "Σφραγισμένο Άδυτο της Φλόγας"

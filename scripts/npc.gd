@@ -60,12 +60,17 @@ func _ready() -> void:
 	_marker.no_depth_test = true
 	add_child(_marker)
 
-	Quests.changed.connect(_update_marker)
+	var q: Node = get_node_or_null("/root/Quests")
+	if q and q.has_signal("changed"):
+		q.changed.connect(_update_marker)
 	_update_marker()
 
 
 func _update_marker() -> void:
-	var m := Quests.marker_for(npc_id)
+	var q: Node = get_node_or_null("/root/Quests")
+	var m: String = ""
+	if q and q.has_method("marker_for"):
+		m = q.marker_for(npc_id)
 	_marker.text = m
 	_marker.visible = m != ""
 	_marker.modulate = Color(0.55, 1.0, 0.5) if m == "?" else Color(1.0, 0.85, 0.2)
@@ -100,8 +105,9 @@ func fall() -> void:
 	remove_from_group("npcs")
 	set_process(false)
 	_marker.visible = false
-	if Quests.changed.is_connected(_update_marker):
-		Quests.changed.disconnect(_update_marker)
+	var q: Node = get_node_or_null("/root/Quests")
+	if q and q.has_signal("changed") and q.changed.is_connected(_update_marker):
+		q.changed.disconnect(_update_marker)
 	if _anim and _anim.has_animation("Death_A"):
 		_anim.play("Death_A", 0.1)
 	var tween := create_tween()
@@ -111,8 +117,9 @@ func fall() -> void:
 
 
 func interact_prompt() -> String:
+	var q: Node = get_node_or_null("/root/Quests")
 	if QuestData.NPCS[npc_id].has("shop"):
-		if Quests.marker_for(npc_id) != "":
+		if q and q.has_method("marker_for") and q.marker_for(npc_id) != "":
 			return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
 		return Strings.PROMPT_TRADE % QuestData.NPCS[npc_id]["name"]
 	return Strings.PROMPT_TALK % QuestData.NPCS[npc_id]["name"]
@@ -126,14 +133,16 @@ func interact(player: Player) -> void:
 	var hud := get_tree().get_first_node_in_group("hud")
 	if hud == null or hud.is_dialogue_open():
 		return
+	var q: Node = get_node_or_null("/root/Quests")
 	var shop_id: String = QuestData.NPCS[npc_id].get("shop", "")
-	if shop_id != "" and Quests.marker_for(npc_id) == "":
+	if shop_id != "" and (q == null or not q.has_method("marker_for") or q.marker_for(npc_id) == ""):
 		var shop: Dictionary = ShopData.SHOPS[shop_id]
 		hud.show_dialogue(QuestData.NPCS[npc_id]["name"], shop["greeting"], func(): hud.open_shop(shop_id, player))
 		return
-	var plan := Quests.dialogue_for(npc_id)
-	hud.show_dialogue(plan["speaker"], plan["lines"], func():
-		Quests.finish_dialogue(plan)
-		if shop_id != "" and Quests.marker_for(npc_id) == "":
-			hud.open_shop(shop_id, player)
-	)
+	if q and q.has_method("dialogue_for"):
+		var plan: Dictionary = q.dialogue_for(npc_id)
+		hud.show_dialogue(plan["speaker"], plan["lines"], func():
+			q.finish_dialogue(plan)
+			if shop_id != "" and q.marker_for(npc_id) == "":
+				hud.open_shop(shop_id, player)
+		)

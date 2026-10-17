@@ -19,6 +19,7 @@ signal bar_changed
 signal talents_changed
 signal gear_changed
 signal mount_changed(mounted: bool)
+signal aim_changed(aiming: bool, charge: float)
 
 @export_group("Movement")
 @export var walk_speed := 5.0
@@ -57,6 +58,8 @@ signal mount_changed(mounted: bool)
 
 const MODEL_PATH := "res://assets/characters/Knight.glb"
 const CLICK_MAX := 0.3          # a left click shorter than this (seconds) is a sword swing; longer with the right button held runs forward
+const PlayerArrowClass := preload("res://scripts/player_arrow.gd")
+const BowMeshBuilderClass := preload("res://scripts/bow_mesh_builder.gd")
 
 # Characters that come close to the camera fade out instead of being clipped (see _fade_near_characters).
 const FADE_NEAR := 0.8                 # invisible this close (metres, times the character's scale) ...
@@ -114,6 +117,8 @@ var equipped := {"weapon": "", "armor": "", "shield": ""} # slot -> gear id ("" 
 var gear_upgrades := {"weapon": 0, "armor": 0, "shield": 0} # slot -> upgrade level (0..3)
 var fish_seen: Array[String] = []   # fish species caught at least once (the journal)
 var food := {}                   # the meal George ate: {"id": String, "time": seconds left}; empty = none
+var blade_coating := {"type": "", "time": 0.0, "power": 0.0, "mods": {}} # active blade coating
+var active_elixirs := {}         # elixir_id -> {"time": float, "mods": Dictionary}
 var junk := {}                   # junk id -> count, sold at the market
 var talents := {}                # talent id -> rank (talent_data.gd)
 var _frenzy_time := 0.0
@@ -180,6 +185,15 @@ var _kick_queued := 0.0         # input buffer for kick
 var _air_attacking := false     # mid-air plunge attack is falling
 var _invulnerable := 0.0
 var _step_dist := 0.0
+var is_swimming := false
+const WATER_SURFACE_Y := -0.10
+var _aiming := false
+var _aim_charge := 0.0
+var _aim_spring_length := 4.5
+var _ranged_shoot_cd := 0.0
+var _ranged_weapon_anchor: Node3D
+var _bow_instance: MeshInstance3D
+var _crossbow_instance: Node3D
 
 
 func _ready() -> void:
@@ -192,6 +206,7 @@ func _ready() -> void:
 	_rig.top_level = true
 	_rig.global_position = global_position + Vector3.UP * camera_height
 	_arm.add_excluded_object(get_rid())
+	_aim_spring_length = _arm.spring_length
 	bar.assign(SkillData.DEFAULT_BAR)
 	_load_model()
 	_horse = Horse.new()
@@ -237,15 +252,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_arm.spring_length = clampf(_arm.spring_length - 1.5, zoom_min, zoom_max)
+			_aim_spring_length = clampf(_aim_spring_length - 1.5, zoom_min, zoom_max)
+			if not _aiming:
+				_arm.spring_length = _aim_spring_length
 		elif mb.pressed and mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_arm.spring_length = clampf(_arm.spring_length + 1.5, zoom_min, zoom_max)
+			_aim_spring_length = clampf(_aim_spring_length + 1.5, zoom_min, zoom_max)
+			if not _aiming:
+				_arm.spring_length = _aim_spring_length
 		elif mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
 				_game_lmb = true
 				_lmb_travel = 0.0
 				_lmb_time = 0.0
 				_lmb_attack_queued = false
+				if _aiming:
+					_fire_ranged_attack()
+					return
 				if is_moving_intent():
 					_attack_queued = 0.25
 					_lmb_attack_queued = true
@@ -292,28 +314,68 @@ func _physics_process(delta: float) -> void:
 	var rmb := _game_rmb
 	var lmb := _game_lmb
 
+	# --- Ranged aiming state ---
+	var wtype := current_weapon_type()
+	var is_ranged := wtype in ["bow", "crossbow"]
+	if is_ranged and rmb and not is_dead and not busy and _stun <= 0.0 and not mounted:
+		if not _aiming:
+			_aiming = true
+			_aim_charge = 0.0
+		_aim_charge = minf(_aim_charge + delta * 2.2, 1.0)
+		_heading = _yaw + PI
+		if _model_root != null:
+			_model_root.rotation.y = _heading
+		aim_changed.emit(true, _aim_charge)
+	elif _aiming:
+		_aiming = false
+		_aim_charge = 0.0
+		aim_changed.emit(false, 0.0)
+
 	# --- Camera look (gamepad stick) ---
 	var look := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	_yaw -= look.x * stick_sensitivity * delta
 	_pitch = clampf(_pitch + look.y * stick_sensitivity * delta, pitch_min, pitch_max)
 
-	# --- Gravity and jumping ---
+	# --- Swimming & Water Buoyancy ---
+	var in_water := is_in_water()
+	if in_water and not is_swimming:
+		is_swimming = true
+		if mounted:
+			dismount()
+		Sfx.play("land", global_position, -2.0)
+	elif not in_water and is_swimming:
+		is_swimming = false
+		if _model != null:
+			_model.rotation.x = 0.0
+
 	var on_floor := is_on_floor()
-	var in_water := global_position.y <= 0.05 and global_position.z >= 85.0 and global_position.z <= 250.0 and global_position.x >= -190.0 and global_position.x <= 70.0
-	if in_water and global_position.y < -1.4:
-		velocity.y = maxf(velocity.y + 20.0 * delta, -0.8)
+	if is_swimming:
+		# Buoyant water physics: dive down with block/kick/crouch, ascend with jump, or float at surface
+		var diving := Input.is_action_pressed("block") or Input.is_action_pressed("kick")
+		var ascending := Input.is_action_pressed("jump")
+		if diving:
+			velocity.y = move_toward(velocity.y, -3.2, 16.0 * delta)
+		elif ascending:
+			velocity.y = move_toward(velocity.y, 4.2, 20.0 * delta)
+		elif global_position.y < WATER_SURFACE_Y - 0.2:
+			# Upward buoyant lift
+			velocity.y = move_toward(velocity.y, 2.6, 14.0 * delta)
+		elif global_position.y > WATER_SURFACE_Y + 0.15:
+			velocity.y -= gravity * 0.5 * delta
+		else:
+			velocity.y = move_toward(velocity.y, 0.0, 8.0 * delta)
 	elif not on_floor:
 		if _air_attacking:
 			velocity.y = minf(velocity.y - gravity * 2.0 * delta, -12.0)
 		else:
 			velocity.y -= gravity * delta
 
-	var can_jump := on_floor or in_water
+	var can_jump := on_floor or (is_swimming and global_position.y >= WATER_SURFACE_Y - 0.4)
 	if Input.is_action_just_pressed("jump") and can_jump and not _attacking and not is_dead and _stun <= 0.0 and not busy:
-		velocity.y = jump_velocity
+		velocity.y = jump_velocity if on_floor or global_position.y >= WATER_SURFACE_Y - 0.1 else 4.5
 		Sfx.play("jump", global_position, -4.0)
 		_landing = false
-		if not mounted:
+		if not mounted and not is_swimming:
 			_play("Jump_Start", 0.05)
 
 	# --- Combat state ---
@@ -423,6 +485,8 @@ func _physics_process(delta: float) -> void:
 		speed *= MountRules.SPEED_FACTOR
 	if forward_axis < 0.0 and strafe_axis == 0.0:
 		speed *= 0.6  # backing up is slower
+	if is_swimming:
+		speed *= 0.75
 	var target := dir * speed
 	if _attacking:
 		target = target * CombatTiming.SWING_MOVE_FACTOR if _free_swing else Vector3.ZERO
@@ -471,9 +535,11 @@ func _physics_process(delta: float) -> void:
 	_footsteps()
 
 	# --- Turn the model toward its heading ---
-	_model_root.rotation.y = lerp_angle(_model_root.rotation.y, _heading, 1.0 - exp(-turn_speed * delta))
+	if _model_root != null:
+		_model_root.rotation.y = lerp_angle(_model_root.rotation.y, _heading, 1.0 - exp(-turn_speed * delta))
 
-	_update_camera(delta)
+	if _rig != null:
+		_update_camera(delta)
 	_update_animation()
 
 	if global_position.y < -30.0:
@@ -526,6 +592,12 @@ func _update_camera(delta: float) -> void:
 	_rig.rotation.y = _yaw
 	_arm.rotation.x = _pitch
 	var goal := global_position + Vector3.UP * (camera_height + (MOUNT_CAMERA_LIFT if mounted else 0.0))
+	if _aiming:
+		var right_dir := Basis(Vector3.UP, _yaw) * Vector3.RIGHT
+		goal += right_dir * 0.65 + Vector3.UP * 0.18
+		_arm.spring_length = lerpf(_arm.spring_length, 2.2, 1.0 - exp(-12.0 * delta))
+	else:
+		_arm.spring_length = lerpf(_arm.spring_length, _aim_spring_length, 1.0 - exp(-10.0 * delta))
 	_rig.global_position = _rig.global_position.lerp(goal, 1.0 - exp(-camera_follow * delta))
 	_fade_near_characters()
 
@@ -590,11 +662,14 @@ func is_moving_intent() -> bool:
 
 
 func _start_attack(skill: String = "") -> void:
+	var wtype := current_weapon_type()
+	if wtype in ["bow", "crossbow"]:
+		_fire_ranged_attack(skill)
+		return
 	_attacking = true
 	var moving := is_moving_intent()
 	_assist_aim(moving)
 	_combo_timer = CombatTiming.COMBO_WINDOW
-	var wtype := current_weapon_type()
 	var combo := CombatTiming.combo_for(wtype)
 	var swing_speed := CombatTiming.speed(attack_speed_stat())
 	if skill == "power_strike":
@@ -607,6 +682,110 @@ func _start_attack(skill: String = "") -> void:
 	Sfx.play(step.get("sfx", "sword_swing"), global_position, -2.0)
 	attacked.emit(idx)
 	_swing(step, swing_speed, moving, sword_damage * float(step["damage"]))
+
+
+func _fire_ranged_attack(skill: String = "") -> void:
+	if _ranged_shoot_cd > 0.0 or is_dead or busy or _stun > 0.0:
+		return
+	var speed_mult := 1.0 + maxf(attack_speed_stat(), -0.3)
+	_ranged_shoot_cd = 0.40 / speed_mult
+	_attacking = true
+	var moving := is_moving_intent()
+	var wtype := current_weapon_type()
+
+	var atype := "normal"
+	var arrow_spd := 40.0
+	var dmg := sword_damage * _damage_mult()
+	if wtype == "crossbow":
+		arrow_spd = 48.0
+		dmg *= 1.15
+
+	if skill == "power_shot":
+		atype = "power"
+		arrow_spd = 65.0
+		dmg *= 2.5
+		Sfx.play("skill_lightning", global_position)
+	elif skill == "volley":
+		atype = "volley"
+		arrow_spd = 42.0
+		dmg *= 1.0
+		Sfx.play("arrow_shoot", global_position)
+	elif skill == "fire_arrow":
+		atype = "fire"
+		arrow_spd = 45.0
+		dmg *= 1.8
+		Sfx.play("skill_flame", global_position)
+	else:
+		if _aiming and _aim_charge >= 0.75:
+			dmg *= 1.40
+		Sfx.play("arrow_shoot", global_position)
+
+	var anim_name := "2H_Ranged_Shoot" if _anim and _anim.has_animation("2H_Ranged_Shoot") else "1H_Ranged_Shoot"
+	if moving and _upper != null and _upper.has_animation(anim_name):
+		_upper.play(anim_name, 0.05, 1.8)
+	else:
+		_play(anim_name, 0.05, true, 1.8)
+
+	var target_pt: Vector3
+	var spawn_pos := global_position + Vector3.UP * 1.35 + _facing() * 0.45
+	if _aiming:
+		target_pt = get_aim_target_point()
+	else:
+		var assist := _find_ranged_assist_target()
+		if assist != null:
+			target_pt = assist.global_position + Vector3.UP * 0.9
+		else:
+			target_pt = spawn_pos + _facing() * 30.0
+
+	var aim_dir := (target_pt - spawn_pos).normalized()
+	if aim_dir.length_squared() < 0.001:
+		aim_dir = _facing()
+
+	if atype == "volley":
+		for offset_deg in [-16.0, -8.0, 0.0, 8.0, 16.0]:
+			var spread_dir := Basis(Vector3.UP, deg_to_rad(offset_deg)) * aim_dir
+			PlayerArrowClass.spawn(get_tree(), "volley", spawn_pos, spread_dir, arrow_spd, dmg, stats.total("crit"), self)
+	else:
+		PlayerArrowClass.spawn(get_tree(), atype, spawn_pos, aim_dir, arrow_spd, dmg, stats.total("crit"), self)
+
+	_aim_charge = 0.0
+	var serial := _attack_serial_next()
+	get_tree().create_timer(0.35 / speed_mult).timeout.connect(_end_skill_attack.bind(serial))
+
+
+func get_aim_target_point() -> Vector3:
+	var cam := _cam
+	if cam == null:
+		return global_position + _facing() * 30.0
+	var space := get_world_3d().direct_space_state
+	var from := cam.global_position
+	var to := from - cam.global_transform.basis.z * 120.0
+	var ray := PhysicsRayQueryParameters3D.create(from, to, 1)
+	var hit := space.intersect_ray(ray)
+	if not hit.is_empty():
+		return hit["position"]
+	return to
+
+
+func _find_ranged_assist_target() -> Node3D:
+	var best: Node3D = null
+	var best_dot := 0.5
+	var forward := _facing()
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		var e3d := enemy as Node3D
+		if e3d == null or ("is_dead" in enemy and enemy.get("is_dead")):
+			continue
+		var diff := e3d.global_position - global_position
+		var dist := diff.length()
+		if dist > 35.0 or dist < 0.5:
+			continue
+		var dot := forward.dot(diff.normalized())
+		if dot > best_dot:
+			best_dot = dot
+			best = e3d
+	return best
 
 
 ## One blow of the combo (combat_timing.gd): the animation plays faster than normal, the blade lands early and
@@ -846,6 +1025,20 @@ func _hit(enemy: Enemy, damage: float, knock: float, stun_time: float = 0.0) -> 
 			_crit_notice = 1.5
 	enemy.take_damage(dealt, global_position, knock)
 	Sfx.play("sword_crit" if crit else "sword_hit", enemy.global_position)
+	# Blade coating elemental effects
+	if blade_coating.get("time", 0.0) > 0.0:
+		var c_type: String = blade_coating.get("type", "")
+		var c_pwr: float = float(blade_coating.get("power", 0.0))
+		if c_type == "flame_oil":
+			enemy.take_damage(c_pwr, global_position, 0.4)
+			Sfx.play("skill_flame", enemy.global_position)
+		elif c_type == "poison_coat":
+			enemy.take_damage(c_pwr, global_position, 0.0)
+			Sfx.play("orb_hit", enemy.global_position)
+		elif c_type == "frost_ward":
+			enemy.take_damage(c_pwr, global_position, 0.2)
+			enemy.stun(0.8)
+			Sfx.play("block_hit", enemy.global_position)
 	if stun_time > 0.0:
 		enemy.stun(stun_time)
 	var steal := stats.total("lifesteal") + (0.12 if _frenzy_time > 0.0 else 0.0)
@@ -1178,6 +1371,13 @@ func _recalc() -> void:
 	stats.set_source("set_bonus", ShopData.set_bonus_mods(set_t))
 	stats.set_source("talents", TalentData.mods_for(talents))
 	stats.set_source("food", ShopData.meal_mods(food))
+	var alchemy_mods := {}
+	for el in active_elixirs:
+		var emods: Dictionary = active_elixirs[el].get("mods", {})
+		alchemy_mods = Stats.merge(alchemy_mods, emods)
+	if blade_coating.get("time", 0.0) > 0.0 and blade_coating.has("mods"):
+		alchemy_mods = Stats.merge(alchemy_mods, blade_coating["mods"])
+	stats.set_source("alchemy", alchemy_mods)
 	var old_max := max_health
 	max_health = base_max_health + stats.total("hp_add")
 	sword_damage = (base_damage + stats.total("damage_add")) * (1.0 + stats.total("damage_mult"))
@@ -1276,7 +1476,7 @@ func _update_equipment_visuals() -> void:
 			if wtype == "dual":
 				mi.visible = true
 				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
-			elif wtype == "2h":
+			elif wtype in ["2h", "bow", "crossbow"]:
 				mi.visible = false
 			else:
 				mi.visible = weapon_tier < 3
@@ -1285,7 +1485,7 @@ func _update_equipment_visuals() -> void:
 			if wtype == "2h":
 				mi.visible = true
 				mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
-			elif wtype == "dual":
+			elif wtype in ["dual", "bow", "crossbow"]:
 				mi.visible = false
 			else:
 				mi.visible = weapon_tier >= 3
@@ -1295,6 +1495,54 @@ func _update_equipment_visuals() -> void:
 			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 and mi.visible else null
 		elif mi.name in ARMOR_NODES:
 			mi.material_overlay = _glow_overlay(ShopData.TIER_COLORS[armor_tier - 1], 0.07, 0.12) if armor_tier >= 2 else null
+	_update_ranged_models(wtype, weapon_tier)
+
+
+func _update_ranged_models(wtype: String, weapon_tier: int) -> void:
+	if _model == null:
+		return
+	var handslot := _model.find_child("handslot_r", true, false) as Node3D
+	if handslot == null:
+		return
+	if _ranged_weapon_anchor == null:
+		_ranged_weapon_anchor = Node3D.new()
+		_ranged_weapon_anchor.name = "RangedWeaponAnchor"
+		handslot.add_child(_ranged_weapon_anchor)
+
+		# Crossbow
+		var cb_sc := load("res://assets/characters/skeleton_weapons/Skeleton_Crossbow.gltf") as PackedScene
+		if cb_sc:
+			_crossbow_instance = cb_sc.instantiate() as Node3D
+			_crossbow_instance.scale = Vector3.ONE * 2.0
+			_crossbow_instance.rotation_degrees = Vector3(0, 180, 0)
+			_crossbow_instance.position = Vector3(0, 0.08, -0.12)
+			_ranged_weapon_anchor.add_child(_crossbow_instance)
+
+		# Recurve Bow
+		_bow_instance = MeshInstance3D.new()
+		_bow_instance.mesh = BowMeshBuilderClass.build_recurve_bow_mesh()
+		_bow_instance.scale = Vector3.ONE * 1.5
+		_bow_instance.rotation_degrees = Vector3(0, 90, 0)
+		_bow_instance.position = Vector3(0, 0.05, 0.0)
+		_ranged_weapon_anchor.add_child(_bow_instance)
+
+	if wtype == "crossbow":
+		_ranged_weapon_anchor.visible = true
+		if _crossbow_instance != null:
+			_crossbow_instance.visible = true
+			for mi in _crossbow_instance.find_children("*", "MeshInstance3D", true, false):
+				(mi as MeshInstance3D).material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+		if _bow_instance != null:
+			_bow_instance.visible = false
+	elif wtype == "bow":
+		_ranged_weapon_anchor.visible = true
+		if _crossbow_instance != null:
+			_crossbow_instance.visible = false
+		if _bow_instance != null:
+			_bow_instance.visible = true
+			_bow_instance.material_overlay = _glow_overlay(ShopData.TIER_COLORS[weapon_tier - 1], 0.30) if weapon_tier >= 2 else null
+	else:
+		_ranged_weapon_anchor.visible = false
 
 
 func _glow_overlay(color: Color, alpha: float, glow: float = 0.5) -> StandardMaterial3D:
@@ -1357,6 +1605,7 @@ func respec() -> bool:
 
 func _tick_timers(delta: float) -> void:
 	_potion_cooldown = maxf(_potion_cooldown - delta, 0.0)
+	_ranged_shoot_cd = maxf(_ranged_shoot_cd - delta, 0.0)
 	for id in _cooldowns.keys():
 		_cooldowns[id] = maxf(_cooldowns[id] - delta, 0.0)
 	_guard_time = maxf(_guard_time - delta, 0.0)
@@ -1377,6 +1626,24 @@ func _tick_timers(delta: float) -> void:
 		if float(food["time"]) <= 0.0:
 			message.emit(Strings.MSG_MEAL_OVER % ShopData.MEALS[food["id"]]["name"])
 			food = {}
+			_recalc()
+	if blade_coating.get("time", 0.0) > 0.0:
+		blade_coating["time"] = maxf(float(blade_coating["time"]) - delta, 0.0)
+		if float(blade_coating["time"]) <= 0.0:
+			message.emit("Η επικάλυψη της λεπίδας σου εξαντλήθηκε.")
+			blade_coating = {"type": "", "time": 0.0, "power": 0.0, "mods": {}}
+			_recalc()
+	if not active_elixirs.is_empty():
+		var expired_elixirs: Array = []
+		for eid in active_elixirs.keys():
+			active_elixirs[eid]["time"] = float(active_elixirs[eid]["time"]) - delta
+			if float(active_elixirs[eid]["time"]) <= 0.0:
+				expired_elixirs.append(eid)
+		for eid in expired_elixirs:
+			var ename: String = ShopData.ALCHEMY_RECIPES[eid]["name"] if ShopData.ALCHEMY_RECIPES.has(eid) else str(eid)
+			message.emit("Το %s έληξε." % ename)
+			active_elixirs.erase(eid)
+		if not expired_elixirs.is_empty():
 			_recalc()
 	_rebirth_cd = maxf(_rebirth_cd - delta, 0.0)
 	_crit_notice = maxf(_crit_notice - delta, 0.0)
@@ -1458,11 +1725,35 @@ func buff_time(id: String) -> float:
 			return _pet_buff_time
 		"food":
 			return float(food.get("time", 0.0))
+		"coating":
+			return float(blade_coating.get("time", 0.0))
+		"elixir":
+			var max_e := 0.0
+			for el in active_elixirs:
+				max_e = maxf(max_e, float(active_elixirs[el].get("time", 0.0)))
+			return max_e
 	return 0.0
 
 
 func apply_pet_buff(duration: float = 120.0) -> void:
 	_pet_buff_time = duration
+
+
+func apply_blade_coating(coating_type: String, duration: float, power: float, mods: Dictionary = {}) -> void:
+	blade_coating = {"type": coating_type, "time": duration, "power": power, "mods": mods}
+	if mods.size() > 0:
+		_recalc()
+	Sfx.ui("potion_buff")
+	var c_name := "Έλαιο Φλόγας" if coating_type == "flame_oil" else ("Δηλητηριώδη Επικάλυψη" if coating_type == "poison_coat" else "Έλαιο Παγετού & Προστασίας")
+	message.emit("Εφάρμοσες %s στη λεπίδα σου για %d δευτερόλεπτα!" % [c_name, int(duration)])
+
+
+func apply_elixir(elixir_id: String, duration: float, mods: Dictionary) -> void:
+	active_elixirs[elixir_id] = {"time": duration, "mods": mods}
+	_recalc()
+	Sfx.ui("potion_buff")
+	var e_name: String = ShopData.ALCHEMY_RECIPES[elixir_id]["name"] if ShopData.ALCHEMY_RECIPES.has(elixir_id) else elixir_id
+	message.emit("Ήπιες το %s! Τα αποτελέσματα θα διαρκέσουν %d δευτερόλεπτα." % [e_name, int(duration)])
 
 
 func _damage_mult() -> float:
@@ -1513,6 +1804,7 @@ const SKILL_SOUNDS := {
 	"charge": "skill_dash", "taunt": "skill_shout", "wall": "skill_wall", "frenzy": "skill_frenzy",
 	"leap": "skill_dash", "flame": "skill_flame", "sanctuary": "skill_holy_circle",
 	"thunder_strike": "thunder", "battle_cry": "skill_shout",
+	"power_shot": "skill_lightning", "volley": "arrow_shoot", "fire_arrow": "skill_flame",
 }
 
 
@@ -1534,6 +1826,12 @@ func use_skill(id: String) -> bool:
 	_cooldowns[id] = cooldown_total(id)
 	Sfx.play(SKILL_SOUNDS.get(id, "skill_heavy"), global_position)
 	match id:
+		"power_shot":
+			_fire_ranged_attack("power_shot")
+		"volley":
+			_fire_ranged_attack("volley")
+		"fire_arrow":
+			_fire_ranged_attack("fire_arrow")
 		"power_strike":
 			_start_attack("power_strike")
 		"whirlwind":
@@ -1783,7 +2081,7 @@ func _ring_effect(color: Color, final_radius: float, duration: float, start_heig
 func _update_interaction() -> void:
 	var best: Node = null
 	var best_dist := INF
-	if not busy and not is_dead:
+	if not busy and not is_dead and is_inside_tree():
 		for n in get_tree().get_nodes_in_group("interactables"):
 			var node := n as Node3D
 			if node == null or not node.is_visible_in_tree() or not node.has_method("interact_range") or not node.has_method("interact_prompt"):
@@ -1887,6 +2185,26 @@ func _update_animation() -> void:
 		_horse.set_motion(Vector2(velocity.x, velocity.z).length(), is_on_floor())
 		_play("Sit_Chair_Idle", 0.2)
 		return
+	if is_swimming:
+		var swim_spd := Vector2(velocity.x, velocity.z).length()
+		if swim_spd > 0.4:
+			_play("Walking_A", 0.2, false, 0.8)
+			if _model != null:
+				_model.rotation.x = deg_to_rad(25.0)
+		else:
+			_play("Idle", 0.2)
+			if _model != null:
+				_model.rotation.x = 0.0
+		return
+	elif _model != null and _model.rotation.x != 0.0:
+		_model.rotation.x = 0.0
+	if _aiming:
+		var h_spd := Vector2(velocity.x, velocity.z).length()
+		if h_spd > 0.3:
+			_play("Walking_A", 0.15)
+		else:
+			_play("2H_Ranged_Aiming", 0.15)
+		return
 	if not is_on_floor():
 		# Jump_Start plays on the way up; switch to the looping air pose when it ends or we start falling.
 		if velocity.y < 0.5 or not _anim.is_playing():
@@ -1913,8 +2231,19 @@ func _play(anim_name: String, blend: float = 0.15, restart: bool = false, speed:
 
 
 func _on_animation_finished(anim_name: StringName) -> void:
-	if not _air_attacking and (String(anim_name) in CombatTiming.animations() or anim_name == &"2H_Melee_Attack_Spin" or anim_name == &"Unarmed_Melee_Attack_Kick" or anim_name == &"Block_Attack" or anim_name == &"1H_Melee_Attack_Chop"):
+	if not _air_attacking and (String(anim_name) in CombatTiming.animations() or anim_name == &"2H_Melee_Attack_Spin" or anim_name == &"Unarmed_Melee_Attack_Kick" or anim_name == &"Block_Attack" or anim_name == &"1H_Melee_Attack_Chop" or anim_name == &"2H_Ranged_Shoot" or anim_name == &"1H_Ranged_Shoot"):
 		_attacking = false
 		_kicking = false
 	elif anim_name == &"Jump_Land":
 		_landing = false
+
+
+func is_in_water() -> bool:
+	var pos := global_position if is_inside_tree() else position
+	# South Sea coastal waters and deep ocean
+	if pos.z >= 85.0 and pos.z <= 480.0 and pos.x >= -195.0 and pos.x <= 80.0 and pos.y <= 0.20:
+		return true
+	# Village pond / waterfall pool
+	if pos.y <= 0.10 and pos.distance_to(Vector3(25.0, 0.0, 35.0)) < 15.0:
+		return true
+	return false

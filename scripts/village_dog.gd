@@ -1,33 +1,51 @@
 class_name VillageDog
 extends CharacterBody3D
-## The friendly village dog ("Μούργος"): hangs out around the tavern and village square,
-## greets George with a happy bark and tail wags, can be petted for a speed buff, and trots
-## around the square during the day.
+## Mourgos the loyal Village Dog & Active Animal Companion.
+## - Follows George outdoors across the island.
+## - Detects hidden/buried chests and barks excitedly while pointing to them.
+## - Assists in combat by biting and distracting enemies.
+## - Learns and performs tricks (Sit, Paw Shake, Roll Over, Happy Leap) with affection progression.
+
+signal companion_mode_changed(active: bool)
+signal trick_performed(trick_name: String, affection: int)
+signal treasure_scented(chest_pos: Vector3)
 
 const REST_POS := Vector2(-12.0, 14.0)
+
+var companion_name := "Μούργος"
+var is_active_companion := false
+var is_sitting := false
+var affection_level := 1
 
 var _model: Node3D
 var _tail: Node3D
 var _head: Node3D
 var _ears: Array[Node3D] = []
 var _legs: Array[Node3D] = []
+var _bark_label: Label3D
 var _wag_intensity := 1.0
 var _wag_timer := 0.0
 var _bark_timer := 8.0 + randf() * 14.0
 var _trot_timer := 5.0
 var _target_pos := Vector3(-12.0, 0.0, 14.0)
-var _follow_time := 0.0
 var _anim_clock := 0.0
 
+var _scent_timer := 0.0
+var _attack_cooldown := 0.0
+var _trick_clock := 0.0
+var _current_trick := 0
+var _target_enemy: Enemy = null
 
 func _ready() -> void:
 	name = "Mourgos"
 	add_to_group("interactables")
 	add_to_group("animals")
+	add_to_group("companions")
 	collision_layer = 16
 	collision_mask = 1
 	_build_mesh()
-	_target_pos = global_position
+	_build_bark_label()
+	_target_pos = global_position if is_inside_tree() else position
 
 
 func _build_mesh() -> void:
@@ -157,31 +175,166 @@ func _build_mesh() -> void:
 	add_child(col)
 
 
+func _build_bark_label() -> void:
+	_bark_label = Label3D.new()
+	_bark_label.text = ""
+	_bark_label.font_size = 28
+	_bark_label.pixel_size = 0.0055
+	_bark_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_bark_label.modulate = Color(1.0, 0.9, 0.3)
+	_bark_label.position.y = 1.3
+	_bark_label.visible = false
+	add_child(_bark_label)
+
+
+# =========================================================================
+# COMPANION CONTROLS & TRICKS
+# =========================================================================
+func set_companion(active: bool) -> void:
+	is_active_companion = active
+	is_sitting = false
+	_wag_timer = 4.0
+	if active:
+		Sfx.play("dog_bark", global_position if is_inside_tree() else position)
+		show_bark("Γαβ! Είμαι έτοιμος!")
+	companion_mode_changed.emit(active)
+
+
+func toggle_sitting() -> void:
+	is_sitting = not is_sitting
+	_wag_timer = 2.0
+	if is_sitting:
+		velocity = Vector3.ZERO
+		show_bark("Περιμένω εδώ...")
+	else:
+		show_bark("Σηκώθηκα! Πάμε!")
+
+
+func perform_next_trick(player: Player = null) -> void:
+	var tricks := [
+		{"name": "Κάτσε!", "bark": "Κάθομαι ήσυχα!"},
+		{"name": "Δώσε ποδαράκι!", "bark": "🐾 Δίνω ποδαράκι!"},
+		{"name": "Κάνε τούμπα!", "bark": "🌀 Χαρούμενη τούμπα!"},
+		{"name": "Άλμα χαράς!", "bark": "✨ Άλμα στον αέρα!"}
+	]
+	var trick: Dictionary = tricks[_current_trick % tricks.size()]
+	_current_trick += 1
+	affection_level = mini(affection_level + 1, 10)
+	_wag_timer = 6.0
+	_trick_clock = 1.8
+
+	Sfx.play("dog_whimper", global_position if is_inside_tree() else position)
+	show_bark(trick["bark"])
+
+	if player != null:
+		if player.has_method("apply_pet_buff"):
+			player.call("apply_pet_buff", 180.0)
+		var msg := "Ο %s έκανε το κόλπο: '%s'! (Αγάπη: Lv.%d, +10%% Ταχύτητα)" % [companion_name, trick["name"], affection_level]
+		var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree != null and tree.has_group("hud"):
+			tree.call_group("hud", "show_banner", msg, 3.0)
+		if player.has_signal("message"):
+			player.emit_signal("message", msg)
+
+	trick_performed.emit(trick["name"], affection_level)
+
+
+func show_bark(text: String, duration: float = 3.0) -> void:
+	if _bark_label == null:
+		return
+	_bark_label.text = text
+	_bark_label.visible = true
+	if is_inside_tree() and get_tree() != null:
+		get_tree().create_timer(duration).timeout.connect(func():
+			if is_instance_valid(_bark_label) and _bark_label.text == text:
+				_bark_label.visible = false
+		)
+
+
+# =========================================================================
+# MAIN AI PROCESS (FOLLOWING, SCENT TRACKING, COMBAT ASSIST)
+# =========================================================================
 func _physics_process(delta: float) -> void:
 	_anim_clock += delta
 	_wag_timer = maxf(_wag_timer - delta, 0.0)
-	_follow_time = maxf(_follow_time - delta, 0.0)
+	_scent_timer = maxf(_scent_timer - delta, 0.0)
+	_attack_cooldown = maxf(_attack_cooldown - delta, 0.0)
+	_trick_clock = maxf(_trick_clock - delta, 0.0)
 
-	var cur_wag := 12.0 if _wag_timer > 0.0 else 3.5
-	_tail.rotation.y = sin(_anim_clock * cur_wag) * (0.6 if _wag_timer > 0.0 else 0.25)
-	_head.rotation.z = sin(_anim_clock * 1.5) * 0.08
-	_head.rotation.x = sin(_anim_clock * 2.0) * 0.05
+	var cur_wag := 14.0 if _wag_timer > 0.0 else 3.5
+	if _tail != null:
+		_tail.rotation.y = sin(_anim_clock * cur_wag) * (0.65 if _wag_timer > 0.0 else 0.25)
+	if _head != null:
+		_head.rotation.z = sin(_anim_clock * 1.5) * 0.08
+		_head.rotation.x = sin(_anim_clock * 2.0) * 0.05
 
-	# Bark timer
-	_bark_timer -= delta
-	if _bark_timer <= 0.0:
-		_bark_timer = 20.0 + randf() * 30.0
-		var player := get_tree().get_first_node_in_group("player") as Node3D
-		if player != null and global_position.distance_to(player.global_position) < 22.0:
-			Sfx.play("dog_bark", global_position, -3.0)
+	if not is_inside_tree():
+		return
 
-	# Movement logic
 	var player_node := get_tree().get_first_node_in_group("player") as Node3D
-	if _follow_time > 0.0 and player_node != null:
-		var to_player := player_node.global_position - global_position
-		to_player.y = 0.0
-		if to_player.length() > 3.0:
-			_target_pos = player_node.global_position - to_player.normalized() * 2.2
+
+	# 1. Active Companion Logic
+	if is_active_companion and player_node != null:
+		var p_pos := player_node.global_position
+		var my_pos := global_position
+		var dist_to_player := my_pos.distance_to(p_pos)
+
+		# Extreme distance teleport catch-up
+		if dist_to_player > 50.0:
+			global_position = p_pos + Vector3(1.5, 0.0, 1.5)
+			velocity = Vector3.ZERO
+			return
+
+		if is_sitting or _trick_clock > 0.0:
+			# Stay in sitting posture
+			velocity = Vector3.ZERO
+			if _model != null:
+				_model.position.y = 0.0
+			return
+
+		# Scent detection for hidden chests
+		if _scent_timer <= 0.0:
+			_check_chest_scent(my_pos, player_node as Player)
+
+		# Combat assist
+		if _attack_cooldown <= 0.0:
+			_check_combat_assist(my_pos)
+
+		# Move toward target position
+		if _target_enemy != null and is_instance_valid(_target_enemy) and not _target_enemy.is_dead():
+			_target_pos = _target_enemy.global_position
+		else:
+			_target_enemy = null
+			var offset := Basis(Vector3.UP, player_node.rotation.y) * Vector3(1.6, 0.0, 1.4)
+			_target_pos = p_pos + offset
+
+		var move_vec := _target_pos - my_pos
+		move_vec.y = 0.0
+		var dist := move_vec.length()
+
+		if dist > 0.6:
+			var dir := move_vec.normalized()
+			var speed := 8.2 if dist > 12.0 else (5.6 if dist > 4.5 else 3.6)
+			velocity.x = dir.x * speed
+			velocity.z = dir.z * speed
+			var target_heading := atan2(dir.x, dir.z)
+			rotation.y = lerp_angle(rotation.y, target_heading, 9.0 * delta)
+			# Animate trot
+			for i in _legs.size():
+				var leg := _legs[i]
+				var phase := 1.0 if (i % 2 == 0) else -1.0
+				leg.rotation.x = sin(_anim_clock * (12.0 if speed > 5.0 else 8.0)) * 0.45 * phase
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, 8.0 * delta)
+			velocity.z = move_toward(velocity.z, 0.0, 8.0 * delta)
+			for leg in _legs:
+				leg.rotation.x = move_toward(leg.rotation.x, 0.0, 4.0 * delta)
+
+			# If close to enemy, perform bite assist
+			if _target_enemy != null and dist <= 1.8:
+				_bite_enemy(_target_enemy)
+
+	# 2. Village Roaming / Idle Mode (when not companion)
 	else:
 		_trot_timer -= delta
 		if _trot_timer <= 0.0:
@@ -189,50 +342,107 @@ func _physics_process(delta: float) -> void:
 			var offset := Vector2(randf_range(-6.0, 6.0), randf_range(-6.0, 6.0))
 			_target_pos = Vector3(REST_POS.x + offset.x, 0.0, REST_POS.y + offset.y)
 
-	var move_vec := _target_pos - global_position
-	move_vec.y = 0.0
-	var dist := move_vec.length()
+		var move_vec := _target_pos - global_position
+		move_vec.y = 0.0
+		var dist := move_vec.length()
 
-	if dist > 0.4:
-		var dir := move_vec.normalized()
-		var speed := 3.2 if _follow_time > 0.0 else 1.8
-		velocity.x = dir.x * speed
-		velocity.z = dir.z * speed
-		var target_heading := atan2(dir.x, dir.z)
-		rotation.y = lerp_angle(rotation.y, target_heading, 8.0 * delta)
-		# Leg trot animation
-		for i in _legs.size():
-			var leg := _legs[i]
-			var phase := 1.0 if (i % 2 == 0) else -1.0
-			leg.rotation.x = sin(_anim_clock * 10.0) * 0.4 * phase
-	else:
-		velocity.x = move_toward(velocity.x, 0.0, 8.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, 8.0 * delta)
-		for leg in _legs:
-			leg.rotation.x = move_toward(leg.rotation.x, 0.0, 4.0 * delta)
+		if dist > 0.4:
+			var dir := move_vec.normalized()
+			velocity.x = dir.x * 1.8
+			velocity.z = dir.z * 1.8
+			rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), 8.0 * delta)
+			for i in _legs.size():
+				var leg := _legs[i]
+				var phase := 1.0 if (i % 2 == 0) else -1.0
+				leg.rotation.x = sin(_anim_clock * 8.0) * 0.35 * phase
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, 8.0 * delta)
+			velocity.z = move_toward(velocity.z, 0.0, 8.0 * delta)
+			for leg in _legs:
+				leg.rotation.x = move_toward(leg.rotation.x, 0.0, 4.0 * delta)
 
 	if not is_on_floor():
 		velocity.y -= 19.6 * delta
 	move_and_slide()
 
 
-# ------------------------------------------------------------- interaction ----
+func _check_chest_scent(my_pos: Vector3, player: Player = null, tree_ref: SceneTree = null) -> void:
+	var tree: SceneTree = tree_ref if tree_ref != null else (get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree))
+	if tree == null:
+		return
+	var chests: Array = tree.get_nodes_in_group("chests")
+	if chests.is_empty() and tree.root != null:
+		for n in tree.root.find_children("*", "", true, false):
+			if n.is_in_group("chests") or "opened" in n:
+				chests.append(n)
+	for c in chests:
+		var is_open: bool = bool(c.get("opened")) if ("opened" in c) else false
+		if not is_open:
+			var c_pos: Vector3 = c.global_position if c.is_inside_tree() else c.position
+			var d := my_pos.distance_to(c_pos)
+			if d < 15.0 and d > 2.0:
+				_scent_timer = 24.0
+				_wag_timer = 8.0
+				Sfx.play("dog_bark", global_position if is_inside_tree() else position)
+				show_bark("🐾 Γαβ! (Μυρίστηκα θησαυρό!)")
+				var msg := "Ο %s γάβγισε! Μυρίστηκε κρυμμένο θησαυρό κοντά!" % companion_name
+				if tree.has_group("hud"):
+					tree.call_group("hud", "show_banner", msg, 3.0)
+				if player != null and player.has_signal("message"):
+					player.emit_signal("message", msg)
+				treasure_scented.emit(c_pos)
+				break
 
+
+func _check_combat_assist(my_pos: Vector3) -> void:
+	if not is_inside_tree() or get_tree() == null:
+		return
+	var closest: Enemy = null
+	var min_d := 9.0
+	for e in get_tree().get_nodes_in_group("enemies"):
+		var enemy := e as Enemy
+		if enemy != null and not enemy.is_dead():
+			var d := my_pos.distance_to(enemy.global_position)
+			if d < min_d:
+				min_d = d
+				closest = enemy
+	if closest != null:
+		_target_enemy = closest
+
+
+func _bite_enemy(enemy: Enemy) -> void:
+	_attack_cooldown = 3.5
+	Sfx.play("dog_bark", global_position)
+	show_bark("Γκρρρ! (Δάγκωμα!)", 1.8)
+	var dmg := 12.0 + float(affection_level) * 1.5
+	enemy.take_damage(dmg, global_position, 2.0)
+	_target_enemy = null
+	_wag_timer = 3.0
+
+
+# =========================================================================
+# INTERACTION
+# =========================================================================
 func interact_prompt() -> String:
-	return "Χάιδεψε τον Μούργο [E]"
+	if not is_active_companion:
+		return "[R] Ακολούθησέ με, %s! (Σύντροφος)" % companion_name
+	elif is_sitting:
+		return "[R] Σήκω και ακολούθησέ με, %s" % companion_name
+	return "[R] Κάτσε εδώ και περίμενε, %s" % companion_name
 
 
 func interact_range() -> float:
-	return 2.8
+	return 3.2
 
 
-func interact(player: Node) -> void:
-	_wag_timer = 5.0
-	_follow_time = 35.0
-	Sfx.play("dog_whimper", global_position, -2.0)
-	get_tree().create_timer(0.35).timeout.connect(func():
-		Sfx.play("dog_bark", global_position, -2.0)
-	)
-	if player.has_method("apply_pet_buff"):
-		player.call("apply_pet_buff", 120.0)
-	get_tree().call_group("hud", "show_banner", "Ο Μούργος κουνάει χαρούμενος την ουρά του! (+10% ταχύτητα)", 3.0)
+func interact(player: Player) -> void:
+	if not is_active_companion:
+		set_companion(true)
+		if player != null:
+			player.message.emit("Ο %s είναι πλέον ο πιστός σου σύντροφος!" % companion_name)
+	else:
+		# Toggle sit / follow or perform trick
+		if Input.is_action_pressed("jump") or Input.is_action_pressed("block"):
+			toggle_sitting()
+		else:
+			perform_next_trick(player)

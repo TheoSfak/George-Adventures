@@ -63,7 +63,9 @@ func open(shop_id: String, player: Player) -> void:
 		return
 	_shop_id = shop_id
 	_player = player
-	_tab = "buy"
+	var shop: Dictionary = ShopData.SHOPS.get(shop_id, {})
+	var is_alchemy: bool = shop.get("kind", "") == "alchemy"
+	_tab = "alchemy" if is_alchemy else "buy"
 	_open_time = Time.get_ticks_msec() / 1000.0
 	player.busy = true
 	visible = true
@@ -101,16 +103,24 @@ func _refresh() -> void:
 		c.queue_free()
 	var kitchen: bool = shop.get("kind", "") == "kitchen"
 	var is_forge: bool = _shop_id in ["blacksmith", "ash_forge"]
-	_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
+	var is_alchemy: bool = shop.get("kind", "") == "alchemy" or _shop_id == "andreas_herbs"
+	if is_alchemy:
+		_tabs.add_child(UiKit.tab_button("Αλχημεία", _tab == "alchemy", _set_tab.bind("alchemy")))
+	if not (shop.get("kind", "") == "alchemy"):
+		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_MEALS if kitchen else Strings.SHOP_BUY, _tab == "buy", _set_tab.bind("buy")))
 	var stable: bool = shop.get("kind", "") == "stable"
-	if not stable:
+	if not stable and not (shop.get("kind", "") == "alchemy"):
 		_tabs.add_child(UiKit.tab_button(Strings.KITCHEN_TAB_COOK if kitchen else Strings.SHOP_SELL, _tab == "sell" or _tab == "cook", _set_tab.bind("cook" if kitchen else "sell")))
+	elif is_alchemy and shop.get("kind", "") == "alchemy":
+		_tabs.add_child(UiKit.tab_button(Strings.SHOP_SELL, _tab == "sell", _set_tab.bind("sell")))
 	if is_forge:
 		_tabs.add_child(UiKit.tab_button(Strings.SHOP_TAB_UPGRADE, _tab == "upgrade", _set_tab.bind("upgrade")))
 	for c in _list.get_children():
 		c.queue_free()
 	if kitchen:
 		_build_kitchen_rows()
+	elif _tab == "alchemy":
+		_build_alchemy_rows()
 	elif _tab == "upgrade" and is_forge:
 		_build_upgrade_rows()
 	elif _tab == "buy" or stable:
@@ -427,4 +437,47 @@ func _upgrade_row(slot: String) -> Control:
 func _on_upgrade_click(slot: String) -> void:
 	_player.upgrade_gear(slot)
 	_refresh()
+
+
+# ------------------------------------------------------------------- alchemy ----
+
+func _build_alchemy_rows() -> void:
+	for recipe_id in ShopData.ALCHEMY_RECIPES:
+		_list.add_child(_alchemy_row(recipe_id))
+
+
+func _alchemy_row(recipe_id: String) -> Control:
+	var rec: Dictionary = ShopData.ALCHEMY_RECIPES[recipe_id]
+	var cost: Dictionary = rec.get("cost", {})
+	var ok: bool = ShopData.can_brew(recipe_id, _player.gold, _player.junk)
+	var b := UiKit.button("Παρασκευή", _brew.bind(recipe_id), 120)
+	b.disabled = not ok
+
+	var lines: Array[String] = []
+	if rec.has("mods") and rec["mods"].size() > 0:
+		lines.append("[color=#8cf27f]%s[/color]" % Stats.describe(rec["mods"]))
+	lines.append("[color=#c9b98a]Διάρκεια: %d λεπτά[/color]" % roundi(float(rec["duration"]) / 60.0))
+
+	var ing_text_parts: Array[String] = []
+	var ings: Dictionary = cost.get("ingredients", {})
+	for ing in ings:
+		var needed: int = int(ings[ing])
+		var have: int = int(_player.junk.get(ing, 0))
+		var iname: String = ShopData.JUNK[ing]["name"] if ShopData.JUNK.has(ing) else ing
+		if have < needed:
+			ing_text_parts.append("[color=#ff7366]%s: %d/%d[/color]" % [iname, have, needed])
+		else:
+			ing_text_parts.append("[color=#c9b98a]%s: %d/%d[/color]" % [iname, have, needed])
+
+	lines.append("Υλικά: " + ", ".join(ing_text_parts))
+	var gold_cost: int = int(cost.get("gold", 0))
+	var icon_name: String = str(rec.get("icon", "potion"))
+	var icon_color: Color = rec.get("color", Color(0.8, 0.9, 0.4))
+	return _row(icon_name, icon_color, rec["name"], rec["desc"], "\n".join(lines),
+		Strings.SHOP_PRICE % gold_cost, _player.gold >= gold_cost, [b])
+
+
+func _brew(recipe_id: String) -> void:
+	if ShopData.brew_recipe(recipe_id, _player):
+		_refresh()
 

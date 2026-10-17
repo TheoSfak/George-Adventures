@@ -591,8 +591,9 @@ func take_damage(amount: float, from: Vector3, knock: float = 5.0) -> void:
 		if _state == State.DEAD:
 			return
 	health -= amount / LevelScaling.health_mult(player_level())   # above level 20 the world is tougher (level_scaling.gd)
-	_bar.visible = true
-	_update_health_bar()
+	if _bar != null:
+		_bar.visible = true
+		_update_health_bar()
 	var away := _flat(global_position - from)
 	if away.length() < 0.01:
 		away = Vector3.BACK
@@ -744,7 +745,9 @@ func _voice(skeleton_sound: String) -> String:
 func player_level() -> int:
 	var p := _player
 	if p == null:
-		p = get_tree().get_first_node_in_group("player") as Player
+		var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+		if tree != null:
+			p = tree.get_first_node_in_group("player") as Player
 	return p.level if p != null else 1
 
 

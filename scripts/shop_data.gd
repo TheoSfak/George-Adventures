@@ -111,6 +111,46 @@ const GEAR := {
 		"name": "Δίδυμα Σπαθιά της Στάχτης", "slot": "weapon", "weapon_type": "dual", "tier": 9, "level": 40, "price": 52000,
 		"mods": {"damage_add": 95, "attack_speed": 0.35, "crit": 0.20, "lifesteal": 0.08}, "desc": "Δύο φλεγόμενες λεπίδες που κατακαίνε τους αντιπάλους σε μια θύελλα χτυπημάτων.",
 	},
+	"bow_1": {
+		"name": "Κυνηγετικό Τόξο", "slot": "weapon", "weapon_type": "bow", "tier": 1, "level": 1, "price": 60,
+		"mods": {"damage_add": 5, "crit": 0.04}, "desc": "Απλό ξύλινο τόξο από ξύλο καρυδιάς, κατάλληλο για αρχάριους τοξότες.",
+	},
+	"crossbow_1": {
+		"name": "Ελαφριά Βαλλίστρα", "slot": "weapon", "weapon_type": "crossbow", "tier": 2, "level": 5, "price": 240,
+		"mods": {"damage_add": 11, "crit": 0.06}, "desc": "Μηχανική βαλλίστρα με ατσάλινη σκανδάλη και γρήγορο όπλισμα.",
+	},
+	"bow_2": {
+		"name": "Μακρύ Τόξο του Ιχνηλάτη", "slot": "weapon", "weapon_type": "bow", "tier": 3, "level": 10, "price": 650,
+		"mods": {"damage_add": 18, "crit": 0.08, "attack_speed": 0.05}, "desc": "Βαθύ καμπυλωτό μακρύ τόξο των αρχαίων ιχνηλατών του νησιού.",
+	},
+	"crossbow_2": {
+		"name": "Βαριά Πολεμική Βαλλίστρα", "slot": "weapon", "weapon_type": "crossbow", "tier": 4, "level": 15, "price": 1600,
+		"mods": {"damage_add": 28, "crit": 0.10, "lifesteal": 0.03}, "desc": "Βαριά στρατιωτική βαλλίστρα που διαπερνά σιδερένιους θώρακες.",
+	},
+	"bow_3": {
+		"name": "Τόξο της Αυγής", "slot": "weapon", "weapon_type": "bow", "tier": 5, "level": 20, "price": 3800,
+		"mods": {"damage_add": 39, "crit": 0.12, "attack_speed": 0.08}, "desc": "Ευλογημένο με το πρώτο χρυσό φως της αυγής, τα βέλη του λάμπουν.",
+	},
+	"crossbow_3": {
+		"name": "Βαλλίστρα της Καταιγίδας", "slot": "weapon", "weapon_type": "crossbow", "tier": 6, "level": 25, "price": 7500,
+		"mods": {"damage_add": 52, "crit": 0.14, "lifesteal": 0.05}, "desc": "Εκτοξεύει βέλη φορτισμένα με την ορμή κεραυνού.",
+	},
+	"bow_4": {
+		"name": "Τόξο του Ήλιου", "slot": "weapon", "weapon_type": "bow", "tier": 7, "level": 30, "price": 15000,
+		"mods": {"damage_add": 66, "crit": 0.16, "attack_speed": 0.12}, "desc": "Χρυσό τόξο που πυρακτώνει τα βέλη κατά την πτήση.",
+	},
+	"bow_5": {
+		"name": "Τόξο του Ουρανού", "slot": "weapon", "weapon_type": "bow", "tier": 8, "level": 35, "price": 28000,
+		"mods": {"damage_add": 84, "crit": 0.18, "attack_speed": 0.15}, "desc": "Φτιαγμένο από ουράνιο μέταλλο, τα βέλη του σχίζουν τον αέρα αθόρυβα.",
+	},
+	"crossbow_4": {
+		"name": "Ουράνια Βαλλίστρα των Αρχαγγέλων", "slot": "weapon", "weapon_type": "crossbow", "tier": 9, "level": 40, "price": 48000,
+		"mods": {"damage_add": 105, "crit": 0.20, "lifesteal": 0.08}, "desc": "Ιερή βαλλίστρα των αρχαγγέλων που εξαπολύει ουράνια δικαιοσύνη.",
+	},
+	"bow_6": {
+		"name": "Τόξο της Αιώνιας Φλόγας", "slot": "weapon", "weapon_type": "bow", "tier": 10, "level": 40, "price": 62000,
+		"mods": {"damage_add": 130, "crit": 0.24, "lifesteal": 0.10, "attack_speed": 0.18}, "desc": "Σφυρηλατημένο από τον Δαμιανό με ηφαιστειακή στάχτη. Κάθε βέλος γίνεται πύρινη καταιγίδα.",
+	},
 	"armor_5": {
 		"name": "Πανοπλία της Αυγής", "slot": "armor", "tier": 5, "level": 20, "price": 3500,
 		"mods": {"hp_add": 240, "defense": 0.28, "regen": 1.5}, "desc": "Ελαφριά σαν πρωινή ομίχλη, σκληρή σαν βράχος.",
@@ -199,6 +239,15 @@ const JUNK := {
 		"fish": true, "rarity": "rare", "zone": 0.12, "speed": 1.20, "weight": 1.5},
 	"king": {"name": "Ο Βασιλιάς της Λίμνης", "price": 150, "color": Color(1.0, 0.78, 0.30), "icon": "fish", "desc": "Ο γέρο-Γιάννης λέει πως τον είδε πριν πενήντα χρόνια.",
 		"fish": true, "rarity": "legendary", "zone": 0.07, "speed": 1.60, "weight": 0.5},
+	# --- Wild Flora Reagents for Alchemy & Herb Brewing ---
+	"waterlily": {"name": "Άγριο Νούφαρο", "price": 12, "color": Color(0.40, 0.90, 0.95), "icon": "star",
+		"desc": "Λευκό νούφαρο που επιπλέει στα ρηχά νερά της λίμνης και της νότιας θάλασσας. Βασικό για δροσιστικά έλαια.", "material": true},
+	"reed": {"name": "Καλάμι του Ποταμού", "price": 8, "color": Color(0.55, 0.85, 0.35), "icon": "arrow",
+		"desc": "Ανθεκτικό καλάμι από τις όχθες του ποταμού. Περιέχει εκχυλίσματα για δηλητηριώδεις επικαλύψεις.", "material": true},
+	"mountain_herb": {"name": "Ορεινό Βότανο", "price": 15, "color": Color(0.85, 0.50, 0.95), "icon": "potion",
+		"desc": "Αρωματικό βότανο των ψηλών βράχων και των ερειπίων. Χαρίζει αντοχή και δύναμη πέτρινης σάρκας.", "material": true},
+	"autumn_cone": {"name": "Χρυσαφένιο Κουκουνάρι", "price": 10, "color": Color(0.95, 0.65, 0.20), "icon": "sun",
+		"desc": "Κουκουνάρι από τα πεύκα του Χρυσού Άλσους. Εκλύει θερμή ρητίνη απαραίτητη για έλαια φλόγας.", "material": true},
 }
 
 const RARITY_ORDER: Array[String] = ["common", "uncommon", "rare", "legendary"]
@@ -241,6 +290,65 @@ const MEALS := {
 	},
 }
 
+## Alchemy brewing recipes crafted at Andreas' alchemy bench in the village square.
+## Reagents gathered from wild flora across the island (waterlilies, reeds, mountain herbs, autumn cones).
+const ALCHEMY_RECIPES := {
+	"flame_oil": {
+		"name": "Έλαιο Φλόγας",
+		"category": "coating",
+		"icon": "flame",
+		"color": Color(1.0, 0.45, 0.15),
+		"desc": "Επικάλυψη όπλου: προσθέτει +8 ζημιά φωτιάς σε κάθε χτύπημα για 5 λεπτά.",
+		"duration": 300.0,
+		"coating_type": "flame_oil",
+		"coating_damage": 8.0,
+		"cost": {"gold": 15, "ingredients": {"mountain_herb": 1, "autumn_cone": 1}},
+	},
+	"poison_coat": {
+		"name": "Δηλητηριώδης Επικάλυψη",
+		"category": "coating",
+		"icon": "potion",
+		"color": Color(0.40, 0.90, 0.35),
+		"desc": "Επικάλυψη όπλου: προκαλεί συνεχή ζημιά δηλητηρίου στους εχθρούς (+5 ζημιά) για 5 λεπτά.",
+		"duration": 300.0,
+		"coating_type": "poison_coat",
+		"coating_damage": 5.0,
+		"cost": {"gold": 20, "ingredients": {"reed": 2, "waterlily": 1}},
+	},
+	"frost_ward": {
+		"name": "Έλαιο Παγετού & Προστασίας",
+		"category": "coating",
+		"icon": "shield",
+		"color": Color(0.45, 0.85, 1.0),
+		"desc": "Ψυχρή επάλειψη λεπίδας: επιβραδύνει τους εχθρούς και ενισχύει την άμυνα κατά +15% για 5 λεπτά.",
+		"duration": 300.0,
+		"coating_type": "frost_ward",
+		"coating_damage": 6.0,
+		"mods": {"defense": 0.15},
+		"cost": {"gold": 25, "ingredients": {"waterlily": 2, "autumn_cone": 1}},
+	},
+	"elixir_stone": {
+		"name": "Ελιξίριο Πέτρινης Σάρκας",
+		"category": "elixir",
+		"icon": "tower",
+		"color": Color(0.85, 0.75, 0.55),
+		"desc": "Πυκνό αφέψημα που σκληραίνει το σώμα: +60 μέγιστη υγεία και +2.0 αναγέννηση ζωής/δευτερόλεπτο για 8 λεπτά.",
+		"duration": 480.0,
+		"mods": {"hp_add": 60, "regen": 2.0},
+		"cost": {"gold": 30, "ingredients": {"mountain_herb": 2, "reed": 1}},
+	},
+	"elixir_swiftness": {
+		"name": "Ελιξίριο Ανεμοστρόβιλου",
+		"category": "elixir",
+		"icon": "whirl",
+		"color": Color(0.40, 0.95, 0.85),
+		"desc": "Ελαφρύ ελιξίριο από νούφαρα και καλάμια: +20% ταχύτητα κίνησης και κολύμβησης για 8 λεπτά.",
+		"duration": 480.0,
+		"mods": {"speed_mult": 0.20},
+		"cost": {"gold": 30, "ingredients": {"waterlily": 1, "reed": 2, "mountain_herb": 1}},
+	},
+}
+
 ## Stock lines: {"type": "item" | "gear", "id", "price" (items only), "level" (items only)}
 const SHOPS := {
 	"market": {
@@ -280,6 +388,26 @@ const SHOPS := {
 			{"type": "gear", "id": "armor_8"}, {"type": "gear", "id": "armor_9"},
 			{"type": "gear", "id": "shield_5"}, {"type": "gear", "id": "shield_6"}, {"type": "gear", "id": "shield_7"},
 			{"type": "gear", "id": "shield_8"}, {"type": "gear", "id": "shield_9"},
+		],
+		"buys": "gear",
+	},
+	"archery": {
+		"title": "Οπλοστάσιο Τοξοβολίας",
+		"keeper": "Δημήτρης ο Τοξότης",
+		"greeting": [
+			"Καλώς όρισες στο πεδίο τοξοβολίας, Γιώργο! Ένα καλό τόξο κι ένα κοφτερό μάτι σώζουν ζωές πριν καν πλησιάσει ο εχθρός.",
+		],
+		"stock": [
+			{"type": "gear", "id": "bow_1"},
+			{"type": "gear", "id": "crossbow_1"},
+			{"type": "gear", "id": "bow_2"},
+			{"type": "gear", "id": "crossbow_2"},
+			{"type": "gear", "id": "bow_3"},
+			{"type": "gear", "id": "crossbow_3"},
+			{"type": "gear", "id": "bow_4"},
+			{"type": "gear", "id": "bow_5"},
+			{"type": "gear", "id": "crossbow_4"},
+			{"type": "gear", "id": "bow_6"},
 		],
 		"buys": "gear",
 	},
@@ -338,6 +466,17 @@ const SHOPS := {
 			{"type": "item", "id": "power", "price": 45},
 			{"type": "item", "id": "speed", "price": 35},
 		],
+		"buys": "junk",
+	},
+	# Andreas' alchemy bench in the village square
+	"andreas_alchemy": {
+		"title": "Πάγκος Αλχημείας του Αντρέα",
+		"keeper": "Αντρέας",
+		"kind": "alchemy",
+		"greeting": [
+			"Καλώς όρισες στον πάγκο αλχημείας, Γιώργο! Με τα σπάνια αγριολούλουδα του νησιού μπορούμε να παρασκευάσουμε ισχυρά έλαια λεπίδας και ελιξίρια!",
+		],
+		"stock": [],
 		"buys": "junk",
 	},
 	# Traveling merchant wandering the island
@@ -548,5 +687,51 @@ static func can_upgrade_slot(slot: String, current_level: int, gold: int, junk: 
 	var mat: String = cost["material"]
 	if int(junk.get(mat, 0)) < int(cost["count"]):
 		return false
+	return true
+
+
+static func can_brew(recipe_id: String, gold: int, junk: Dictionary) -> bool:
+	if not ALCHEMY_RECIPES.has(recipe_id):
+		return false
+	var recipe: Dictionary = ALCHEMY_RECIPES[recipe_id]
+	var cost: Dictionary = recipe.get("cost", {})
+	if gold < int(cost.get("gold", 0)):
+		return false
+	var ingredients: Dictionary = cost.get("ingredients", {})
+	for ing in ingredients:
+		var needed: int = int(ingredients[ing])
+		if int(junk.get(ing, 0)) < needed:
+			return false
+	return true
+
+
+static func brew_recipe(recipe_id: String, player: Player) -> bool:
+	if not ALCHEMY_RECIPES.has(recipe_id) or player == null:
+		return false
+	var recipe: Dictionary = ALCHEMY_RECIPES[recipe_id]
+	if not can_brew(recipe_id, player.gold, player.junk):
+		return false
+	var cost: Dictionary = recipe.get("cost", {})
+	var gold_cost: int = int(cost.get("gold", 0))
+	player.gold -= gold_cost
+	var ingredients: Dictionary = cost.get("ingredients", {})
+	for ing in ingredients:
+		var needed: int = int(ingredients[ing])
+		player.junk[ing] = int(player.junk.get(ing, 0)) - needed
+		if int(player.junk[ing]) <= 0:
+			player.junk.erase(ing)
+
+	var duration: float = float(recipe.get("duration", 300.0))
+	var cat: String = recipe.get("category", "")
+	if cat == "coating":
+		var c_type: String = recipe.get("coating_type", recipe_id)
+		var c_dmg: float = float(recipe.get("coating_damage", 6.0))
+		var mods: Dictionary = recipe.get("mods", {})
+		player.apply_blade_coating(c_type, duration, c_dmg, mods)
+	elif cat == "elixir":
+		var mods: Dictionary = recipe.get("mods", {})
+		player.apply_elixir(recipe_id, duration, mods)
+
+	player.inventory_changed.emit(player.gold, player.potions)
 	return true
 

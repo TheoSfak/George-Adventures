@@ -97,6 +97,8 @@ static func save() -> bool:
 	var rescue := tree.get_first_node_in_group("rescue")
 	var spawner := tree.get_first_node_in_group("enemy_spawner")
 	var invasion := tree.get_first_node_in_group("invasion")
+	var q := _quests_node()
+	var quests_dict: Dictionary = {"state": q.state, "progress": q.progress, "intro_seen": q.intro_seen} if q != null else {}
 	var data := {
 		"version": VERSION,
 		"saved_at": Time.get_datetime_string_from_system(false, true),
@@ -116,7 +118,7 @@ static func save() -> bool:
 		"rescue": rescue.save_data() if rescue != null else {},
 		"enemies": spawner.save_data() if spawner != null else {},
 		"invasion": invasion.save_data() if invasion != null else {},
-		"quests": {"state": Quests.state, "progress": Quests.progress, "intro_seen": Quests.intro_seen},
+		"quests": quests_dict,
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
 			"day": daynight.day_number if daynight else 1,
@@ -222,19 +224,21 @@ static func apply(d: Dictionary) -> void:
 	player.gear_changed.emit()
 	player._announce()
 
-	var qd: Dictionary = d["quests"]
-	for id in qd["state"]:
-		if Quests.state.has(id):
-			Quests.state[id] = int(qd["state"][id])
-	for id in qd["progress"]:
-		if Quests.progress.has(id):
-			var arr: Array = qd["progress"][id]
-			for i in arr.size():
-				if i < Quests.progress[id].size():
-					Quests.progress[id][i] = int(arr[i])
-	Quests._refresh_availability()    # quests added after the save was made (story part 2) unlock
-	Quests.intro_seen = bool(qd.get("intro_seen", true))
-	Quests.changed.emit()
+	var qd: Dictionary = d.get("quests", {})
+	var q := _quests_node()
+	if q != null and not qd.is_empty():
+		for id in qd.get("state", {}):
+			if q.state.has(id):
+				q.state[id] = int(qd["state"][id])
+		for id in qd.get("progress", {}):
+			if q.progress.has(id):
+				var arr: Array = qd["progress"][id]
+				for i in arr.size():
+					if i < q.progress[id].size():
+						q.progress[id][i] = int(arr[i])
+		q._refresh_availability()    # quests added after the save was made (story part 2) unlock
+		q.intro_seen = bool(qd.get("intro_seen", true))
+		q.changed.emit()
 	var rescue := tree.get_first_node_in_group("rescue")
 	if rescue != null:
 		rescue.load_data(d.get("rescue", {}))
@@ -263,3 +267,10 @@ static func apply(d: Dictionary) -> void:
 	for item in tree.get_nodes_in_group("quest_items"):
 		if collected_items.has("%s@%s" % [item.get("item_id"), key_for(item.global_position)]):
 			item.queue_free()
+
+
+static func _quests_node() -> Node:
+	var ml := Engine.get_main_loop() as SceneTree
+	if ml != null and ml.root != null:
+		return ml.root.get_node_or_null("Quests")
+	return null

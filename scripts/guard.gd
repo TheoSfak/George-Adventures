@@ -17,6 +17,8 @@ const ATTACKS: Array[String] = ["1H_Melee_Attack_Slice_Diagonal", "1H_Melee_Atta
 
 var home := Vector3.ZERO
 var damage := 10.0
+var follow_player := false
+var guard_name := ""
 
 var _model_root: Node3D
 var _anim: AnimationPlayer
@@ -65,7 +67,7 @@ func _ready() -> void:
 				_anim.get_animation(a).loop_mode = Animation.LOOP_LINEAR
 		_anim.play("Idle")
 	var tag := Label3D.new()
-	tag.text = Strings.GUARD_NAME
+	tag.text = guard_name if guard_name != "" else Strings.GUARD_NAME
 	tag.font_size = 40
 	tag.pixel_size = 0.0068
 	tag.outline_size = 12
@@ -119,10 +121,15 @@ func _physics_process(delta: float) -> void:
 			if _cooldown <= 0.0:
 				_start_swing()
 	else:
-		var back := home - global_position
+		var target_pos := home
+		if follow_player and is_inside_tree():
+			var p := get_tree().get_first_node_in_group("player") as Node3D
+			if p != null:
+				target_pos = p.global_position
+		var back := target_pos - global_position
 		back.y = 0.0
-		if back.length() > 1.2:
-			wanted = _steer(_nav.direction(global_position, home, CLEARANCE, delta)) * SPEED * 0.7
+		if back.length() > (2.5 if follow_player else 1.2):
+			wanted = _steer(_nav.direction(global_position, target_pos, CLEARANCE, delta)) * SPEED * (1.1 if follow_player else 0.7)
 			anim = "Running_A"
 			_face(wanted if (_detour_time > 0.0 or _nav.active) else back, delta)
 	velocity.x = move_toward(velocity.x, wanted.x, 40.0 * delta)

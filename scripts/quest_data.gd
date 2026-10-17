@@ -14,7 +14,7 @@ class_name QuestData
 
 ## Creatures that are not skeletons: the totems, the creatures made from props and the people of the cult. The bandits are
 ## told apart by their name (`bandit_...`). The quests that ask for "skeletons" (target "skeleton") count every other kill.
-const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider"]
+const NOT_SKELETONS: Array[String] = ["totem", "pumpkin", "haunted_tree", "golem", "bone_heap", "mimic", "cultist", "cult_priest", "magma_golem", "dark_knight", "witch", "thief", "raider", "cursed_coffin", "ash_lord", "cursed_scarecrow", "cinder_guardian", "cinder_archon", "orc_warrior", "orc_berserker", "orc_warlord", "wolf", "spider", "warband_totem", "orc_catapult"]
 
 
 static func is_skeleton(kind: String) -> bool:
@@ -81,7 +81,7 @@ const NPCS := {
 	"giannis": {
 		"name": "Γέρο-Γιάννης",
 		"model": "res://assets/characters/Rogue_Hooded.glb",
-		"show": ["Knife"],
+		"show": ["1H_Axe"],
 		"idle": [
 			"Πενήντα χρόνια κόβω ξύλα εδώ, και ποτέ δεν είδα τέτοια νύχτα.",
 			"Το δάσος ξέρει. Τα δέντρα ψιθυρίζουν για τον Βασιλιά των Οστών.",
@@ -224,6 +224,7 @@ const NPCS := {
 		"name": "Δημήτρης ο Τοξότης",
 		"model": "res://assets/characters/Rogue.glb",
 		"show": ["2H_Crossbow"],
+		"shop": "archery",
 		"idle": [
 			"Στο πεδίο τοξοβολίας εκπαιδεύουμε τους φρουρούς. Ένα βέλος στα μάτια σταματάει ακόμα και τα όρκ.",
 			"Οι λύκοι στο άλσος των χρυσών πεύκων έχουν αγριέψει από τότε που πλησίασαν τα όρκ.",
@@ -1062,5 +1063,47 @@ const QUESTS := {
 			"Το άλσος είναι πάλι ασφαλές! Τώρα οι χωρικοί μπορούν να θαυμάσουν τα χρυσά πεύκα με ασφάλεια. Ορίστε η αμοιβή σου.",
 		],
 		"reward": {"xp": 150, "gold": 80, "potions": 1},
+	},
+	"orc_totems": {
+		"title": "Τα Τοτέμ του Πολέμου",
+		"giver": "vasilis",
+		"turn_in": "vasilis",
+		"requires": ["orc_raid"],
+		"objectives": [
+			{"type": "kill", "target": "warband_totem", "count": 3, "text": "Κατάστρεψε 3 Τοτέμ της Πολεμικής Συμμορίας"},
+			{"type": "kill", "target": "orc_catapult", "count": 1, "text": "Αχρήστευσε τον πολιορκητικό καταπέλτη των Όρκ"},
+		],
+		"offer": [
+			"Γιώργο, η κατάσταση στο ανατολικό προπύργιο είναι κρίσιμη! Τα Όρκ έχουν στήσει τρία ματωμένα τοτέμ που τους δίνουν δαιμονική λύσσα στη μάχη.",
+			"Επίσης, έστησαν έναν βαρύ καταπέλτη στραμμένο προς τις πύλες του χωριού μας. Πρέπει να διεισδύσεις, να σπάσεις τα τοτέμ και να αχρηστεύσεις τον καταπέλτη!",
+		],
+		"progress": [
+			"Τρία ματωμένα τοτέμ και ένας καταπέλτης στο προπύργιο, Γιώργο! Μην τους αφήσεις να χτυπήσουν το χωριό!",
+		],
+		"complete": [
+			"Εξαιρετική δουλειά, παλικάρι μου! Τα τοτέμ έπεσαν και ο καταπέλτης κάπνισε. Η συμμορία είναι αποδιοργανωμένη!",
+		],
+		"reward": {"xp": 450, "gold": 250, "potions": 2},
+	},
+	"orc_siege": {
+		"title": "Η Πολιορκία του Προπυργίου",
+		"giver": "vasilis",
+		"turn_in": "vasilis",
+		"requires": ["orc_totems"],
+		"objectives": [
+			{"type": "kill", "target": "orc_warlord", "count": 1, "text": "Σάλπισε την έφοδο και νίκησε τον Πολέμαρχο Γκρομ'γκαρ"},
+		],
+		"offer": [
+			"Ήρθε η ώρα της τελικής αντεπίθεσης, Γιώργο! Οι Φρουροί του Αγίου Βλάση είναι παρατεταγμένοι και έτοιμοι για μάχη.",
+			"Πήγαινε στο προκεχωρημένο φυλάκιο, σάλπισε την επίθεση με το πολεμικό κέρας και οι φρουροί θα ορμήσουν μαζί σου για να διασπάσουν το οχυρό!",
+			"Μπείτε στο εσωτερικό άδυτο και συντρίψτε τον ίδιο τον Πολέμαρχο Γκρομ'γκαρ!",
+		],
+		"progress": [
+			"Σάλπισε την έφοδο έξω από τα ερείπια. Οι φρουροί θα πολεμήσουν στο πλευρό σου μέχρι να πέσει ο Γκρομ'γκαρ!",
+		],
+		"complete": [
+			"Νίκη! Ο Γκρομ'γκαρ έπεσε και το προπύργιο απελευθερώθηκε οριστικά! Ο Άγιος Βλάσης υποκλίνεται στη γενναιότητά σου!",
+		],
+		"reward": {"xp": 1200, "gold": 750, "potions": 4, "damage": 4},
 	},
 }

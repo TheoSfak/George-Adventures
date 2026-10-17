@@ -19,18 +19,26 @@ const RED := Color(0.9, 0.2, 0.15)
 # [Strings.MAP_PLACES key, x, z, optional label offset in px] places named on the big map
 const PLACES := [
 	["church", 0.0, -59.0], ["tavern", -59.0, -9.8], ["market", 59.0, -11.5], ["smith", -93.5, 29.5],
-	["mill", 95.1, 39.4], ["windmill", -100.0, -54.1], ["tower", 95.1, -78.7], ["well", 0.0, 0.0],
+	["mill", 88.0, 32.0], ["windmill", -100.0, -54.1], ["tower", 95.1, -78.7], ["well", 0.0, 0.0],
 	["camp", -175.0, 20.0, -24.0], ["quarry", 140.0, 125.0], ["crypt", 0.0, -178.0], ["bigtree", 172.0, -40.0],
 	["stable", 63.0, 53.0], ["bandits", -140.0, -90.0], ["cult", -80.0, -140.0],
 	["lighthouse", -115.0, 138.0], ["harbor", -35.0, 126.0], ["waterfall", 48.0, -132.0],
 	["bridge_meadow", 70.0, -66.0], ["highlands", 82.0, -155.0], ["shipwreck", -72.0, 168.0],
-	["cliffs", 64.0, 160.0],
+	["cliffs", 64.0, 160.0], ["barracks", 78.0, -84.0], ["orc_stronghold", 150.0, 68.0],
+	["golden_grove", 55.0, 25.0], ["grotto", -15.0, 142.0],
 ]
-const SHOPS := [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)]
+const SHOPS := [
+	Vector2(59.0, -11.5), Vector2(-93.5, 29.5),
+	Vector2(78.0, -84.0), Vector2(-4.8, 9.2), Vector2(63.0, 53.0),
+]
 const BOSS_AREAS := {
 	"captain": Vector2(142.0, 128.0), "king": Vector2(0.0, -190.0),
 	"bandit_chief": Vector2(-140.0, -98.0), "bandit": Vector2(-140.0, -90.0),
 	"cult_priest": Vector2(-80.0, -147.0), "cultist": Vector2(-80.0, -140.0),
+	"orc_warlord": Vector2(150.0, 68.0), "orc": Vector2(150.0, 68.0),
+	"warband_totem": Vector2(150.0, 68.0), "orc_catapult": Vector2(145.0, 79.0),
+	"wolf": Vector2(55.0, 25.0), "spider": Vector2(140.0, 125.0),
+	"brute": Vector2(140.0, 125.0), "cursed_scarecrow": Vector2(-95.0, -50.0),
 }
 
 const REGION_DATA := {
@@ -40,7 +48,7 @@ const REGION_DATA := {
 		"center_offset": Vector2.ZERO,
 		"half": 300.0,
 		"bg_color": Color(0.12, 0.17, 0.11),
-		"shops": [Vector2(59.0, -11.5), Vector2(-93.5, 29.5)],
+		"shops": SHOPS,
 		"places": PLACES,
 		"boss_areas": BOSS_AREAS,
 	},
@@ -60,6 +68,9 @@ const REGION_DATA := {
 		"boss_areas": {
 			"giant_skeleton": Vector2(0.0, -128.0),
 			"malakar": Vector2(0.0, -156.0),
+			"shadow_knight": Vector2(0.0, -80.0),
+			"soul_collector": Vector2(0.0, -80.0),
+			"raider": Vector2(0.0, 40.0),
 		},
 	},
 	"ashvalley": {
@@ -78,6 +89,8 @@ const REGION_DATA := {
 		"boss_areas": {
 			"ash_lord": Vector2(52.0, -82.0),
 			"pyrforos": Vector2(0.0, -166.0),
+			"cinder_guardian": Vector2(0.0, -175.0),
+			"cinder_archon": Vector2(0.0, -192.0),
 		},
 	},
 }
@@ -324,7 +337,7 @@ func _draw_enemies(reg: String, cfg: Dictionary) -> void:
 		if not _inside_world(e.global_position):
 			continue
 		var kind: String = e.get("kind_id")
-		var boss := kind in ["captain", "king", "warlord", "night_lord", "bandit_chief", "cult_priest", "giant_skeleton", "malakar", "pyrforos", "ash_lord"]
+		var boss := kind in ["captain", "king", "warlord", "orc_warlord", "night_lord", "bandit_chief", "cult_priest", "giant_skeleton", "malakar", "pyrforos", "ash_lord", "cinder_archon"]
 		var invader: bool = e.is_in_group("invaders")
 		if big and not (boss or invader):
 			continue
@@ -383,13 +396,14 @@ func _draw_invasion_well() -> void:
 
 
 func _draw_quest_markers(cfg: Dictionary) -> void:
-	if get_node_or_null("/root/Quests") == null:
+	var q: Node = get_node_or_null("/root/Quests")
+	if q == null:
 		return
 	# Priority 1: Ready turn-ins ("?") and active quest objectives (diamonds)
 	for n in get_tree().get_nodes_in_group("npcs"):
 		if not _inside_world(n.global_position):
 			continue
-		var m := Quests.marker_for(n.get("npc_id"))
+		var m: String = q.marker_for(n.get("npc_id")) if q.has_method("marker_for") else ""
 		if m == "?":
 			var pos := _to_map(n.global_position)
 			_glyph(pos, m, GREEN)
@@ -397,29 +411,56 @@ func _draw_quest_markers(cfg: Dictionary) -> void:
 				_label(pos + Vector2(0, -16), QuestData.NPCS[n.get("npc_id")]["name"])
 
 	for id in QuestData.QUESTS:
-		if Quests.state[id] != Quests.S.ACTIVE:
+		if q.state[id] != Quests.S.ACTIVE:
 			continue
 		var objectives: Array = QuestData.QUESTS[id]["objectives"]
 		for i in objectives.size():
 			var o: Dictionary = objectives[i]
-			if Quests.progress[id][i] >= o["count"]:
+			if q.progress[id][i] >= o["count"]:
 				continue
 			match o["type"]:
 				"collect":
 					for it in get_tree().get_nodes_in_group("quest_items"):
 						if it.visible and it.get("item_id") == o["item"] and _inside_world(it.global_position):
 							_diamond(it.global_position)
+				"reach":
+					var reach_pos := Vector3.ZERO
+					var pl: String = o.get("place", "")
+					if pl == "catacombs":
+						reach_pos = Vector3(0.0, 0.0, -178.0)
+					elif pl == "frontier":
+						reach_pos = Vector3(17.0, 0.0, -142.0)
+					elif pl == "temple":
+						reach_pos = cfg["origin"] + Vector3(0.0, 0.0, -165.0)
+					if reach_pos != Vector3.ZERO and _inside_world(reach_pos):
+						_diamond(reach_pos)
 				"rescue":
 					pass
 				"kill":
-					if o["target"] == "totem":
+					if o["target"] in ["totem", "warband_totem"]:
 						for t in get_tree().get_nodes_in_group("breakables"):
 							if t.visible and _inside_world(t.global_position):
 								_diamond(t.global_position)
+						for t in get_tree().get_nodes_in_group("totems"):
+							if t.visible and _inside_world(t.global_position):
+								_diamond(t.global_position)
+						continue
+					if o["target"] == "orc_catapult":
+						for c in get_tree().get_nodes_in_group("interactables"):
+							if c.visible and _inside_world(c.global_position) and (c.name.find("Catapult") >= 0 or c.name.find("catapult") >= 0 or (c.has_method("interact_prompt") and "Καταπέλτη" in c.interact_prompt())):
+								_diamond(c.global_position)
 						continue
 					var found := false
 					for e in get_tree().get_nodes_in_group("enemies"):
-						if e.get("kind_id") == o["target"] and o["target"] != "skeleton" and _inside_world(e.global_position):
+						var ek: String = e.get("kind_id")
+						var matches := false
+						if ek == o["target"]:
+							matches = true
+						elif o["target"] == "orc" and QuestData.is_orc(ek):
+							matches = true
+						elif o["target"] == "bandit" and QuestData.is_bandit(ek):
+							matches = true
+						if matches and o["target"] != "skeleton" and _inside_world(e.global_position):
 							_diamond(e.global_position)
 							found = true
 					if not found and cfg["boss_areas"].has(o["target"]):
@@ -430,7 +471,7 @@ func _draw_quest_markers(cfg: Dictionary) -> void:
 	for n in get_tree().get_nodes_in_group("npcs"):
 		if not _inside_world(n.global_position):
 			continue
-		var m := Quests.marker_for(n.get("npc_id"))
+		var m: String = q.marker_for(n.get("npc_id")) if q.has_method("marker_for") else ""
 		if m == "!":
 			var pos := _to_map(n.global_position)
 			_glyph(pos, m, GOLD)

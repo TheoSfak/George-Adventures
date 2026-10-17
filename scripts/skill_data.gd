@@ -33,6 +33,18 @@ const SKILLS := {
 		"name": "Πολεμική Κραυγή", "level": 25, "cooldown": 30.0, "icon": "shout", "color": Color(1.0, 0.40, 0.20),
 		"desc": "Εμψυχώνει τον Γιώργο: αυξάνει τη ζημιά κατά 30% και την ταχύτητα επίθεσης κατά 15% για 12 δευτερόλεπτα.",
 	},
+	"power_shot": {
+		"name": "Βολή Ισχύος", "level": 1, "cooldown": 5.0, "icon": "bow_power", "color": Color(0.95, 0.48, 0.22),
+		"desc": "Μια ισχυρή διατρητική βολή που εκτοξεύεται με τρομερή ταχύτητα, προκαλεί 250% ζημιά και απωθεί τον εχθρό.",
+	},
+	"volley": {
+		"name": "Ριπή Βελών", "level": 6, "cooldown": 10.0, "icon": "bow_volley", "color": Color(0.40, 0.85, 0.95),
+		"desc": "Εκτοξεύει μια βεντάλια από 5 βέλη, πλήττοντας πολλαπλούς στόχους ταυτόχρονα.",
+	},
+	"fire_arrow": {
+		"name": "Φλεγόμενο Βέλος", "level": 12, "cooldown": 8.0, "icon": "bow_fire", "color": Color(1.0, 0.35, 0.10),
+		"desc": "Φλογοβόλο βέλος που εκρήγνυται στην πρόσκρουση, καίγοντας τους εχθρούς σε ακτίνα 4 μέτρων.",
+	},
 	# --- skills learned in the talent tree (see talent_data.gd); "talent" is the node that unlocks them
 	"taunt": {
 		"name": "Κραυγή Πρόκλησης", "level": 1, "talent": "g_taunt", "cooldown": 22.0, "icon": "shout", "color": Color(0.45, 0.72, 1.0),

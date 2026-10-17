@@ -67,6 +67,8 @@ var _banner_tween: Tween
 var _mini_frame: Control
 var _big_map: Control
 var _interiors: Interiors
+var _aim_reticle: Control
+var _aim_charge := 0.0
 
 
 func _ready() -> void:
@@ -87,6 +89,7 @@ func _ready() -> void:
 	_build_action_bar()
 	_build_clock()
 	_build_maps()
+	_build_aim_reticle()
 	_connect_signals()
 	_refresh_tracker()
 
@@ -113,6 +116,8 @@ func _connect_signals() -> void:
 	_player.message.connect(show_message)
 	_player.leveled_up.connect(_on_level_up)
 	_player.prompt_changed.connect(_on_prompt_changed)
+	if _player.has_signal("aim_changed"):
+		_player.connect("aim_changed", _on_aim_changed)
 	var invasion := get_parent().get_node_or_null("Invasion") as Invasion
 	if invasion:
 		invasion.updated.connect(_on_invasion_updated)
@@ -1033,3 +1038,50 @@ func fade_in(time: float = 0.35) -> void:
 	var tween := create_tween()
 	tween.tween_property(_fade, "color:a", 0.0, time)
 	await tween.finished
+
+
+# ------------------------------------------------------------- aiming reticle ----
+
+func _build_aim_reticle() -> void:
+	_aim_reticle = Control.new()
+	_aim_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_aim_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_aim_reticle.visible = false
+	add_child(_aim_reticle)
+	_aim_reticle.draw.connect(_draw_aim_reticle)
+
+
+func _draw_aim_reticle() -> void:
+	if _aim_reticle == null or not _aim_reticle.visible:
+		return
+	var c := _aim_reticle.size * 0.5
+	var gap := 10.0 + (1.0 - _aim_charge) * 16.0
+	var blen := 8.0
+	var col := Color(1.0, 1.0, 1.0, 0.88)
+	var glow := Color(0.35, 0.85, 1.0, 0.45)
+
+	# Central dot
+	_aim_reticle.draw_circle(c, 3.5, glow)
+	_aim_reticle.draw_circle(c, 2.0, col)
+
+	# 4 Crosshair brackets
+	_aim_reticle.draw_line(c + Vector2(0, -gap), c + Vector2(0, -gap - blen), col, 2.0)
+	_aim_reticle.draw_line(c + Vector2(0, gap), c + Vector2(0, gap + blen), col, 2.0)
+	_aim_reticle.draw_line(c + Vector2(-gap, 0), c + Vector2(-gap - blen, 0), col, 2.0)
+	_aim_reticle.draw_line(c + Vector2(gap, 0), c + Vector2(gap + blen, 0), col, 2.0)
+
+	# Circular charge arc
+	if _aim_charge > 0.04:
+		var r := 26.0 - _aim_charge * 6.0
+		var angle := TAU * _aim_charge
+		_aim_reticle.draw_arc(c, r, -PI * 0.5, -PI * 0.5 + angle, 32, Color(1.0, 0.84, 0.35, 0.9), 2.2)
+
+
+func _on_aim_changed(aiming: bool, charge: float) -> void:
+	if _aim_reticle == null:
+		return
+	_aim_charge = charge
+	_aim_reticle.visible = aiming
+	if aiming:
+		_aim_reticle.queue_redraw()
+

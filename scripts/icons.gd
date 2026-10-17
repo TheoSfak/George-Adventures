@@ -61,6 +61,16 @@ static func draw(ci: CanvasItem, rect: Rect2, icon: String, color: Color) -> voi
 			_rain(ci, c, s, color)
 		"storm":
 			_storm(ci, c, s, color)
+		"bow":
+			_bow(ci, c, s, color)
+		"crossbow":
+			_crossbow(ci, c, s, color)
+		"bow_power":
+			_bow_power(ci, c, s, color)
+		"bow_volley":
+			_bow_volley(ci, c, s, color)
+		"bow_fire":
+			_bow_fire(ci, c, s, color)
 
 
 static func _fish(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
@@ -265,3 +275,58 @@ static func _moon(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
 	# a crescent: a disc with a darker disc bitten out of it
 	ci.draw_circle(c, 0.72 * s, color)
 	ci.draw_circle(c + Vector2(0.36, -0.2) * s, 0.62 * s, Color(0.06, 0.05, 0.1, 1.0))
+
+
+static func _bow(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	# Curved bow stave (left arc)
+	ci.draw_arc(c + Vector2(0.35, 0.0) * s, 0.75 * s, deg_to_rad(115.0), deg_to_rad(245.0), 24, color, maxf(2.0, 0.12 * s))
+	# Bowstring (vertical chord)
+	var top := c + Vector2(-0.05, -0.68) * s
+	var btm := c + Vector2(-0.05, 0.68) * s
+	ci.draw_line(top, btm, Color(1, 1, 1, 0.75), maxf(1.0, 0.05 * s))
+	# Arrow shaft & head
+	ci.draw_line(c + Vector2(-0.45, 0.0) * s, c + Vector2(0.55, 0.0) * s, color.lightened(0.3), maxf(1.5, 0.07 * s))
+	_poly(ci, c, s, [Vector2(0.55, 0.0), Vector2(0.35, -0.16), Vector2(0.35, 0.16)], color.lightened(0.5))
+
+
+static func _crossbow(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	# Stock (body)
+	_rect(ci, c, s, -0.10, -0.65, 0.20, 1.30, color.darkened(0.2))
+	# Crossbow arms / lathe
+	ci.draw_arc(c + Vector2(0.0, 0.10) * s, 0.72 * s, deg_to_rad(-160.0), deg_to_rad(-20.0), 20, color, maxf(2.5, 0.14 * s))
+	# String
+	ci.draw_line(c + Vector2(-0.68, -0.15) * s, c + Vector2(0.0, 0.18) * s, Color(1, 1, 1, 0.8), maxf(1.0, 0.05 * s))
+	ci.draw_line(c + Vector2(0.68, -0.15) * s, c + Vector2(0.0, 0.18) * s, Color(1, 1, 1, 0.8), maxf(1.0, 0.05 * s))
+	# Bolt head
+	_poly(ci, c, s, [Vector2(0.0, -0.75), Vector2(-0.16, -0.45), Vector2(0.16, -0.45)], color.lightened(0.4))
+
+
+static func _bow_power(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_bow(ci, c, s, color)
+	# Heavy kinetic aura streaks
+	ci.draw_line(c + Vector2(-0.7, -0.3) * s, c + Vector2(0.7, -0.3) * s, Color(1, 0.85, 0.3, 0.7), 0.06 * s)
+	ci.draw_line(c + Vector2(-0.7, 0.3) * s, c + Vector2(0.7, 0.3) * s, Color(1, 0.85, 0.3, 0.7), 0.06 * s)
+	ci.draw_circle(c + Vector2(0.55, 0.0) * s, 0.18 * s, Color(1, 0.9, 0.4, 0.85))
+
+
+static func _bow_volley(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	# 3 fan-out arrows
+	for angle_deg in [-25.0, 0.0, 25.0]:
+		var rad := deg_to_rad(angle_deg)
+		var dir := Vector2(cos(rad), sin(rad))
+		var norm := Vector2(-sin(rad), cos(rad))
+		ci.draw_line(c - dir * 0.4 * s, c + dir * 0.55 * s, color, maxf(1.5, 0.07 * s))
+		_poly(ci, c, s, [
+			dir * 0.65,
+			dir * 0.42 + norm * 0.14,
+			dir * 0.42 - norm * 0.14
+		], color.lightened(0.3))
+
+
+static func _bow_fire(ci: CanvasItem, c: Vector2, s: float, color: Color) -> void:
+	_bow(ci, c, s, color)
+	# Fiery aura & flame petals around arrowhead
+	var tip := c + Vector2(0.55, 0.0) * s
+	ci.draw_circle(tip, 0.22 * s, Color(1.0, 0.45, 0.1, 0.8))
+	ci.draw_circle(tip + Vector2(0.08, -0.05) * s, 0.14 * s, Color(1.0, 0.85, 0.2, 0.9))
+
