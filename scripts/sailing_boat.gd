@@ -14,9 +14,9 @@ const DECEL := 3.0
 const TURN_SPEED := 1.8
 const WATER_Y := -0.15
 const MIN_Z := 108.0
-const MAX_Z := 580.0
-const OPEN_SEA_MIN_X := -220.0
-const OPEN_SEA_MAX_X := 180.0
+const MAX_Z := 780.0
+const OPEN_SEA_MIN_X := -380.0
+const OPEN_SEA_MAX_X := 350.0
 
 var is_sailing := false
 var current_player: Player = null

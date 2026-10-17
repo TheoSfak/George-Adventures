@@ -68,11 +68,11 @@ func _build_ocean() -> void:
 	# 2. Open South Ocean Water: Extends across the southern horizon for Z >= 220.0.
 	# At Z >= 220.0, all island terrain is discarded by ground.gdshader, so water spreads wide to infinity with zero overlap.
 	var open_sea_mesh := PlaneMesh.new()
-	open_sea_mesh.size = Vector2(900.0, 500.0)
+	open_sea_mesh.size = Vector2(1300.0, 750.0)
 	var open_sea := MeshInstance3D.new()
 	open_sea.mesh = open_sea_mesh
 	open_sea.material_override = water_mat
-	open_sea.position = Vector3(0.0, -0.01, 470.0)
+	open_sea.position = Vector3(0.0, -0.01, 560.0)
 	ocean_holder.add_child(open_sea)
 
 	# Continuous Sandy Seabed underneath the open ocean floor
@@ -91,11 +91,11 @@ func _build_ocean() -> void:
 
 	# Open ocean seabed
 	var open_seabed_mesh := PlaneMesh.new()
-	open_seabed_mesh.size = Vector2(900.0, 500.0)
+	open_seabed_mesh.size = Vector2(1300.0, 750.0)
 	var open_seabed := MeshInstance3D.new()
 	open_seabed.mesh = open_seabed_mesh
 	open_seabed.material_override = sand_mat
-	open_seabed.position = Vector3(0.0, -1.8, 470.0)
+	open_seabed.position = Vector3(0.0, -2.5, 560.0)
 	ocean_holder.add_child(open_seabed)
 
 	# Solid seabed floor collider for the deep ocean
@@ -107,41 +107,41 @@ func _build_ocean() -> void:
 	f_shape_bay.shape = f_box_bay
 	f_shape_bay.position = Vector3(-55.0, -2.8, 192.5)
 	floor_body.add_child(f_shape_bay)
-	# Open ocean floor (Z in [220, 720], X in [-450, 450])
+	# Open ocean floor (Z in [220, 935], X in [-650, 650])
 	var f_shape_open := CollisionShape3D.new()
 	var f_box_open := BoxShape3D.new()
-	f_box_open.size = Vector3(900.0, 2.0, 500.0)
+	f_box_open.size = Vector3(1300.0, 2.0, 750.0)
 	f_shape_open.shape = f_box_open
-	f_shape_open.position = Vector3(0.0, -2.8, 470.0)
+	f_shape_open.position = Vector3(0.0, -3.5, 560.0)
 	floor_body.add_child(f_shape_open)
 	ocean_holder.add_child(floor_body)
 
-	# Ocean boundary barriers: encloses the open sea around Pirate Island up to Z=650
+	# Ocean boundary barriers: encloses the open sea around the massive Pirate Island up to Z=850
 	var barrier := StaticBody3D.new()
 	barrier.name = "OceanBoundaries"
 
-	# South outer boundary (Z = 650)
+	# South outer boundary (Z = 850)
 	var b_shape_s := CollisionShape3D.new()
 	var b_box_s := BoxShape3D.new()
-	b_box_s.size = Vector3(900.0, 20.0, 10.0)
+	b_box_s.size = Vector3(1300.0, 25.0, 15.0)
 	b_shape_s.shape = b_box_s
-	b_shape_s.position = Vector3(0.0, 5.0, 650.0)
+	b_shape_s.position = Vector3(0.0, 6.0, 850.0)
 	barrier.add_child(b_shape_s)
 
-	# West outer boundary (X = -380)
+	# West outer boundary (X = -460)
 	var b_shape_w := CollisionShape3D.new()
 	var b_box_w := BoxShape3D.new()
-	b_box_w.size = Vector3(10.0, 20.0, 500.0)
+	b_box_w.size = Vector3(15.0, 25.0, 750.0)
 	b_shape_w.shape = b_box_w
-	b_shape_w.position = Vector3(-380.0, 5.0, 440.0)
+	b_shape_w.position = Vector3(-460.0, 6.0, 530.0)
 	barrier.add_child(b_shape_w)
 
-	# East outer boundary (X = 380)
+	# East outer boundary (X = 460)
 	var b_shape_e := CollisionShape3D.new()
 	var b_box_e := BoxShape3D.new()
-	b_box_e.size = Vector3(10.0, 20.0, 500.0)
+	b_box_e.size = Vector3(15.0, 25.0, 750.0)
 	b_shape_e.shape = b_box_e
-	b_shape_e.position = Vector3(380.0, 5.0, 440.0)
+	b_shape_e.position = Vector3(460.0, 6.0, 530.0)
 	barrier.add_child(b_shape_e)
 
 	ocean_holder.add_child(barrier)

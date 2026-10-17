@@ -131,20 +131,66 @@ func _test_pirate_island_geography_and_volcano() -> void:
 	var island = PirateIslandClass.new()
 	island._ready()
 
+	# 4x Island radius check
+	_check(PirateIslandClass.ISLAND_RADIUS >= 140.0, "Island radius is 4x expanded (RADIUS=%.1fm >= 140m)" % PirateIslandClass.ISLAND_RADIUS)
+
 	# Height checks at different radii (Non-flat validation)
 	var h_altar: float = island.call("_calc_island_height", 0.0, 0.0)
-	var h_caldera_floor: float = island.call("_calc_island_height", 8.0, 0.0)
-	var h_crater_rim: float = island.call("_calc_island_height", 14.5, 0.0)
-	var h_mid_hill: float = island.call("_calc_island_height", 35.0, 0.0)
-	var h_cove_landing: float = island.call("_calc_island_height", 0.0, -35.0)
-	var h_deep_ocean: float = island.call("_calc_island_height", 75.0, 0.0)
+	var h_caldera_floor: float = island.call("_calc_island_height", 10.0, 0.0)
+	var h_crater_rim: float = island.call("_calc_island_height", 23.5, 0.0)
+	var h_mid_hill: float = island.call("_calc_island_height", 65.0, 0.0)
+	var h_cove_landing: float = island.call("_calc_island_height", 0.0, -125.0)
+	var h_deep_ocean: float = island.call("_calc_island_height", 150.0, 0.0)
 
-	_check(h_altar > 15.0, "Central boss altar is high elevated platform (Y=%.2fm > 15m)" % h_altar)
-	_check(h_caldera_floor < h_altar and h_caldera_floor > 14.0, "Caldera floor is sunken beneath altar (Y=%.2fm)" % h_caldera_floor)
-	_check(h_crater_rim > h_caldera_floor and h_crater_rim >= 18.0, "Crater rim towers above caldera floor (Y=%.2fm >= 18m)" % h_crater_rim)
-	_check(h_mid_hill > 3.0 and h_mid_hill < h_crater_rim, "Mid mountain terrain forms steep hillside (Y=%.2fm)" % h_mid_hill)
-	_check(h_cove_landing <= 1.8 and h_cove_landing >= 0.0, "Northern cove landing is gently sloped beach at sea level (Y=%.2fm)" % h_cove_landing)
+	_check(h_altar > 18.0, "Central boss altar is high elevated platform (Y=%.2fm > 18m)" % h_altar)
+	_check(h_caldera_floor < h_altar and h_caldera_floor >= 16.5, "Caldera floor is sunken beneath altar (Y=%.2fm)" % h_caldera_floor)
+	_check(h_crater_rim > h_caldera_floor and h_crater_rim >= 24.0, "Crater rim towers above caldera floor (Y=%.2fm >= 24m)" % h_crater_rim)
+	_check(h_mid_hill > 3.0 and h_mid_hill < h_crater_rim, "Mid mountain terrain forms rolling hillside (Y=%.2fm)" % h_mid_hill)
+	_check(h_cove_landing <= 3.0 and h_cove_landing >= 0.0, "Northern cove landing is gently sloped beach near sea level (Y=%.2fm)" % h_cove_landing)
 	_check(h_deep_ocean < -1.0, "Outer perimeter drops off into deep sea floor (Y=%.2fm)" % h_deep_ocean)
+
+	# Verify Highland Lake
+	var lake = island.get_node_or_null("HighlandLake")
+	_check(lake != null, "HighlandLake node exists")
+	if lake:
+		var has_bridge := false
+		for c in lake.get_children():
+			if c is StaticBody3D:
+				has_bridge = true
+				break
+		_check(has_bridge, "Highland lake has crossing footbridge")
+
+	# Verify Island Forest (Trees with collision)
+	var forest = island.get_node_or_null("IslandForest")
+	_check(forest != null, "IslandForest node exists")
+	if forest:
+		var tree_count := forest.get_child_count()
+		_check(tree_count >= 40, "Island forest has dense tree groves (%d trees >= 40)" % tree_count)
+
+	# Verify Wildlife
+	var wildlife = island.get_node_or_null("IslandWildlife")
+	_check(wildlife != null, "IslandWildlife node exists")
+	if wildlife:
+		var deer_count := wildlife.get_child_count()
+		_check(deer_count >= 4, "Island wildlife has roaming deer (%d deer >= 4)" % deer_count)
+
+	# Verify Secret Smuggler's Grotto & Hidden Treasure
+	var grotto = island.get_node_or_null("SecretSmugglersGrotto")
+	_check(grotto != null, "SecretSmugglersGrotto node exists")
+	if grotto:
+		var secret_chest: Chest = null
+		var has_glow := false
+		for c in grotto.get_children():
+			if c is ChestClass:
+				secret_chest = c
+			if c is OmniLight3D:
+				has_glow = true
+		_check(secret_chest != null, "Hidden chest exists in secret grotto")
+		if secret_chest:
+			_check(secret_chest.golden == true, "Hidden chest is golden")
+			_check(secret_chest.gold_min >= 800, "Hidden chest has massive gold stash (min >= 800)")
+			_check(secret_chest.potions >= 5, "Hidden chest contains 5 potions")
+		_check(has_glow, "Secret grotto has mystical emerald glow")
 
 	# Verify Caldera Lava Lake
 	var lava = island.get_node_or_null("CalderaMagma")
@@ -160,6 +206,20 @@ func _test_pirate_island_geography_and_volcano() -> void:
 	# Verify Cove Dock and Pier
 	var cove = island.get_node_or_null("PirateCove")
 	_check(cove != null, "PirateCove landing area exists")
+
+	# Verify Mob Positions: None in the sea!
+	var mob_positions: Array[Vector3] = [
+		PirateIslandClass.DOCK_GATE_POS,
+		PirateIslandClass.LOWER_CAMP_POS,
+		PirateIslandClass.LAKE_CAMP_POS,
+		PirateIslandClass.LOOKOUT_POS,
+		PirateIslandClass.ALTAR_POS
+	]
+	var all_mobs_dry := true
+	for p in mob_positions:
+		if p.y < 2.5:
+			all_mobs_dry = false
+	_check(all_mobs_dry, "All mob outpost locations are on dry elevated land (Y >= 2.5m, zero mobs in water)")
 
 	# Verify Crater Arena & Cursed Chest
 	var arena = island.get_node_or_null("CraterArena")
