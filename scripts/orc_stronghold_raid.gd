@@ -34,7 +34,23 @@ func _ready() -> void:
 	_build_warband_totems()
 	_setup_catapult_sabotage()
 	_setup_assault_horn()
-	_listen_for_warlord()
+	call_deferred("_listen_for_warlord")
+	var quests_node: Node = get_tree().root.get_node_or_null("Quests") if is_inside_tree() and get_tree() and get_tree().root else null
+	if quests_node != null and quests_node.has_signal("changed"):
+		quests_node.changed.connect(_on_quests_changed)
+
+
+func _on_quests_changed() -> void:
+	if warlord_slain:
+		return
+	var quests_node: Node = get_tree().root.get_node_or_null("Quests") if is_inside_tree() and get_tree() and get_tree().root else null
+	if quests_node != null:
+		var st = quests_node.get("state")
+		var pr = quests_node.get("progress")
+		if st != null and st.get("orc_siege", 0) >= 3: # READY (3) or DONE (4)
+			_on_warlord_vanquished()
+		elif pr != null and pr.has("orc_siege") and pr["orc_siege"].size() > 0 and pr["orc_siege"][0] >= 1:
+			_on_warlord_vanquished()
 
 
 # =========================================================================
@@ -231,6 +247,7 @@ func start_assault(player: Player = null) -> void:
 	for i in guard_names.size():
 		var guard: Guard = GuardClass.new()
 		guard.guard_name = guard_names[i]
+		guard.follow_slot = i
 		guard.damage = 20.0
 		guard.follow_player = true
 		guard.home = FORTRESS_CENTER
@@ -238,6 +255,8 @@ func start_assault(player: Player = null) -> void:
 		guard.position = spawn_pos
 		add_child(guard)
 		_guards.append(guard)
+
+	_listen_for_warlord()
 
 	if player != null:
 		player.message.emit("Η Πολιορκία Ξεκίνησε! Οι Φρουροί Εφορμούν στο Προπύργιο!")
@@ -290,20 +309,28 @@ func sabotage_catapult(player: Player = null) -> void:
 
 func _listen_for_warlord() -> void:
 	# Watch for orc_warlord defeat
-	if not is_inside_tree():
+	if not is_inside_tree() or warlord_slain:
 		return
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if e.get("kind_id") == "orc_warlord":
-			e.connect("tree_exited", _on_warlord_vanquished)
+			if not e.is_connected("tree_exited", _on_warlord_vanquished):
+				e.connect("tree_exited", _on_warlord_vanquished)
+			if e.has_signal("died") and not e.is_connected("died", _on_warlord_died_signal):
+				e.connect("died", _on_warlord_died_signal)
+
+
+func _on_warlord_died_signal(_enemy: Node = null) -> void:
+	_on_warlord_vanquished()
 
 
 func _on_warlord_vanquished() -> void:
 	if warlord_slain:
 		return
 	warlord_slain = true
+	siege_active = false
 
 	# Victory Fanfare & Golden Chest
-	Sfx.ui("quest_complete")
+	Sfx.ui("quest_done")
 	var chest: Chest = ChestClass.new()
 	chest.golden = true
 	chest.gold_min = 1200
@@ -319,13 +346,17 @@ func _on_warlord_vanquished() -> void:
 
 	for g in _guards:
 		if is_instance_valid(g):
-			# Guards celebrate
-			var lbl := Label3D.new()
-			lbl.text = "Ζήτω ο Γιώργος!"
-			lbl.font_size = 32
-			lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			lbl.modulate = Color(1.0, 0.9, 0.3)
-			lbl.position.y = 2.8
-			g.add_child(lbl)
+			if g.has_method("celebrate_and_dismiss"):
+				g.celebrate_and_dismiss()
+			else:
+				var lbl := Label3D.new()
+				lbl.text = "Ζήτω ο Γιώργος!"
+				lbl.font_size = 32
+				lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+				lbl.modulate = Color(1.0, 0.9, 0.3)
+				lbl.position.y = 2.8
+				g.add_child(lbl)
+				if g.has_method("dismiss"):
+					get_tree().create_timer(6.0).timeout.connect(func(): if is_instance_valid(g): g.dismiss())
 
 	fortress_liberated.emit()

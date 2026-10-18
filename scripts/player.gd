@@ -646,16 +646,22 @@ func _update_camera(delta: float) -> void:
 func _fade_near_characters() -> void:
 	var cam_pos := _cam.global_position
 	var seen := {}
+	var max_fade_reach_sq := (FADE_FAR * 3.5) * (FADE_FAR * 3.5)
 	for group in FADE_GROUPS:
 		for n in get_tree().get_nodes_in_group(group):
 			var c := n as Node3D
 			if c == null or seen.has(c):
 				continue
 			seen[c] = true
+			var c_pos := c.global_position
+			var dx := c_pos.x - cam_pos.x
+			var dz := c_pos.z - cam_pos.z
+			if dx * dx + dz * dz > max_fade_reach_sq and not _fading.has(c):
+				continue
 			var size := 1.0
 			if "model_scale" in c:
 				size = maxf(float(c.get("model_scale")), 0.5)
-			var d := cam_pos.distance_to(c.global_position + Vector3.UP * 0.9 * size)
+			var d := cam_pos.distance_to(c_pos + Vector3.UP * 0.9 * size)
 			var t := clampf((FADE_FAR * size - d) / ((FADE_FAR - FADE_NEAR) * size), 0.0, 1.0)
 			if t <= 0.0 and not _fading.has(c):
 				continue

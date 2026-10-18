@@ -206,6 +206,8 @@ func _update_voice(delta: float) -> void:
 func play(id: String, at: Vector3 = Vector3.INF, volume_db: float = 0.0, pitch: float = 1.0) -> void:
 	if not sfx_on:
 		return
+	if id == "quest_complete":
+		id = "quest_done"
 	var count: int = SfxIds.VARIANTS.get(id, 0)
 	if count == 0:
 		push_warning("SoundManager: unknown sound '%s'" % id)

@@ -18,12 +18,15 @@ const ATTACKS: Array[String] = ["1H_Melee_Attack_Slice_Diagonal", "1H_Melee_Atta
 var home := Vector3.ZERO
 var damage := 10.0
 var follow_player := false
+var follow_slot := 0
 var guard_name := ""
 
 var _model_root: Node3D
 var _anim: AnimationPlayer
 var _target: Enemy
 var _cooldown := 0.0
+var _scan_cd := 0.0
+var _celebrating := false
 var _swing := -1.0                   # time since the swing started, -1 = not swinging
 var _leaving := false
 var _returning := false                 # true while moving back to home post
@@ -89,19 +92,60 @@ func dismiss() -> void:
 		return
 	_leaving = true
 	remove_from_group("guards")
-	var tween := create_tween()
-	tween.tween_property(_model_root, "scale", Vector3.ONE * 0.05, 0.6)
-	tween.tween_callback(queue_free)
+	if is_inside_tree() and _model_root != null:
+		var tween := create_tween()
+		if tween != null:
+			tween.tween_property(_model_root, "scale", Vector3.ONE * 0.05, 0.6)
+			tween.tween_callback(queue_free)
+			return
+	queue_free()
+
+
+## Fortress is liberated: the guard celebrates and gracefully fades after a victory stance.
+func celebrate_and_dismiss() -> void:
+	if _celebrating or _leaving:
+		return
+	_celebrating = true
+	follow_player = false
+	_target = null
+	_returning = false
+	velocity = Vector3.ZERO
+	_nav.reset()
+
+	var lbl := Label3D.new()
+	lbl.text = "Ζήτω ο Γιώργος!"
+	lbl.font_size = 36
+	lbl.pixel_size = 0.007
+	lbl.outline_size = 10
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.modulate = Color(1.0, 0.9, 0.3)
+	lbl.position.y = 2.8
+	lbl.no_depth_test = true
+	add_child(lbl)
+
+	if _anim != null and _anim.has_animation("Idle"):
+		_anim.play("Idle")
+
+	if is_inside_tree() and get_tree() != null:
+		var timer := get_tree().create_timer(6.0)
+		timer.timeout.connect(func():
+			if is_instance_valid(self):
+				dismiss()
+		)
+	else:
+		dismiss()
 
 
 func _physics_process(delta: float) -> void:
-	if _leaving:
+	if _leaving or _celebrating:
 		return
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
-	_cooldown = maxf(_cooldown - delta, 0.0)
+	_scan_cd = maxf(_scan_cd - delta, 0.0)
 	if _target == null or not is_instance_valid(_target) or _target.is_dead():
-		_target = _find_target()
+		if _scan_cd <= 0.0:
+			_target = _find_target()
+			_scan_cd = 0.35 if _target == null else 0.08
 	var wanted := Vector3.ZERO
 	var anim := "Idle"
 	if _swing >= 0.0:
@@ -127,12 +171,24 @@ func _physics_process(delta: float) -> void:
 		if follow_player and is_inside_tree():
 			var p := get_tree().get_first_node_in_group("player") as Node3D
 			if p != null:
-				target_pos = p.global_position
+				var fwd := -p.global_transform.basis.z
+				fwd.y = 0.0
+				if fwd.length_squared() < 0.01:
+					fwd = Vector3.FORWARD
+				else:
+					fwd = fwd.normalized()
+				var right := Vector3(-fwd.z, 0.0, fwd.x)
+				var offset := Vector3.ZERO
+				match follow_slot % 3:
+					0: offset = -right * 2.2 - fwd * 1.6
+					1: offset = right * 2.2 - fwd * 1.6
+					2: offset = -fwd * 3.2
+				target_pos = p.global_position + offset
 		var back := target_pos - global_position
 		back.y = 0.0
 		var dist := back.length()
-		var start_thresh := 3.2 if follow_player else 2.2
-		var stop_thresh := 1.8 if follow_player else 0.45
+		var start_thresh := 4.2 if follow_player else 2.2
+		var stop_thresh := 2.0 if follow_player else 0.45
 
 		if not _returning:
 			if dist > start_thresh:
@@ -141,6 +197,8 @@ func _physics_process(delta: float) -> void:
 			if dist <= stop_thresh:
 				_returning = false
 				_detour_time = 0.0
+				_blocked_time = 0.0
+				_nav.reset()
 				velocity.x = 0.0
 				velocity.z = 0.0
 
@@ -247,12 +305,23 @@ func _check_blocked(wanted: Vector3, delta: float) -> void:
 func _find_target() -> Enemy:
 	var best: Enemy = null
 	var best_dist := SIGHT
+	var own_pos := global_position
+	var max_range_bound := SIGHT + 14.0
+	var max_range_sq := max_range_bound * max_range_bound
 	for e in get_tree().get_nodes_in_group("enemies"):
 		var enemy := e as Enemy
 		if enemy == null or enemy.is_dead():
 			continue
-		var d := Vector2(enemy.global_position.x - home.x, enemy.global_position.z - home.z).length()
-		var own := global_position.distance_to(enemy.global_position)
+		var ep := enemy.global_position
+		var dx := absf(ep.x - own_pos.x)
+		var dz := absf(ep.z - own_pos.z)
+		if dx > max_range_bound or dz > max_range_bound:
+			continue
+		var own_sq := dx * dx + dz * dz
+		if own_sq > max_range_sq:
+			continue
+		var own := sqrt(own_sq)
+		var d := Vector2(ep.x - home.x, ep.z - home.z).length()
 		if d < best_dist + 8.0 and own < best_dist + 14.0 and own < best_dist * 2.0:
 			if own < best_dist or best == null:
 				best_dist = minf(own, best_dist)
