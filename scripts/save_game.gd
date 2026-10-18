@@ -49,6 +49,9 @@ static func note_chest(position: Vector3) -> void:
 	var k := key_for(position)
 	if not opened_chests.has(k):
 		opened_chests.append(k)
+		var tree := _tree()
+		if tree != null:
+			tree.call_group("journal_manager", "report_stat", "chests_opened", 1)
 
 
 static func note_item(item_id: String, position: Vector3) -> void:
@@ -66,6 +69,9 @@ static func note_totem(position: Vector3) -> void:
 static func note_boss(kind: String) -> void:
 	if not defeated_bosses.has(kind):
 		defeated_bosses.append(kind)
+		var tree := _tree()
+		if tree != null:
+			tree.call_group("journal_manager", "report_kill", kind)
 
 
 static func boss_defeated(kind: String) -> bool:
@@ -124,6 +130,7 @@ static func save() -> bool:
 		"bounties": bounty_mgr.save_data() if bounty_mgr != null else {},
 		"cottage_garden": tree.get_first_node_in_group("cottage_garden").save_data() if tree.get_first_node_in_group("cottage_garden") != null else {},
 		"arena": tree.get_first_node_in_group("gladiator_arena").save_data() if tree.get_first_node_in_group("gladiator_arena") != null else {},
+		"journal": tree.get_first_node_in_group("journal_manager").save_data() if tree.get_first_node_in_group("journal_manager") != null else {},
 		"quests": quests_dict,
 		"world": {
 			"time_of_day": daynight.time_of_day if daynight else 9.0,
@@ -268,6 +275,9 @@ static func apply(d: Dictionary) -> void:
 	var arena := tree.get_first_node_in_group("gladiator_arena")
 	if arena != null and d.has("arena"):
 		arena.load_data(d.get("arena", {}))
+	var journal := tree.get_first_node_in_group("journal_manager")
+	if journal != null and d.has("journal"):
+		journal.load_data(d.get("journal", {}))
 
 	var wd: Dictionary = d["world"]
 	var village_spawns := tree.get_first_node_in_group("enemy_spawner")

@@ -1344,6 +1344,9 @@ func add_fish(id: String) -> bool:
 		fish_seen.append(id)
 		message.emit(Strings.MSG_FISH_NEW % [fish_seen.size(), ShopData.fish_ids().size()])
 	inventory_changed.emit(gold, potions)
+	var tree := get_tree() if is_inside_tree() else null
+	if tree != null:
+		tree.call_group("journal_manager", "report_stat", "fish_caught", 1)
 	return fresh
 
 
@@ -1459,6 +1462,10 @@ func upgrade_gear(slot: String) -> bool:
 	message.emit(Strings.MSG_UPGRADED % (slot_label + " +" + str(next_lvl)))
 	inventory_changed.emit(gold, potions)
 	gear_changed.emit()
+	if next_lvl >= 5:
+		var tree := get_tree() if is_inside_tree() else null
+		if tree != null:
+			tree.call_group("journal_manager", "report_stat", "gear_upgraded_5", 1)
 	return true
 
 

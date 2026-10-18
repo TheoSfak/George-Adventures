@@ -194,6 +194,9 @@ func board(player: Player) -> void:
 	player._play("Sit_Chair_Idle", 0.2)
 	player.message.emit("Σαλπάρισες! [W/S] Πρόωση, [A/D] Πηδάλιο, [Shift] Άνοιγμα Πανιού, [R] Αποβίβαση.")
 	boarded.emit(player)
+	var tree := get_tree() if is_inside_tree() else null
+	if tree != null:
+		tree.call_group("journal_manager", "report_stat", "sailed_boat", 1)
 
 
 func disembark(place_player: bool = true) -> void:

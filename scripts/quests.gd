@@ -101,6 +101,7 @@ func report_kill(kind: String) -> void:
 	var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
 	if tree != null:
 		tree.call_group("bounty_manager", "report_kill", kind)
+		tree.call_group("journal_manager", "report_kill", kind)
 	for id in QuestData.QUESTS:
 		if state[id] != S.ACTIVE:
 			continue

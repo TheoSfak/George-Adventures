@@ -516,6 +516,9 @@ func _on_forge_click(recipe_id: String) -> void:
 		Sfx.play("sword_hit")
 		var rec: Dictionary = ShopData.FORGE_RECIPES[recipe_id]
 		_player.message.emit(Strings.MSG_FORGE_SUCCESS % rec["name"])
+		var tree := get_tree() if is_inside_tree() else null
+		if tree != null:
+			tree.call_group("journal_manager", "report_stat", "crafted_legendary", 1)
 	_refresh()
 
 

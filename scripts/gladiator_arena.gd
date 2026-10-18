@@ -565,6 +565,11 @@ func _on_trial_victorious() -> void:
 	var vic_text := Strings.ARENA_VICTORY_BANNER % trial["title"]
 	_player.message.emit(vic_text)
 
+	var tree := get_tree() if is_inside_tree() else null
+	if tree != null:
+		tree.call_group("journal_manager", "report_stat", "arena_victories", 1)
+		tree.call_group("journal_manager", "report_stat", "arena_" + current_trial_id, 1)
+
 	# Apply Rewards
 	if _player != null:
 		_player.apply_reward(reward)

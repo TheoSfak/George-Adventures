@@ -286,8 +286,10 @@ func interact(player: Player) -> void:
 	player.inventory_changed.emit(player.gold, player.potions)
 
 	var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
-	if tree != null and tree.has_group("hud"):
-		tree.call_group("hud", "show_banner", "🌿 Συγκομιδή: %s ×%d!" % [flora_name, count], 2.2)
+	if tree != null:
+		if tree.has_group("hud"):
+			tree.call_group("hud", "show_banner", "🌿 Συγκομιδή: %s ×%d!" % [flora_name, count], 2.2)
+		tree.call_group("journal_manager", "report_stat", "herbs_harvested", count)
 
 	Sfx.ui("eat")
 	harvested_reagent.emit(flora_id, count)

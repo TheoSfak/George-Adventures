@@ -176,6 +176,7 @@ func _build_summit_shrine() -> void:
 		var player = get_tree().get_first_node_in_group("player")
 		if player and player.has_method("notify"):
 			player.notify("Η καμπάνα της κορυφής αντηχεί σε όλο το νησί!")
+		get_tree().call_group("journal_manager", "report_stat", "rang_eagle_bell", 1)
 	, 4.5)
 	bell_spot.position = canopy_pos + Vector3(0.0, 0.2, 0.8)
 	shrine_holder.add_child(bell_spot)

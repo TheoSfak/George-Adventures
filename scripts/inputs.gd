@@ -59,7 +59,6 @@ func _register_defaults() -> void:
 	_key("run", KEY_SHIFT)
 	_button("run", JOY_BUTTON_LEFT_STICK)
 	_key("attack", KEY_F)
-	_key("attack", KEY_J)
 	_button("attack", JOY_BUTTON_X)
 	_key("dodge", KEY_V)              # the dodge roll
 	_button("dodge", JOY_BUTTON_RIGHT_SHOULDER)
@@ -86,6 +85,7 @@ func _register_defaults() -> void:
 	_key("skillbook", KEY_P)
 	_key("talents", KEY_T)
 	_key("equipment", KEY_I)
+	_key("journal", KEY_J)
 	_key("map", KEY_M)
 	_key("interact", KEY_R)
 	_key("interact", KEY_ENTER)       # remote-desktop tools often mangle letter keys; Enter and the arrow keys still arrive

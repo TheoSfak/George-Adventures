@@ -209,6 +209,7 @@ func _complete_course() -> void:
 		if is_rec:
 			win_msg += "\n" + Strings.PARKOUR_NEW_RECORD
 		get_tree().call_group("hud", "show_banner", win_msg, 5.0)
+		get_tree().call_group("journal_manager", "report_stat", "parkour_completed", 1)
 
 	_update_hud()
 	if _hud_hint_label != null:

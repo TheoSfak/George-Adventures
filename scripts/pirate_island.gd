@@ -924,6 +924,11 @@ func _build_secret_treasure_grotto() -> void:
 	secret_chest.potions = 5
 	secret_chest.position = grotto_pos + Vector3(0.0, 0.2, 0.0)
 	secret_chest.rotation_degrees.y = -35.0
+	secret_chest.chest_opened.connect(func():
+		var tree := get_tree() if is_inside_tree() else null
+		if tree != null:
+			tree.call_group("journal_manager", "report_stat", "found_smugglers_grotto", 1)
+	)
 	grotto_holder.add_child(secret_chest)
 
 	# Coin Stacks & Booty Crates

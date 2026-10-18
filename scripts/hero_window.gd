@@ -64,6 +64,13 @@ func _refresh() -> void:
 	var names := {"skills": Strings.HERO_TAB_SKILLS, "talents": Strings.HERO_TAB_TALENTS, "gear": Strings.HERO_TAB_GEAR}
 	for t in TABS:
 		_tab_row.add_child(UiKit.tab_button(names[t], _tab == t, _switch.bind(t)))
+	var j_btn := UiKit.button("🏆 Επιτεύγματα [J]", func():
+		visible = false
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud and hud.has_method("open_journal"):
+			hud.open_journal("achievements")
+	, 32.0, 13)
+	_tab_row.add_child(j_btn)
 	for c in _content.get_children():
 		c.queue_free()
 	_info = null

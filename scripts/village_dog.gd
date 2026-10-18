@@ -231,8 +231,10 @@ func perform_next_trick(player: Player = null) -> void:
 			player.call("apply_pet_buff", 180.0)
 		var msg := "Ο %s έκανε το κόλπο: '%s'! (Αγάπη: Lv.%d, +10%% Ταχύτητα)" % [companion_name, trick["name"], affection_level]
 		var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
-		if tree != null and tree.has_group("hud"):
-			tree.call_group("hud", "show_banner", msg, 3.0)
+		if tree != null:
+			if tree.has_group("hud"):
+				tree.call_group("hud", "show_banner", msg, 3.0)
+			tree.call_group("journal_manager", "report_stat", "petted_companion", 1)
 		if player.has_signal("message"):
 			player.emit_signal("message", msg)
 

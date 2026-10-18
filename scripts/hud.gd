@@ -51,11 +51,13 @@ var _buff_labels := {}
 var _hero: HeroWindow
 var _shop: ShopWindow
 const ArenaWindowClass := preload("res://scripts/arena_window.gd")
+const JournalWindowClass := preload("res://scripts/journal_window.gd")
 
 var _fishing: Fishing
 var _bounty_window: BountyWindow
 var _stash_window: StashWindow
 var _arena_window: PanelContainer
+var _journal_window: PanelContainer
 var _hint: Label
 var _clock_label: Label
 var _clock_icon: Control
@@ -611,12 +613,24 @@ func _input(event: InputEvent) -> void:
 		_stash_window.close()
 		get_viewport().set_input_as_handled()
 		return
+	if _arena_window != null and _arena_window.visible and event.is_action_pressed("ui_cancel"):
+		_arena_window.close()
+		get_viewport().set_input_as_handled()
+		return
+	if _journal_window != null and _journal_window.visible and event.is_action_pressed("ui_cancel"):
+		_journal_window.close()
+		get_viewport().set_input_as_handled()
+		return
 	if _big_map.visible and event.is_action_pressed("ui_cancel"):
 		_big_map.visible = false
 		Sfx.ui("window_close")
 		get_viewport().set_input_as_handled()
 		return
 	if not is_dialogue_open() and not _shop.is_open():
+		if event.is_action_pressed("journal"):
+			toggle_journal()
+			get_viewport().set_input_as_handled()
+			return
 		for pair in [["skillbook", "skills"], ["talents", "talents"], ["equipment", "gear"]]:
 			if event.is_action_pressed(pair[0]):
 				_hero.toggle(pair[1])
@@ -1013,6 +1027,8 @@ func _build_windows() -> void:
 	add_child(_stash_window)
 	_arena_window = ArenaWindowClass.new()
 	add_child(_arena_window)
+	_journal_window = JournalWindowClass.new()
+	add_child(_journal_window)
 	if _player:
 		_player.talents_changed.connect(_update_hint)
 		_player.leveled_up.connect(func(_l): _update_hint())
@@ -1088,14 +1104,107 @@ func open_arena(arena: Node, player: Player) -> void:
 		_bounty_window.close()
 	if _stash_window != null and _stash_window.visible:
 		_stash_window.close()
-	if _dlg_panel != null and _dlg_panel.visible:
-		_dlg_panel.visible = false
+	if _journal_window != null and _journal_window.visible:
+		_journal_window.close()
 	if _arena_window != null:
 		_arena_window.open(arena, player)
 
 
 func is_arena_open() -> bool:
 	return _arena_window != null and _arena_window.visible
+
+
+## Opens the Journal (Achievements & Bestiary Lore) window.
+func open_journal(tab: String = "achievements") -> void:
+	if _shop != null and _shop.is_open():
+		_shop.close()
+	if _hero != null and _hero.visible:
+		_hero.visible = false
+	if _bounty_window != null and _bounty_window.visible:
+		_bounty_window.close()
+	if _stash_window != null and _stash_window.visible:
+		_stash_window.close()
+	if _arena_window != null and _arena_window.visible:
+		_arena_window.close()
+	if _dlg_panel != null and _dlg_panel.visible:
+		_dlg_panel.visible = false
+	if _journal_window != null:
+		_journal_window.open(_player, tab)
+
+
+func is_journal_open() -> bool:
+	return _journal_window != null and _journal_window.visible
+
+
+func toggle_journal(tab: String = "achievements") -> void:
+	if is_journal_open():
+		_journal_window.close()
+	else:
+		open_journal(tab)
+
+
+## Shows an animated achievement unlocked toast banner in the top center of the screen.
+func show_achievement_toast(ach_data: Dictionary) -> void:
+	Sfx.ui("quest_done")
+	var pill := PanelContainer.new()
+	var sb := UiKit.panel_style(0.92)
+	sb.border_color = Color(1.0, 0.84, 0.35, 1.0)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(14)
+	sb.shadow_size = 12
+	sb.shadow_color = Color(0, 0, 0, 0.8)
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 10
+	sb.content_margin_bottom = 10
+	pill.add_theme_stylebox_override("panel", sb)
+	pill.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	pill.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	pill.position.y = 80.0
+	pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(pill)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	pill.add_child(row)
+
+	var icon_box := UiKit.label(ach_data.get("icon", "🏆"), 28, Color(1.0, 0.85, 0.35))
+	row.add_child(icon_box)
+
+	var text_col := VBoxContainer.new()
+	text_col.add_theme_constant_override("separation", 2)
+	row.add_child(text_col)
+
+	var header_lbl := Label.new()
+	header_lbl.text = "🏆 ΕΠΙΤΕΥΓΜΑ ΞΕΚΛΕΙΔΩΘΗΚΕ!"
+	header_lbl.add_theme_font_size_override("font_size", 13)
+	header_lbl.add_theme_color_override("font_color", Color(1.0, 0.84, 0.35))
+	text_col.add_child(header_lbl)
+
+	var title_lbl := Label.new()
+	title_lbl.text = String(ach_data.get("title", ""))
+	title_lbl.add_theme_font_size_override("font_size", 17)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.96, 0.90))
+	text_col.add_child(title_lbl)
+
+	var rew: Dictionary = ach_data.get("reward", {})
+	if rew.size() > 0:
+		var rew_lbl := Label.new()
+		rew_lbl.text = "+%d XP  +%d 💰" % [int(rew.get("xp", 0)), int(rew.get("gold", 0))]
+		rew_lbl.add_theme_font_size_override("font_size", 12)
+		rew_lbl.add_theme_color_override("font_color", Color(0.35, 0.95, 0.45))
+		text_col.add_child(rew_lbl)
+
+	pill.modulate.a = 0.0
+	pill.scale = Vector2(0.85, 0.85)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(pill, "modulate:a", 1.0, 0.3)
+	tween.tween_property(pill, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+	var fade_tween := create_tween()
+	fade_tween.tween_interval(4.5)
+	fade_tween.tween_property(pill, "modulate:a", 0.0, 0.6)
+	fade_tween.tween_callback(pill.queue_free)
 
 
 # ------------------------------------------------------------------- fading ----

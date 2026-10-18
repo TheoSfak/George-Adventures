@@ -168,6 +168,7 @@ func _ready() -> void:
 	_build_bounty_board()
 	_build_george_cottage()
 	_build_gladiator_arena()
+	_build_journal_manager()
 	# ------------------------------------------------------------- Island Overhaul ----
 	add_child(IslandSouthSea.new())
 	add_child(IslandRiver.new())
@@ -2174,3 +2175,14 @@ func _build_gladiator_arena() -> void:
 	arena.name = "GladiatorArena"
 	add_child(arena)
 	_occupy(122.0, -75.0, 22.0)
+
+
+func _build_journal_manager() -> void:
+	var tree := get_tree() if is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+	if tree != null:
+		var mgr := tree.get_first_node_in_group("journal_manager")
+		if mgr == null:
+			var mgr_script = load("res://scripts/journal_manager.gd")
+			var new_mgr: Node = mgr_script.new()
+			new_mgr.name = "JournalManager"
+			tree.root.call_deferred("add_child", new_mgr)

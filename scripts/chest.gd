@@ -78,6 +78,10 @@ func interact(_player: Player) -> void:
 	if vlight:
 		vlight.queue_free()
 	SaveGame.note_chest(global_position)
+	if is_in_group("buried_chests"):
+		var tree_inst := get_tree()
+		if tree_inst != null:
+			tree_inst.call_group("journal_manager", "report_stat", "buried_chests_opened", 1)
 	Sfx.play("chest_open", global_position)
 	if _lid:
 		# The lid hinges at the back of the chest: tilt it up and open.

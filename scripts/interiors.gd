@@ -414,6 +414,8 @@ func enter(door_id: String, kind: String, outside_pos: Vector3, outside_heading:
 	player.busy = false
 	if kind == "catacombs":
 		_report_reach("catacombs")
+	if kind in ["tower", "orc_castle", "shadow_castle"]:
+		get_tree().call_group("journal_manager", "report_castle_visit", kind)
 
 func _report_reach(place: String) -> void:
 	var q: Node = get_tree().root.get_node_or_null("Quests")
@@ -473,6 +475,7 @@ func enter_region(region_id: String, outside_pos: Vector3, outside_heading: floa
 	await hud.fade_in(0.3)
 	player.busy = false
 	_report_reach(region_id)
+	get_tree().call_group("journal_manager", "report_stat", "entered_" + region_id, 1)
 
 
 func exit_region(player: Player) -> void:
