@@ -15,7 +15,7 @@ func _initialize() -> void:
 		check("level %d: nothing is scaled" % lv, LevelScaling.health_mult(lv) == 1.0 and LevelScaling.damage_mult(lv) == 1.0 and LevelScaling.xp_mult(lv) == 1.0 and LevelScaling.gold_mult(lv) == 1.0)
 	check("level 21 is the first scaled level", LevelScaling.health_mult(21) > 1.0 and LevelScaling.damage_mult(21) > 1.0)
 	check("level 40: health about x5.4", is_equal_approx(LevelScaling.health_mult(40), 1.0 + 0.22 * 20.0))
-	check("level 40: damage about x3.4", is_equal_approx(LevelScaling.damage_mult(40), 1.0 + 0.12 * 20.0))
+	check("level 40: damage about x4.2", is_equal_approx(LevelScaling.damage_mult(40), 1.0 + 0.16 * 20.0))
 	check("level 40: xp and gold about x4", is_equal_approx(LevelScaling.xp_mult(40), 4.0) and is_equal_approx(LevelScaling.gold_mult(40), 4.0))
 	var mono := true
 	for lv in range(1, 40):

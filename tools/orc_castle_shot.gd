@@ -46,7 +46,7 @@ func _run() -> void:
 	if p:
 		p.max_health = 50000.0
 		p.health = 50000.0
-		p.global_position = Vector3(128.0, 0.0, 78.0) # Outside the stronghold approach
+		p.global_position = Vector3(95.0, 0.0, 6.0) # Outside the stronghold staging area
 
 	var cam: Camera3D = Camera3D.new()
 	cam.fov = 65.0
@@ -55,34 +55,42 @@ func _run() -> void:
 
 	print("Capturing Orc Stronghold Castle views...")
 
-	# 1. High angle overview of the entire Orc Stronghold
-	_look(cam, Vector3(148.0, 2.0, 68.0), Vector3(125.0, 18.0, 95.0))
+	# 1. High angle overview of the entire Orc Stronghold at (122, 6)
+	_look(cam, Vector3(124.0, 2.0, 6.0), Vector3(98.0, 19.0, 28.0))
 	await create_timer(0.8).timeout
 	await shot("orc_castle_overview")
 
 	# 2. Eye-level view from the approach path facing the OPEN gate archway
 	if p:
-		p.global_position = Vector3(131.0, 0.0, 77.0)
-		p.rotation_degrees.y = 55.0
-	_look(cam, Vector3(139.0, 2.5, 73.0), Vector3(126.0, 2.0, 81.0))
+		p.global_position = Vector3(101.0, 0.0, 6.0)
+		p.rotation_degrees.y = -90.0
+	_look(cam, Vector3(110.0, 2.5, 6.0), Vector3(96.0, 2.0, 6.0))
 	await create_timer(0.8).timeout
 	await shot("orc_castle_gate_approach")
 
 	# 3. George standing right in the open gateway archway entering the courtyard
 	if p:
-		p.global_position = Vector3(139.0, 0.0, 73.0)
-		p.rotation_degrees.y = 65.0
-	_look(cam, Vector3(147.0, 2.0, 69.0), Vector3(134.0, 2.2, 76.0))
+		p.global_position = Vector3(109.0, 0.0, 6.0)
+		p.rotation_degrees.y = -90.0
+	_look(cam, Vector3(122.0, 2.2, 6.0), Vector3(103.5, 2.2, 6.0))
 	await create_timer(0.8).timeout
 	await shot("orc_castle_gateway_open")
 
-	# 4. Inside the courtyard: George confronting the Orc Warlord and Warband
+	# 4. Inside the courtyard: George confronting the Orc Warlord, Berserkers, Totems and Keep
 	if p:
-		p.global_position = Vector3(145.0, 0.0, 70.0)
-		p.rotation_degrees.y = 75.0
-	_look(cam, Vector3(150.0, 2.0, 68.0), Vector3(140.0, 2.8, 76.0))
+		p.global_position = Vector3(118.0, 0.0, 6.0)
+		p.rotation_degrees.y = -90.0
+	_look(cam, Vector3(128.0, 2.2, 6.0), Vector3(113.0, 2.6, 6.0))
 	await create_timer(0.8).timeout
 	await shot("orc_castle_courtyard")
+
+	# 5. Clear, unobstructed approach to Ash Valley Gate at (178, 64)
+	if p:
+		p.global_position = Vector3(150.0, 0.0, 66.0)
+		p.rotation_degrees.y = -70.0
+	_look(cam, Vector3(178.0, 2.5, 64.0), Vector3(145.0, 3.5, 68.0))
+	await create_timer(0.8).timeout
+	await shot("ash_valley_portal_clear")
 
 	print("ORC CASTLE SHOTS DONE!")
 	quit(0)

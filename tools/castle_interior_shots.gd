@@ -71,7 +71,7 @@ func _run() -> void:
 	interiors._exit_room("tower_12", p)
 	await create_timer(1.2).timeout
 	p.busy = false
-	interiors.enter("orc_castle_0", "orc_castle", Vector3(146.5, 0.0, 68.5), deg_to_rad(45.0), p)
+	interiors.enter("orc_castle_0", "orc_castle", Vector3(130.5, 0.05, 6.0), 0.0, p)
 	await create_timer(1.2).timeout
 	var orc_room := interiors.get_node("Room_orc_castle_0")
 	var orc_origin: Vector3 = interiors._rooms["orc_castle_0"]["origin"]

@@ -13,9 +13,9 @@ signal fortress_liberated
 const GuardClass := preload("res://scripts/guard.gd")
 const ChestClass := preload("res://scripts/chest.gd")
 
-const FORTRESS_CENTER := Vector3(150.0, 0.0, 68.0)
-const STAGING_POS := Vector3(128.0, 0.0, 64.0)
-const CATAPULT_POS := Vector3(145.0, 0.0, 79.0)
+const FORTRESS_CENTER := Vector3(122.0, 0.0, 6.0)
+const STAGING_POS := Vector3(98.0, 0.0, 6.0)
+const CATAPULT_POS := Vector3(115.5, 0.0, 13.5)
 
 var siege_active := false
 var totems_destroyed := 0
@@ -42,9 +42,9 @@ func _ready() -> void:
 # =========================================================================
 func _build_warband_totems() -> void:
 	var totem_positions: Array[Vector3] = [
-		Vector3(141.0, 0.0, 64.0), # Courtyard outer archway
-		Vector3(148.0, 0.0, 75.0), # Central blood ring
-		Vector3(156.0, 0.0, 66.0)  # Inner sanctum gateway
+		FORTRESS_CENTER + Vector3(-3.5, 0.0, -5.0), # Northern courtyard totem (118.5, 0.0, 1.0)
+		FORTRESS_CENTER + Vector3(4.0, 0.0, 0.0),   # Central ritual blood totem (126.0, 0.0, 6.0)
+		FORTRESS_CENTER + Vector3(-3.5, 0.0, 5.0)   # Southern courtyard totem (118.5, 0.0, 11.0)
 	]
 
 	for i in totem_positions.size():
@@ -223,9 +223,9 @@ func start_assault(player: Player = null) -> void:
 
 	var guard_names: Array[String] = ["Φρουρός Λεωνίδας", "Φρουρός Μάρκος", "Φρουρός Στέφανος"]
 	var guard_offsets: Array[Vector3] = [
-		Vector3(1.5, 0.0, -1.0),
-		Vector3(0.0, 0.0, 1.5),
-		Vector3(-1.5, 0.0, -1.0)
+		Vector3(0.0, 0.0, -1.8),
+		Vector3(2.0, 0.0, 0.0),
+		Vector3(0.0, 0.0, 1.8)
 	]
 
 	for i in guard_names.size():
@@ -309,7 +309,7 @@ func _on_warlord_vanquished() -> void:
 	chest.gold_min = 1200
 	chest.gold_max = 1800
 	chest.potions = 5
-	chest.position = FORTRESS_CENTER + Vector3(1.5, 0.0, 4.0)
+	chest.position = FORTRESS_CENTER + Vector3(4.0, 0.0, 0.0)
 	add_child(chest)
 	_victory_chest = chest
 

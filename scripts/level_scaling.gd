@@ -8,7 +8,7 @@ const MAX_LEVEL := 40
 const SCALE_FROM := 20             # the level the old game stopped at
 
 const HEALTH_PER_LEVEL := 0.22     # +22% enemy health per level above 20 (about x5.4 at level 40)
-const DAMAGE_PER_LEVEL := 0.12     # +12% enemy damage per level above 20 (about x3.4)
+const DAMAGE_PER_LEVEL := 0.16     # +16% enemy damage per level above 20 (about x4.2)
 const XP_PER_LEVEL := 0.15         # +15% XP per level above 20 (about x4)
 const GOLD_PER_LEVEL := 0.15
 

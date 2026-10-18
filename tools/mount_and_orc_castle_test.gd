@@ -61,8 +61,8 @@ func _run() -> void:
 
 	# 2. Test Indoor Mount Block in Orc Castle
 	print("\n--- 2. Testing Orc Castle Interior & Mount Block ---")
-	var orc_door_front := Vector3(146.5, 0.05, 72.0)
-	await interiors.enter("orc_castle_0", "orc_castle", orc_door_front, deg_to_rad(45.0), player)
+	var orc_door_front := Vector3(130.5, 0.05, 6.0)
+	await interiors.enter("orc_castle_0", "orc_castle", orc_door_front, 0.0, player)
 	await create_timer(0.4).timeout
 
 	if not interiors.is_inside():

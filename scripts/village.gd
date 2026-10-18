@@ -266,6 +266,8 @@ func _build_ground() -> void:
 	_terrain.add_patch(QUARRY, 38.0, Color(0.60, 0.60, 0.57), false, Color(0.38, 0.38, 0.36))
 	_terrain.add_patch(CRYPT + Vector2(0, -2), 46.0, Color(0.38, 0.43, 0.38), false, Color(0.25, 0.29, 0.25))
 	_terrain.add_patch(Vector2(92.0, 36.0), 24.0, Color(0.52, 0.42, 0.28), false, Color(0.35, 0.28, 0.19))
+	_terrain.add_patch(Vector2(122.0, 6.0), 22.0, Color(0.48, 0.44, 0.38), false, Color(0.32, 0.28, 0.24))
+	_terrain.add_patch(Vector2(-130.0, 58.0), 22.0, Color(0.72, 0.62, 0.48), false, Color(0.40, 0.35, 0.28))
 
 
 func _build_border() -> void:
@@ -302,7 +304,7 @@ func _build_rolling_hills() -> void:
 		{"model": "decoration/nature/hills_B.gltf", "pos": Vector3(-6.0, 0.0, 70.0), "rot": 20.0, "scale": 10.5},
 		{"model": "decoration/nature/hill_single_B.gltf", "pos": Vector3(32.0, 0.0, 74.0), "rot": 210.0, "scale": 8.5},
 		{"model": "decoration/nature/hills_C.gltf", "pos": Vector3(88.0, 0.0, 74.0), "rot": 85.0, "scale": 10.0},
-		{"model": "decoration/nature/hill_single_C.gltf", "pos": Vector3(105.0, 0.0, 8.0), "rot": 160.0, "scale": 8.0},
+		{"model": "decoration/nature/hill_single_C.gltf", "pos": Vector3(148.0, 0.0, 48.0), "rot": 160.0, "scale": 8.0},
 	]
 
 	for hd in hill_data:
@@ -780,51 +782,55 @@ func _build_ruined_outpost() -> void:
 	holder.name = "RuinedOutpost"
 	add_child(holder)
 
-	var center := Vector3(150.0, 0.0, 68.0)
+	var center := Vector3(122.0, 0.0, 6.0)
 
-	# Ruined keep / fortress (trimesh collider allows walking through ruined arches and courtyard!)
-	var destroyed := _place("buildings/neutral/building_destroyed.gltf", center, 45.0, BS * 1.2, holder)
+	# Ruined keep / citadel at the rear (East) of the courtyard (trimesh collider allows walking through ruined arches!)
+	var keep_pos := center + Vector3(18.0, 0.0, 0.0)
+	var destroyed := _place("buildings/neutral/building_destroyed.gltf", keep_pos, 0.0, BS * 1.0, holder)
 	_add_trimesh_collider(destroyed)
 
 	# Entrance door to explore inside the Ruined Orc Castle Keep!
-	var castle_door_front := center + Vector3(-3.5, 0.05, 4.0)
+	var castle_door_front := center + Vector3(8.5, 0.05, 0.0)
 	var orc_door_label: String = Strings.PROMPT_ENTER % Strings.BUILDING_NAMES["orc_castle"]
 	var orc_castle_spot := InteractSpot.make(orc_door_label, func(player: Player):
 		var interiors := get_tree().get_first_node_in_group("interiors") as Interiors
 		if interiors:
-			interiors.enter("orc_castle_0", "orc_castle", castle_door_front, deg_to_rad(45.0), player), 4.6)
+			interiors.enter("orc_castle_0", "orc_castle", castle_door_front, 0.0, player), 4.6)
 	orc_castle_spot.position = castle_door_front
 	holder.add_child(orc_castle_spot)
 
-	# Fortification walls & gates (gate and walls use trimesh collider so gateway arch and corridors are open!)
-	var wall1 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(-8.0, 0.0, -4.0), 20.0, BS * 1.0, holder)
-	_add_trimesh_collider(wall1)
-	var wall2 := _place("buildings/neutral/wall_straight.gltf", center + Vector3(8.0, 0.0, 4.0), 20.0, BS * 1.0, holder)
-	_add_trimesh_collider(wall2)
-	var gate := _place("buildings/neutral/wall_corner_A_gate.gltf", center + Vector3(-12.0, 0.0, 6.0), -60.0, BS * 1.0, holder)
+	# Grand fortress entrance gate facing the western approach road towards the village
+	var gate_pos := center + Vector3(-13.0, 0.0, 0.0)
+	var gate := _place("buildings/neutral/wall_straight_gate.gltf", gate_pos, 90.0, BS * 0.95, holder)
 	# Remove closed gate doors so the ruined fortress entrance arch is wide open and passable
 	for d in gate.find_children("*door*", "MeshInstance3D", true, false):
 		d.free()
 	_add_trimesh_collider(gate)
 
-	# Siege weapon & war banners
-	var catapult := _place("buildings/neutral/projectile_catapult.gltf", center + Vector3(-5.0, 0.0, 11.0), -120.0, BS * 0.9, holder)
-	_add_box_collider(catapult)
-	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(-4.0, 0.0, -7.0), 0.0, 2.8, holder)
-	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(5.0, 0.0, 8.0), 180.0, 2.8, holder)
+	# Fortification perimeter side walls enclosing the open inner courtyard
+	var wall_north := _place("buildings/neutral/wall_straight.gltf", center + Vector3(2.0, 0.0, -13.5), 0.0, BS * 0.95, holder)
+	_add_trimesh_collider(wall_north)
+	var wall_south := _place("buildings/neutral/wall_straight.gltf", center + Vector3(2.0, 0.0, 13.5), 0.0, BS * 0.95, holder)
+	_add_trimesh_collider(wall_south)
 
-	# Props around outpost
+	# Siege weapon & war banners flanking the gateway
+	var catapult := _place("buildings/neutral/projectile_catapult.gltf", center + Vector3(-6.5, 0.0, 7.5), -60.0, BS * 0.85, holder)
+	_add_box_collider(catapult, 0.85)
+	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(-13.0, 0.0, -4.5), 90.0, 2.8, holder)
+	_place_abs(ITEMS + "banner_red.gltf.glb", center + Vector3(-13.0, 0.0, 4.5), 90.0, 2.8, holder)
+
+	# Props around outpost (tents and crates safely placed against perimeter walls)
 	var outpost_props: Array = [
-		["decoration/props/barrel.gltf", center + Vector3(4.0, 0.0, -2.0), 10.0, 1.4],
-		["decoration/props/crate_open.gltf", center + Vector3(6.0, 0.0, -4.0), 45.0, 1.3],
-		["decoration/props/tent.gltf", center + Vector3(12.0, 0.0, -7.0), -45.0, 1.4],
+		["decoration/props/tent.gltf", center + Vector3(7.0, 0.0, -8.5), -45.0, 1.4],
+		["decoration/props/barrel.gltf", center + Vector3(7.5, 0.0, 8.5), 10.0, 1.4],
+		["decoration/props/crate_open.gltf", center + Vector3(9.5, 0.0, 8.5), 45.0, 1.3],
 	]
 	for op in outpost_props:
 		var n := _place(op[0], op[1], op[2], PS * op[3], holder)
 		_add_box_collider(n, 0.75)
 
-	_signpost("Ερειπωμένο Προπύργιο  ↖\nΠροσοχή: Πολεμική Συμμορία Όρκ!", center + Vector3(-16.0, 0.0, -5.0), 75.0, holder)
-	_occupy(center.x, center.z, 22.0)
+	_signpost("Ερειπωμένο Προπύργιο  →\nΠροσοχή: Πολεμική Συμμορία Όρκ!", center + Vector3(-20.0, 0.0, -7.0), 90.0, holder)
+	_occupy(center.x, center.z, 26.0)
 
 	# Story Part 6: The Siege of the Orc Stronghold Raid Controller
 	var raid_sc := preload("res://scripts/orc_stronghold_raid.gd")
@@ -1672,6 +1678,7 @@ func _build_terrain_details() -> void:
 	_terrain.add_path([Vector2(13, -14), Vector2(27, -48), Vector2(24, -84), Vector2(10, -122), Vector2(0.0, -151.0)], 4.8, false, true)
 	_terrain.add_path([Vector2(-78, 19), Vector2(-100, 11), Vector2(-128, 12), Vector2(-154, 17), Vector2(-172, 22)], 4.6, false, true)
 	_terrain.add_path([Vector2(88, 52), Vector2(97, 74), Vector2(112, 97), Vector2(128, 114), Vector2(138, 124)], 4.6, false, true)
+	_terrain.add_path([Vector2(65.0, 5.0), Vector2(85.0, 5.0), Vector2(105.0, 6.0)], 4.5, false, true)
 	# The flower bed around the well.
 	_terrain.add_flower_ring(Vector2.ZERO, 4.6, 8.6, 70)
 	# A vegetable garden beside every house.
@@ -2174,7 +2181,7 @@ func _build_gladiator_arena() -> void:
 	var arena: Node3D = arena_script.new()
 	arena.name = "GladiatorArena"
 	add_child(arena)
-	_occupy(122.0, -75.0, 22.0)
+	_occupy(-130.0, 58.0, 22.0)
 
 
 func _build_journal_manager() -> void:

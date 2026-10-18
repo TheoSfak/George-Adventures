@@ -24,9 +24,9 @@ const PLACES := [
 	["stable", 63.0, 53.0], ["bandits", -140.0, -90.0], ["cult", -80.0, -140.0],
 	["lighthouse", -115.0, 138.0], ["harbor", -35.0, 126.0], ["waterfall", 48.0, -132.0],
 	["bridge_meadow", 70.0, -66.0], ["highlands", 82.0, -155.0], ["shipwreck", -72.0, 168.0],
-	["cliffs", 64.0, 160.0], ["barracks", 78.0, -84.0], ["orc_stronghold", 150.0, 68.0],
+	["cliffs", 64.0, 160.0], ["barracks", 78.0, -84.0], ["orc_stronghold", 122.0, 6.0],
 	["golden_grove", 55.0, 25.0], ["grotto", -15.0, 142.0], ["bounty_board", -53.5, -12.5],
-	["george_cottage", -28.0, -28.0], ["arena", 122.0, -75.0], ["pirate_island", -20.0, 520.0], ["camp_babis", -22.0, 92.0],
+	["george_cottage", -28.0, -28.0], ["arena", -130.0, 58.0], ["pirate_island", -20.0, 520.0], ["camp_babis", -22.0, 92.0],
 	["pirate_lake", -75.0, 520.0], ["secret_pirate_cache", 35.0, 535.0],
 ]
 const SHOPS := [
@@ -37,8 +37,8 @@ const BOSS_AREAS := {
 	"captain": Vector2(142.0, 128.0), "king": Vector2(0.0, -190.0),
 	"bandit_chief": Vector2(-140.0, -98.0), "bandit": Vector2(-140.0, -90.0),
 	"cult_priest": Vector2(-80.0, -147.0), "cultist": Vector2(-80.0, -140.0),
-	"orc_warlord": Vector2(150.0, 68.0), "orc": Vector2(150.0, 68.0),
-	"warband_totem": Vector2(150.0, 68.0), "orc_catapult": Vector2(145.0, 79.0),
+	"orc_warlord": Vector2(128.0, 6.0), "orc": Vector2(122.0, 6.0),
+	"warband_totem": Vector2(122.0, 6.0), "orc_catapult": Vector2(115.5, 13.5),
 	"wolf": Vector2(55.0, 25.0), "spider": Vector2(140.0, 125.0),
 	"brute": Vector2(140.0, 125.0), "cursed_scarecrow": Vector2(-95.0, -50.0),
 	"pirate_captain": Vector2(-20.0, 520.0),

@@ -36,7 +36,7 @@ func _run() -> void:
 		dn.set_time(15.0) # Crisp golden afternoon lighting
 
 	var arena := get_first_node_in_group("gladiator_arena")
-	var center := Vector3(122.0, 0.0, -75.0)
+	var center := Vector3(-130.0, 0.0, 58.0)
 
 	# Give George high level, gold, and equip him
 	p.level = 25
@@ -47,7 +47,7 @@ func _run() -> void:
 	p._update_equipment_visuals()
 
 	# Position George at the entrance avenue
-	p.teleport(Vector3(106.0, 0.05, -75.0), deg_to_rad(90.0))
+	p.teleport(Vector3(-108.0, 0.05, 58.0), deg_to_rad(-90.0))
 	await create_timer(0.4).timeout
 
 	var cam: Camera3D = Camera3D.new()
@@ -55,30 +55,29 @@ func _run() -> void:
 	main.add_child(cam)
 	cam.make_current()
 
-	# 1. Panoramic Overview of the Arena (Sand pit, polygonal battlements, grandstands, torches)
-	_look(cam, center + Vector3(0.0, 1.5, 0.0), Vector3(112.0, 16.0, -48.0))
-	await shot("gladiator_arena_panoramic")
+	# 1. Panoramic Overview of the Arena (Coastal meadow setting, sand pit, polygonal battlements, grandstands)
+	_look(cam, center + Vector3(0.0, 1.5, 0.0), center + Vector3(28.0, 16.0, -22.0))
+	await shot("gladiator_arena_panoramic_new")
 
-	# 2. Medium Shot: Master Kassandros at his podium, Entrance Archway, and Portcullis
-	_look(cam, Vector3(106.0, 1.2, -73.0), Vector3(98.5, 2.2, -79.5))
-	await shot("gladiator_arena_entrance_and_master")
+	# 2. Medium Shot: Master Kassandros at his podium, Entrance Archway, Grand Signpost & Portcullis
+	_look(cam, Vector3(-114.5, 1.4, 58.0), Vector3(-102.0, 2.4, 53.5))
+	await shot("gladiator_arena_entrance_and_master_new")
 
-	# 3. Action Shot: George inside the sand pit fighting an Arena Competitor with cheering crowd
-	p.teleport(center + Vector3(-5.0, 0.05, 0.0), deg_to_rad(90.0))
-	var spawner := get_first_node_in_group("enemy_spawner")
-	if spawner:
-		var recruit = spawner.spawn_extra("gladiator_recruit", center + Vector3(3.0, 0.0, 0.0))
-		recruit.aggro_range = 30.0
-	await create_timer(0.5).timeout
+	# 3. Clean Sand Pit Interior (Zero deer, zero chests, pristine fighting disc with spectator stands)
+	p.teleport(center + Vector3(4.0, 0.05, 0.0), deg_to_rad(-90.0))
+	await create_timer(0.3).timeout
+	_look(cam, center + Vector3(-2.0, 1.2, 0.0), center + Vector3(10.0, 2.5, 3.5))
+	await shot("gladiator_arena_clean_pit_new")
 
-	_look(cam, center + Vector3(0.0, 1.2, 0.0), center + Vector3(-9.5, 2.8, -6.5))
-	await shot("gladiator_arena_sand_pit_combat")
+	# 4. Emergency Gate Lever inside the arena near the gate post
+	_look(cam, Vector3(-118.1, 0.55, 60.2), Vector3(-121.2, 1.6, 57.5))
+	await shot("gladiator_arena_emergency_lever_new")
 
-	# 4. Arena Window UI
+	# 5. Arena Window UI
 	if hud:
 		hud.open_arena(arena, p)
 		await create_timer(0.4).timeout
-		await shot("gladiator_arena_window_ui")
+		await shot("gladiator_arena_window_ui_new")
 		hud._arena_window.close()
 
 	print("\n--- All Gladiator Arena Screenshots Captured Successfully! ---")

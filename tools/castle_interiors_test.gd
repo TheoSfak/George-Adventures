@@ -88,9 +88,9 @@ func _run() -> void:
 
 	# Test 2: Enter Ruined Orc Stronghold Castle Keep (orc_castle)
 	print("\n--- Testing Ruined Orc Stronghold Castle (orc_castle) ---")
-	var orc_outside := Vector3(146.5, 0.0, 68.5)
+	var orc_outside := Vector3(130.5, 0.05, 6.0)
 	player.busy = false
-	await interiors.enter("orc_castle_0", "orc_castle", orc_outside, deg_to_rad(45.0), player)
+	await interiors.enter("orc_castle_0", "orc_castle", orc_outside, 0.0, player)
 	await create_timer(0.4).timeout
 
 	if not interiors.is_inside() or interiors.current_kind != "orc_castle":

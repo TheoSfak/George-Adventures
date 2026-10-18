@@ -35,7 +35,7 @@ func _run() -> void:
 	await process_frame
 	check("the boss is an invader", boss.invader and boss.is_in_group("invaders"))
 	check("tier 2 health is 1260 (max and current)", approx(boss.max_health, 1260.0) and approx(boss.health, 1260.0))
-	check("tier 2 damage is 39.2", approx(boss.attack_damage, 39.2))
+	check("tier 2 damage is 64.4", approx(boss.attack_damage, 64.4))
 	check("tier 2 may keep 5 helpers and is named II", boss.summon_max == 5 and boss.display_name == "Άρχοντας της Νύχτας II")
 
 	boss.call("_summon")

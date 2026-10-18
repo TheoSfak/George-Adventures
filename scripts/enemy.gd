@@ -39,7 +39,7 @@ signal died(enemy: Enemy)
 @export var steals_gold := 0          # gold stolen from George on a melee hit
 @export_group("Stats")
 @export var max_health := 45.0
-@export var attack_damage := 12.0
+@export var attack_damage := 20.0
 @export var patrol_speed := 1.5
 @export var chase_speed := 4.2
 @export_group("Rewards")

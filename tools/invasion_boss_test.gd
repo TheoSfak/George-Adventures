@@ -34,10 +34,10 @@ func _run() -> void:
 	check("roman numerals", InvasionBoss.roman(1) == "I" and InvasionBoss.roman(4) == "IV" and InvasionBoss.roman(9) == "IX" and InvasionBoss.roman(14) == "XIV")
 	check("tier 1 keeps the plain name", InvasionBoss.title("Άρχοντας", 1) == "Άρχοντας")
 	check("tier 2 and 3 get a numeral", InvasionBoss.title("Άρχοντας", 2) == "Άρχοντας II" and InvasionBoss.title("Άρχοντας", 3) == "Άρχοντας III")
-	var base := {"max_health": 900.0, "attack_damage": 28.0, "summon_max": 4, "display_name": "Άρχοντας της Νύχτας"}
+	var base := {"max_health": 900.0, "attack_damage": 46.0, "summon_max": 4, "display_name": "Άρχοντας της Νύχτας"}
 	var t1 := InvasionBoss.overrides(1, base)
-	check("tier 1 overrides equal the base", approx(t1["max_health"], 900.0) and approx(t1["attack_damage"], 28.0) and t1["summon_max"] == 4 and t1["display_name"] == "Άρχοντας της Νύχτας")
+	check("tier 1 overrides equal the base", approx(t1["max_health"], 900.0) and approx(t1["attack_damage"], 46.0) and t1["summon_max"] == 4 and t1["display_name"] == "Άρχοντας της Νύχτας")
 	var t2 := InvasionBoss.overrides(2, base)
-	check("tier 2 overrides: 1260 hp, 39.2 damage, 5 helpers, numeral", approx(t2["max_health"], 1260.0) and approx(t2["attack_damage"], 39.2) and t2["summon_max"] == 5 and t2["display_name"] == "Άρχοντας της Νύχτας II")
+	check("tier 2 overrides: 1260 hp, 64.4 damage, 5 helpers, numeral", approx(t2["max_health"], 1260.0) and approx(t2["attack_damage"], 64.4) and t2["summon_max"] == 5 and t2["display_name"] == "Άρχοντας της Νύχτας II")
 	check("the strings exist", Strings.INVASION_BOSS_COMING != "" and Strings.INVASION_BOSS_WON != "" and Strings.NIGHT_LORD_ENRAGE != "")
 	quit(1 if failed else 0)

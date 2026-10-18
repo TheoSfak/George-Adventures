@@ -28,7 +28,7 @@ func _run() -> void:
 
 	# level 1: nothing changes
 	var w1 = spawner.spawn_extra("warrior", at)
-	check("level 1: damage is the plain 12", is_equal_approx(w1.scaled_damage(), 12.0))
+	check("level 1: damage is the plain 20", is_equal_approx(w1.scaled_damage(), 20.0))
 	w1.take_damage(20.0, w1.global_position + Vector3.RIGHT)
 	check("level 1: a 20 blow takes exactly 20 of the 45 health", is_equal_approx(w1.health, 25.0))
 	w1.take_damage(25.0, w1.global_position + Vector3.RIGHT)
@@ -38,12 +38,12 @@ func _run() -> void:
 	p.level = 20
 	var w20 = spawner.spawn_extra("warrior", at + Vector3(8, 0, 0))
 	w20.take_damage(20.0, w20.global_position + Vector3.RIGHT)
-	check("level 20: still unscaled (health 25)", is_equal_approx(w20.health, 25.0) and is_equal_approx(w20.scaled_damage(), 12.0))
+	check("level 20: still unscaled (health 25)", is_equal_approx(w20.health, 25.0) and is_equal_approx(w20.scaled_damage(), 20.0))
 
 	# level 40: five times the health, three times the damage
 	p.level = 40
 	var w40 = spawner.spawn_extra("warrior", at + Vector3(16, 0, 0))
-	check("level 40: a warrior hits 3.4 times as hard (40.8)", is_equal_approx(w40.scaled_damage(), 12.0 * 3.4))
+	check("level 40: a warrior hits 4.2 times as hard (84.0)", is_equal_approx(w40.scaled_damage(), 20.0 * 4.2))
 	w40.take_damage(45.0, w40.global_position + Vector3.RIGHT)
 	check("level 40: a 45 blow does only 45 / 5.4", w40.health > 45.0 - 45.0 / 5.4 - 0.01 and w40.health < 45.0 - 45.0 / 5.4 + 0.01)
 	var hits := 1
@@ -57,9 +57,12 @@ func _run() -> void:
 
 	# arrows
 	var archer = spawner.spawn_extra("rogue", at + Vector3(0, 0, 40))
-	check("level 40: archers shoot harder too", is_equal_approx(archer.scaled_damage(), archer.attack_damage * 3.4))
+	check("level 40: archers shoot harder too", is_equal_approx(archer.scaled_damage(), archer.attack_damage * 4.2))
 
 	# XP: level 24 -> x1.6 (25 XP warrior gives 40)
+	var jm = get_first_node_in_group("journal_manager")
+	if jm:
+		jm.check_achievements()
 	p.level = 24
 	p.xp = 0
 	var w24 = spawner.spawn_extra("warrior", at + Vector3(30, 0, 0))

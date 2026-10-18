@@ -193,4 +193,6 @@ func load_data(data: Dictionary) -> void:
 	if data.has("stats") and data["stats"] is Dictionary:
 		stats = data["stats"].duplicate()
 	if data.has("visited_castles") and data["visited_castles"] is Array:
-		_visited_castles = data["visited_castles"].duplicate()
+		_visited_castles.clear()
+		for c in data["visited_castles"]:
+			_visited_castles.append(str(c))

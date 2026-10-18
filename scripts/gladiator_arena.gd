@@ -13,18 +13,19 @@ signal trial_finished(trial_id: String, success: bool)
 const ArenaDataClass := preload("res://scripts/arena_data.gd")
 const ChestClass := preload("res://scripts/chest.gd")
 
-const CENTER := Vector3(122.0, 0.0, -75.0)
+const CENTER := Vector3(-130.0, 0.0, 58.0)
 const ARENA_RADIUS := 13.5
 const WALL_HEIGHT := 3.2
-const GATE_POS := Vector3(108.5, 0.0, -75.0)
-const MASTER_POS := Vector3(104.5, 0.0, -71.5)
-const SIGN_POS := Vector3(103.0, 0.0, -78.5)
+const GATE_POS := Vector3(-116.5, 0.0, 58.0)
+const MASTER_POS := Vector3(-112.5, 0.0, 61.5)
+const SIGN_POS := Vector3(-112.5, 0.0, 54.5)
 
 var completed_trials: Array = []
 var trial_active := false
 var current_trial_id := ""
 var current_wave := 0
 var total_waves := 3
+var _wave_transitioning := false
 
 var _active_mobs: Array[Enemy] = []
 var _portcullis: Node3D
@@ -92,8 +93,8 @@ func _build_arena_structure() -> void:
 
 	for i in num_segments:
 		var angle := float(i) * angle_step
-		# West side (angle closest to PI) is the entrance gate
-		var is_gate := absf(wrapf(angle - PI, -PI, PI)) < (angle_step * 0.6)
+		# East side (angle closest to 0.0) is the entrance gate facing the village
+		var is_gate := absf(wrapf(angle, -PI, PI)) < (angle_step * 0.6)
 		var wall_center := CENTER + Vector3(cos(angle), 0.0, sin(angle)) * ARENA_RADIUS
 
 		if is_gate:
@@ -194,14 +195,14 @@ func _build_corner_pillar(holder: Node3D, pos: Vector3, with_torch: bool) -> voi
 		_torch_lights.append(light)
 
 
-func _build_gate_portal(holder: Node3D, pos: Vector3, angle: float) -> void:
+func _build_gate_portal(holder: Node3D, pos: Vector3, _angle: float) -> void:
 	var stone_dark := StandardMaterial3D.new()
 	stone_dark.albedo_color = Color(0.36, 0.34, 0.32)
 	stone_dark.roughness = 0.85
 
 	# Left and Right Stone Archway Towers
-	for offset_x in [-2.8, 2.8]:
-		var side_vec := Vector3(0.0, 0.0, offset_x)
+	for offset_z in [-2.8, 2.8]:
+		var side_vec := Vector3(0.0, 0.0, offset_z)
 		var tower := MeshInstance3D.new()
 		var t_box := BoxMesh.new()
 		t_box.size = Vector3(1.6, WALL_HEIGHT + 1.8, 1.6)
@@ -219,8 +220,8 @@ func _build_gate_portal(holder: Node3D, pos: Vector3, angle: float) -> void:
 	lintel.position = pos + Vector3(0.0, WALL_HEIGHT + 1.5, 0.0)
 	holder.add_child(lintel)
 
-	# Red and Gold Heraldic Championship Banners on Archway
-	for bx in [-2.4, 2.4]:
+	# Red and Gold Heraldic Championship Banners on Archway (facing East towards approaching visitors)
+	for bz in [-2.4, 2.4]:
 		var banner := MeshInstance3D.new()
 		var b_quad := QuadMesh.new()
 		b_quad.size = Vector2(0.9, 2.6)
@@ -229,8 +230,8 @@ func _build_gate_portal(holder: Node3D, pos: Vector3, angle: float) -> void:
 		b_mat.albedo_color = Color(0.82, 0.12, 0.10) # crimson arena red
 		b_mat.roughness = 0.8
 		banner.material_override = b_mat
-		banner.position = pos + Vector3(-0.85, WALL_HEIGHT - 0.2, bx)
-		banner.rotation_degrees = Vector3(0.0, -90.0, 0.0)
+		banner.position = pos + Vector3(0.85, WALL_HEIGHT - 0.2, bz)
+		banner.rotation_degrees = Vector3(0.0, 90.0, 0.0)
 		holder.add_child(banner)
 
 	# Movable Heavy Iron Portcullis Gate
@@ -279,6 +280,42 @@ func _build_gate_portal(holder: Node3D, pos: Vector3, angle: float) -> void:
 	p_col.position = Vector3(0.0, 2.0, 0.0)
 	_portcullis_body.add_child(p_col)
 	_portcullis.add_child(_portcullis_body)
+
+	# Emergency Gate Lever inside the arena near the gate post
+	var lever_holder := Node3D.new()
+	lever_holder.name = "GateEmergencyLever"
+	lever_holder.position = pos + Vector3(-1.6, 0.0, 2.2)
+	holder.add_child(lever_holder)
+
+	var lever_base := MeshInstance3D.new()
+	var l_cyl := CylinderMesh.new()
+	l_cyl.top_radius = 0.22
+	l_cyl.bottom_radius = 0.28
+	l_cyl.height = 0.35
+	lever_base.mesh = l_cyl
+	lever_base.material_override = stone_dark
+	lever_base.position = Vector3(0.0, 0.175, 0.0)
+	lever_holder.add_child(lever_base)
+
+	var lever_handle := MeshInstance3D.new()
+	var h_cyl := CylinderMesh.new()
+	h_cyl.top_radius = 0.04
+	h_cyl.bottom_radius = 0.04
+	h_cyl.height = 0.75
+	lever_handle.mesh = h_cyl
+	var red_mat := StandardMaterial3D.new()
+	red_mat.albedo_color = Color(0.85, 0.18, 0.15)
+	red_mat.metallic = 0.65
+	lever_handle.material_override = red_mat
+	lever_handle.position = Vector3(0.0, 0.55, 0.0)
+	lever_handle.rotation_degrees = Vector3(18.0, 0.0, 0.0)
+	lever_holder.add_child(lever_handle)
+
+	var lever_spot := InteractSpot.make("[R] Μοχλός Πύλης (Άνοιγμα / Έξοδος)", func(p: Player):
+		abandon_or_open_gate(p)
+	, 3.5)
+	lever_spot.position = Vector3(0.0, 0.4, 0.0)
+	lever_holder.add_child(lever_spot)
 
 
 func _build_grandstand(holder: Node3D, pos: Vector3, yaw: float, is_north: bool) -> void:
@@ -339,18 +376,20 @@ func _build_grandstand(holder: Node3D, pos: Vector3, yaw: float, is_north: bool)
 # 2. APPROACH AVENUE, SIGNPOST & ARENA MASTER KASSANDROS
 # =========================================================================
 func _build_approach_and_master() -> void:
-	# 1. Approach Cobblestone Path
+	# 1. Approach Cobblestone Path leading from meadow toward gate
 	var path_mat := StandardMaterial3D.new()
 	path_mat.albedo_color = Color(0.48, 0.45, 0.42)
 	path_mat.roughness = 0.92
 
-	for dist_x in range(96, 108, 3):
+	var start_x := int(GATE_POS.x + 2.0)
+	var end_x := int(GATE_POS.x + 13.0)
+	for dist_x in range(start_x, end_x, 3):
 		var stone_step := MeshInstance3D.new()
 		var step_mesh := BoxMesh.new()
 		step_mesh.size = Vector3(2.8, 0.05, 3.8)
 		stone_step.mesh = step_mesh
 		stone_step.material_override = path_mat
-		stone_step.position = Vector3(float(dist_x), 0.02, -75.0)
+		stone_step.position = Vector3(float(dist_x), 0.02, GATE_POS.z)
 		add_child(stone_step)
 
 	# 2. Arena Master Podium & Kassandros NPC
@@ -373,14 +412,14 @@ func _build_approach_and_master() -> void:
 	if wrack_sc != null:
 		var wrack := wrack_sc.instantiate() as Node3D
 		wrack.scale = Vector3.ONE * 1.4
-		wrack.position = MASTER_POS + Vector3(-1.8, 0.0, 0.5)
-		wrack.rotation_degrees = Vector3(0.0, 45.0, 0.0)
+		wrack.position = MASTER_POS + Vector3(1.2, 0.0, 1.6)
+		wrack.rotation_degrees = Vector3(0.0, -45.0, 0.0)
 		add_child(wrack)
 
-	# Master NPC: Kassandros
+	# Master NPC: Kassandros (facing East towards approaching visitors)
 	_master_npc = Npc.new()
 	_master_npc.set("npc_id", "kassandros")
-	_master_npc.set("rest_yaw", deg_to_rad(90.0))
+	_master_npc.set("rest_yaw", deg_to_rad(-90.0))
 	_master_npc.position = MASTER_POS + Vector3(0.0, 0.4, 0.0)
 	add_child(_master_npc)
 
@@ -397,10 +436,9 @@ func _build_approach_and_master() -> void:
 	add_child(spot)
 
 	# 4. Arena Grand Signpost
-	var sign_sc := load("res://assets/world/decoration/props/resource_stone.gltf") as PackedScene
 	var sign_holder := Node3D.new()
 	sign_holder.position = SIGN_POS
-	sign_holder.rotation_degrees = Vector3(0.0, 75.0, 0.0)
+	sign_holder.rotation_degrees = Vector3(0.0, -90.0, 0.0)
 	add_child(sign_holder)
 
 	var sign_label := Label3D.new()
@@ -473,10 +511,11 @@ func start_trial(trial_id: String, player: Player) -> bool:
 	if is_instance_valid(_victory_chest):
 		_victory_chest.queue_free()
 
-	# Move player safely inside fighting pit
-	player.global_position = CENTER + Vector3(-7.5, 0.05, 0.0)
-	player.set_heading(0.0, true)
+	# Move player safely inside fighting pit facing the center
+	player.global_position = CENTER + Vector3(8.0, 0.05, 0.0)
+	player.set_heading(PI, true)
 
+	_wave_transitioning = false
 	_close_gate()
 	Sfx.ui("invasion_horn")
 	Sfx.ui("crowd_cheer")
@@ -530,28 +569,73 @@ func _spawn_next_wave() -> void:
 			enemy.leash_range = 60.0
 			enemy.add_to_group("arena_mobs")
 			_active_mobs.append(enemy)
-			enemy.died.connect(_on_mob_died.bind(enemy))
+			# Robust connections: Enemy.died(self) passes 1 argument, tolerate any
+			enemy.died.connect(_on_mob_died)
+			enemy.tree_exited.connect(_on_mob_tree_exited)
 
 	mob_count_changed.emit(_active_mobs.size())
 
 
-func _on_mob_died(_enemy: Enemy) -> void:
-	_active_mobs = _active_mobs.filter(func(e): return is_instance_valid(e) and not e.is_dead())
+func _on_mob_died(_a = null, _b = null) -> void:
+	_check_mobs_remaining()
+
+
+func _on_mob_tree_exited() -> void:
+	_check_mobs_remaining()
+
+
+func _check_mobs_remaining() -> void:
+	if not trial_active or _wave_transitioning:
+		return
+
+	var alive_mobs: Array[Enemy] = []
+	for m in _active_mobs:
+		if is_instance_valid(m) and not m.is_dead() and m.is_inside_tree():
+			alive_mobs.append(m)
+	_active_mobs = alive_mobs
 	mob_count_changed.emit(_active_mobs.size())
 
 	if _active_mobs.is_empty():
+		_wave_transitioning = true
 		Sfx.ui("crowd_cheer")
 		if current_wave < total_waves:
-			_player.message.emit("Το Κύμα %d εξουδετερώθηκε! Ετοιμάσου..." % current_wave)
-			get_tree().create_timer(2.6).timeout.connect(_spawn_next_wave)
+			if _player != null:
+				_player.message.emit("Το Κύμα %d εξουδετερώθηκε! Ετοιμάσου..." % current_wave)
+			var timer := get_tree().create_timer(2.6)
+			timer.timeout.connect(func():
+				_wave_transitioning = false
+				_spawn_next_wave()
+			)
 		else:
+			_wave_transitioning = false
 			_on_trial_victorious()
+
+
+func abandon_or_open_gate(player: Player = null) -> void:
+	if trial_active:
+		trial_active = false
+		current_trial_id = ""
+		_wave_transitioning = false
+		for mob in _active_mobs:
+			if is_instance_valid(mob):
+				mob.queue_free()
+		_active_mobs.clear()
+		_open_gate()
+		Sfx.ui("gate_open" if SfxIds.VARIANTS.has("gate_open") else "window_close")
+		if player != null:
+			player.message.emit("Η δοκιμασία ακυρώθηκε. Η πύλη άνοιξε!")
+		trial_finished.emit("", false)
+	else:
+		_open_gate()
+		if player != null:
+			player.message.emit("Η πύλη της αρένας είναι ανοιχτή.")
 
 
 func _on_trial_victorious() -> void:
 	if not trial_active:
 		return
 	trial_active = false
+	_wave_transitioning = false
 	var trial := ArenaDataClass.get_trial(current_trial_id)
 	var reward: Dictionary = trial["reward"]
 
@@ -630,6 +714,7 @@ func _on_player_died() -> void:
 	if not trial_active:
 		return
 	trial_active = false
+	_wave_transitioning = false
 	current_trial_id = ""
 	_open_gate()
 
@@ -649,6 +734,16 @@ func _process(delta: float) -> void:
 		var l := _torch_lights[i]
 		if is_instance_valid(l):
 			l.light_energy = 1.6 + sin(_anim_clock * 8.0 + float(i) * 1.5) * 0.22
+
+	# Periodic failsafe check during active waves
+	if trial_active and not _wave_transitioning:
+		var has_stale := false
+		for m in _active_mobs:
+			if not is_instance_valid(m) or m.is_dead() or not m.is_inside_tree():
+				has_stale = true
+				break
+		if has_stale:
+			_check_mobs_remaining()
 
 
 # =========================================================================
