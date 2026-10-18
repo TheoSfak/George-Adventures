@@ -28,6 +28,8 @@ var _catapult_spot: Node3D
 var _horn_spot: Node3D
 var _victory_chest: Node3D
 var _smoke_particles: Array[Node3D] = []
+var _monitor_timer := 0.0
+var _player_away_time := 0.0
 
 func _ready() -> void:
 	name = "OrcStrongholdRaid"
@@ -38,6 +40,92 @@ func _ready() -> void:
 	var quests_node: Node = get_tree().root.get_node_or_null("Quests") if is_inside_tree() and get_tree() and get_tree().root else null
 	if quests_node != null and quests_node.has_signal("changed"):
 		quests_node.changed.connect(_on_quests_changed)
+	call_deferred("_check_initial_state")
+
+
+func _check_initial_state() -> void:
+	_on_quests_changed()
+
+
+func _process(delta: float) -> void:
+	if not siege_active:
+		return
+	_monitor_timer += delta
+	if _monitor_timer < 0.4:
+		return
+	var dt := _monitor_timer
+	_monitor_timer = 0.0
+	_monitor_siege(dt)
+
+
+func _monitor_siege(dt: float = 0.4) -> void:
+	if warlord_slain:
+		_cleanup_guards_post_slain()
+		return
+
+	# 1. Check if warlord or all stronghold orcs are defeated
+	var warlord_found := false
+	var warlord_alive := false
+	var living_orcs := 0
+	if is_inside_tree() and get_tree() != null:
+		for e in get_tree().get_nodes_in_group("enemies"):
+			var enemy := e as Enemy
+			if enemy == null or not is_instance_valid(enemy):
+				continue
+			var ep := enemy.global_position
+			var dist_fortress := (ep - FORTRESS_CENTER).length()
+			var kind: String = str(enemy.get("kind_id"))
+			if kind == "orc_warlord":
+				warlord_found = true
+				if not enemy.is_dead():
+					warlord_alive = true
+			elif kind.begins_with("orc_") and dist_fortress < 45.0:
+				if not enemy.is_dead():
+					living_orcs += 1
+
+	if (warlord_found and not warlord_alive) or (not warlord_found and living_orcs == 0):
+		_on_warlord_vanquished()
+		return
+
+	# 2. Check quests state as backup (both orc_siege and orc_warlord)
+	_on_quests_changed()
+	if warlord_slain:
+		return
+
+	# 3. Check player distance to stronghold: if player retreats/abandons, call off siege
+	if is_inside_tree() and get_tree() != null:
+		var player := get_tree().get_first_node_in_group("player") as Player
+		if player != null:
+			var p_dist := (player.global_position - FORTRESS_CENTER).length()
+			if p_dist > 52.0:
+				_player_away_time += dt
+				if _player_away_time >= 12.0:
+					_abandon_siege(player)
+			else:
+				_player_away_time = 0.0
+
+
+func _abandon_siege(player: Player = null) -> void:
+	siege_active = false
+	_player_away_time = 0.0
+	if player != null:
+		player.message.emit("Απομακρυνθήκατε από το Προπύργιο. Οι φρουροί ανασυντάσσονται!")
+	for g in _guards:
+		if is_instance_valid(g):
+			g.follow_player = false
+			if g.has_method("dismiss"):
+				g.dismiss()
+	_guards.clear()
+
+
+func _cleanup_guards_post_slain() -> void:
+	for g in _guards:
+		if is_instance_valid(g):
+			g.follow_player = false
+			if g.has_method("celebrate_and_dismiss"):
+				g.celebrate_and_dismiss()
+			elif g.has_method("dismiss"):
+				g.dismiss()
 
 
 func _on_quests_changed() -> void:
@@ -47,10 +135,20 @@ func _on_quests_changed() -> void:
 	if quests_node != null:
 		var st = quests_node.get("state")
 		var pr = quests_node.get("progress")
+		# Check quest orc_siege (Captain Vasilis)
 		if st != null and st.get("orc_siege", 0) >= 3: # READY (3) or DONE (4)
 			_on_warlord_vanquished()
+			return
 		elif pr != null and pr.has("orc_siege") and pr["orc_siege"].size() > 0 and pr["orc_siege"][0] >= 1:
 			_on_warlord_vanquished()
+			return
+		# Also check quest orc_warlord (Dimitris)
+		if st != null and st.get("orc_warlord", 0) >= 3:
+			_on_warlord_vanquished()
+			return
+		elif pr != null and pr.has("orc_warlord") and pr["orc_warlord"].size() > 0 and pr["orc_warlord"][0] >= 1:
+			_on_warlord_vanquished()
+			return
 
 
 # =========================================================================
@@ -229,12 +327,19 @@ static func _get_horn_script() -> GDScript:
 # 4. RAID LOGIC & PROGRESSION
 # =========================================================================
 func start_assault(player: Player = null) -> void:
+	if warlord_slain:
+		if player != null:
+			player.message.emit("Το Προπύργιο έχει ήδη απελευθερωθεί! Οι Όρκ έχουν ηττηθεί.")
+		return
+
 	if siege_active:
 		if player != null:
 			player.message.emit("Η πολιορκία είναι ήδη σε εξέλιξη! Προχωρήστε στην πύλη!")
 		return
 
 	siege_active = true
+	_player_away_time = 0.0
+	_guards.clear()
 	Sfx.play("skill_shout", STAGING_POS)
 
 	var guard_names: Array[String] = ["Φρουρός Λεωνίδας", "Φρουρός Μάρκος", "Φρουρός Στέφανος"]
@@ -251,6 +356,7 @@ func start_assault(player: Player = null) -> void:
 		guard.damage = 20.0
 		guard.follow_player = true
 		guard.home = FORTRESS_CENTER
+		guard.max_follow_dist = 48.0
 		var spawn_pos := STAGING_POS + guard_offsets[i]
 		guard.position = spawn_pos
 		add_child(guard)
@@ -346,6 +452,7 @@ func _on_warlord_vanquished() -> void:
 
 	for g in _guards:
 		if is_instance_valid(g):
+			g.follow_player = false
 			if g.has_method("celebrate_and_dismiss"):
 				g.celebrate_and_dismiss()
 			else:

@@ -19,6 +19,7 @@ var home := Vector3.ZERO
 var damage := 10.0
 var follow_player := false
 var follow_slot := 0
+var max_follow_dist: float = 48.0
 var guard_name := ""
 
 var _model_root: Node3D
@@ -171,19 +172,24 @@ func _physics_process(delta: float) -> void:
 		if follow_player and is_inside_tree():
 			var p := get_tree().get_first_node_in_group("player") as Node3D
 			if p != null:
-				var fwd := -p.global_transform.basis.z
-				fwd.y = 0.0
-				if fwd.length_squared() < 0.01:
-					fwd = Vector3.FORWARD
+				var p_dist_home := (p.global_position - home).length() if home != Vector3.ZERO else 0.0
+				if home != Vector3.ZERO and max_follow_dist > 0.0 and p_dist_home > max_follow_dist:
+					# Player has moved outside the raid/fortress zone; guards hold ground at home
+					target_pos = home
 				else:
-					fwd = fwd.normalized()
-				var right := Vector3(-fwd.z, 0.0, fwd.x)
-				var offset := Vector3.ZERO
-				match follow_slot % 3:
-					0: offset = -right * 2.2 - fwd * 1.6
-					1: offset = right * 2.2 - fwd * 1.6
-					2: offset = -fwd * 3.2
-				target_pos = p.global_position + offset
+					var fwd := -p.global_transform.basis.z
+					fwd.y = 0.0
+					if fwd.length_squared() < 0.01:
+						fwd = Vector3.FORWARD
+					else:
+						fwd = fwd.normalized()
+					var right := Vector3(-fwd.z, 0.0, fwd.x)
+					var offset := Vector3.ZERO
+					match follow_slot % 3:
+						0: offset = -right * 2.2 - fwd * 1.6
+						1: offset = right * 2.2 - fwd * 1.6
+						2: offset = -fwd * 3.2
+					target_pos = p.global_position + offset
 		var back := target_pos - global_position
 		back.y = 0.0
 		var dist := back.length()
